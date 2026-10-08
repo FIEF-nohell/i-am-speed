@@ -17,20 +17,20 @@ Content is fetched at prepare time by `scripts/fetch-content.ts` (`npm run fetch
 - Licence: the works are in the public domain in the United States (all authors died more than 70 years ago). The Project Gutenberg trademark and licence text are not included.
 - Used for: long passages (phase 11) and extra word counts.
 
-| Language | Title | Author | Gutenberg ID |
-|----------|-------|--------|--------------|
-| en | Pride and Prejudice | Jane Austen | 1342 |
-| en | Alice's Adventures in Wonderland | Lewis Carroll | 11 |
-| en | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 1661 |
-| en | A Tale of Two Cities | Charles Dickens | 98 |
-| en | Frankenstein | Mary Shelley | 84 |
-| en | Great Expectations | Charles Dickens | 1400 |
-| de | Die Verwandlung | Franz Kafka | 22367 |
-| de | Effi Briest | Theodor Fontane | 5323 |
-| de | Der Stechlin | Theodor Fontane | 53628 |
-| de | Unterm Birnbaum | Theodor Fontane | 26686 |
-| de | Klein Zaches, genannt Zinnober | E. T. A. Hoffmann | 9200 |
-| de | Casanovas Heimfahrt | Arthur Schnitzler | 18148 |
+| Language | Title                             | Author             | Gutenberg ID |
+| -------- | --------------------------------- | ------------------ | ------------ |
+| en       | Pride and Prejudice               | Jane Austen        | 1342         |
+| en       | Alice's Adventures in Wonderland  | Lewis Carroll      | 11           |
+| en       | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 1661         |
+| en       | A Tale of Two Cities              | Charles Dickens    | 98           |
+| en       | Frankenstein                      | Mary Shelley       | 84           |
+| en       | Great Expectations                | Charles Dickens    | 1400         |
+| de       | Die Verwandlung                   | Franz Kafka        | 22367        |
+| de       | Effi Briest                       | Theodor Fontane    | 5323         |
+| de       | Der Stechlin                      | Theodor Fontane    | 53628        |
+| de       | Unterm Birnbaum                   | Theodor Fontane    | 26686        |
+| de       | Klein Zaches, genannt Zinnober    | E. T. A. Hoffmann  | 9200         |
+| de       | Casanovas Heimfahrt               | Arthur Schnitzler  | 18148        |
 
 (Two further German candidates failed to download during the prepare step and are not used.)
 

@@ -36,7 +36,9 @@ async function download(url: string, file: string): Promise<string | null> {
     try {
       const res = await fetch(url, {
         signal: AbortSignal.timeout(180_000),
-        headers: { "user-agent": "i-am-speed-content-script (+https://github.com/FIEF-nohell/i-am-speed)" },
+        headers: {
+          "user-agent": "i-am-speed-content-script (+https://github.com/FIEF-nohell/i-am-speed)",
+        },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       writeFileSync(target, Buffer.from(await res.arrayBuffer()));
@@ -53,7 +55,10 @@ async function tatoebaSentences(lang: Lang): Promise<string[] | null> {
   const archive = await download(TATOEBA[lang], `${lang}.tsv.bz2`);
   if (!archive) return null;
   const tsv = execFileSync("bzip2", ["-dc", archive], { maxBuffer: 1 << 30 }).toString("utf8");
-  return tsv.split("\n").map((line) => line.split("\t")[2] ?? "").filter(Boolean);
+  return tsv
+    .split("\n")
+    .map((line) => line.split("\t")[2] ?? "")
+    .filter(Boolean);
 }
 
 async function bookParagraphs(lang: Lang): Promise<string[] | null> {
@@ -90,7 +95,13 @@ async function buildLanguage(lang: Lang): Promise<void> {
   // Keep only sentences made of words that are in the ranked list, so lessons stay familiar.
   const familiar = accepted.filter((s) => tokenise(s).every((w) => rank.has(w.toLowerCase())));
   const sentences = rankSentences(familiar.length ? familiar : accepted, rank, SENTENCE_LIMIT);
-  const passages = [...new Set((paragraphs ?? fb.passages).map((p) => normaliseText(p)).filter((p): p is string => p !== null))];
+  const passages = [
+    ...new Set(
+      (paragraphs ?? fb.passages)
+        .map((p) => normaliseText(p))
+        .filter((p): p is string => p !== null),
+    ),
+  ];
 
   mkdirSync(path.join(OUT, lang), { recursive: true });
   const write = (name: string, data: string[]): void =>
@@ -98,7 +109,9 @@ async function buildLanguage(lang: Lang): Promise<void> {
   write("words", words);
   write("sentences", sentences);
   write("passages", passages);
-  console.log(`${lang}: ${words.length} words, ${sentences.length} sentences, ${passages.length} passages`);
+  console.log(
+    `${lang}: ${words.length} words, ${sentences.length} sentences, ${passages.length} passages`,
+  );
 }
 
 async function main(): Promise<void> {

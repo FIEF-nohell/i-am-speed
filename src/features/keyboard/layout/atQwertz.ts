@@ -28,7 +28,14 @@ const sym = (
   dead: Modifier[] = [],
 ): KeyDef => ({ code, base, shift, altgr, finger, dead, rect: { x, y, w: 1 } });
 
-const mod = (code: string, label: string, finger: Finger, x: number, y: number, w: number): KeyDef => ({
+const mod = (
+  code: string,
+  label: string,
+  finger: Finger,
+  x: number,
+  y: number,
+  w: number,
+): KeyDef => ({
   code,
   label,
   finger,

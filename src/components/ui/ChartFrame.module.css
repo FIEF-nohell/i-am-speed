@@ -1,0 +1,18 @@
+.frame {
+  margin: 0;
+}
+.title {
+  font-size: var(--text-sm);
+  color: var(--dim);
+  margin-bottom: var(--space-3);
+}
+.body {
+  width: 100%;
+}
+.empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+  font-size: var(--text-sm);
+}

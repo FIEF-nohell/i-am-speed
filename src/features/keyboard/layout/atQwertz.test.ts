@@ -1,12 +1,44 @@
 import { describe, expect, it } from "vitest";
-import { CHAR_MAP, DEAD_CHARS, KEYS, KEY_BY_CODE, fingerOf, isTypeable, placementOf } from "./atQwertz";
+import {
+  CHAR_MAP,
+  DEAD_CHARS,
+  KEYS,
+  KEY_BY_CODE,
+  fingerOf,
+  isTypeable,
+  placementOf,
+} from "./atQwertz";
 
 const SHIFT_PAIRS: Record<string, string> = {
-  "°": "^", "!": "1", '"': "2", "§": "3", $: "4", "%": "5", "&": "6", "/": "7", "(": "8",
-  ")": "9", "=": "0", "?": "ß", "*": "+", "'": "#", ">": "<", ";": ",", ":": ".", _: "-",
+  "°": "^",
+  "!": "1",
+  '"': "2",
+  "§": "3",
+  $: "4",
+  "%": "5",
+  "&": "6",
+  "/": "7",
+  "(": "8",
+  ")": "9",
+  "=": "0",
+  "?": "ß",
+  "*": "+",
+  "'": "#",
+  ">": "<",
+  ";": ",",
+  ":": ".",
+  _: "-",
 };
 const ALTGR_PAIRS: Record<string, string> = {
-  "@": "q", "€": "e", "{": "7", "[": "8", "]": "9", "}": "0", "\\": "ß", "~": "+", "|": "<",
+  "@": "q",
+  "€": "e",
+  "{": "7",
+  "[": "8",
+  "]": "9",
+  "}": "0",
+  "\\": "ß",
+  "~": "+",
+  "|": "<",
 };
 
 describe("atQwertz layout", () => {
@@ -17,7 +49,11 @@ describe("atQwertz layout", () => {
   it("maps every typeable character to exactly one key, modifier and finger", () => {
     const seen = new Map<string, string>();
     for (const key of KEYS) {
-      for (const [layer, ch] of [["none", key.base], ["shift", key.shift], ["altgr", key.altgr]] as const) {
+      for (const [layer, ch] of [
+        ["none", key.base],
+        ["shift", key.shift],
+        ["altgr", key.altgr],
+      ] as const) {
         if (!ch || key.dead?.includes(layer)) continue;
         expect(seen.has(ch), `duplicate ${ch}`).toBe(false);
         seen.set(ch, key.code);

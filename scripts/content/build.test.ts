@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { acceptSentence, buildWordList, gutenbergParagraphs, rankSentences, spread, tokenise } from "./build";
+import {
+  acceptSentence,
+  buildWordList,
+  gutenbergParagraphs,
+  rankSentences,
+  spread,
+  tokenise,
+} from "./build";
 
 describe("content build helpers", () => {
   it("tokenises letters and drops contractions", () => {
@@ -21,12 +28,16 @@ describe("content build helpers", () => {
     expect(acceptSentence("No punctuation at the end of this one")).toBeNull();
   });
   it("ranks easy sentences first", () => {
-    const rank = new Map([["the", 0], ["cat", 1]]);
+    const rank = new Map([
+      ["the", 0],
+      ["cat", 1],
+    ]);
     const r = rankSentences(["The cat.", "Zygomatic quarrelsome exigency."], rank, 2);
     expect(r[0]).toBe("The cat.");
   });
   it("strips gutenberg framing and unwraps lines", () => {
-    const t = "junk\n*** START OF THE PROJECT GUTENBERG EBOOK X ***\nFirst line\nsecond line\n\nNext para\n*** END OF THE PROJECT GUTENBERG EBOOK X ***\nlicense";
+    const t =
+      "junk\n*** START OF THE PROJECT GUTENBERG EBOOK X ***\nFirst line\nsecond line\n\nNext para\n*** END OF THE PROJECT GUTENBERG EBOOK X ***\nlicense";
     expect(gutenbergParagraphs(t)).toEqual(["First line second line", "Next para"]);
   });
   it("spreads picks evenly", () => {
@@ -36,7 +47,12 @@ describe("content build helpers", () => {
 
 describe("german casing", () => {
   it("lowercases words that are only capitalised at sentence start", () => {
-    const texts = ["Ich sehe das Haus", "Das Haus ist alt", "Heute sehe ich das Haus", "ich weiß es"];
+    const texts = [
+      "Ich sehe das Haus",
+      "Das Haus ist alt",
+      "Heute sehe ich das Haus",
+      "ich weiß es",
+    ];
     const words = buildWordList(texts, "de", 20, 1);
     expect(words).toContain("ich");
     expect(words).toContain("Haus");

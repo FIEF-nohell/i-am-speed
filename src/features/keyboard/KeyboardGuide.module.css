@@ -1,0 +1,58 @@
+.board {
+  display: block;
+  width: 100%;
+  max-width: 46rem;
+  margin: 0 auto;
+  user-select: none;
+}
+
+.cap {
+  fill: color-mix(in srgb, var(--tint) 10%, transparent);
+  stroke: color-mix(in srgb, var(--tint) 38%, var(--line));
+  stroke-width: 1;
+  transition:
+    fill var(--dur-fast) var(--ease-out),
+    stroke var(--dur-fast) var(--ease-out);
+}
+
+.cap[data-hot] {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.cap[data-down] {
+  fill: color-mix(in srgb, var(--tint) 30%, transparent);
+}
+
+.heat {
+  fill: var(--error);
+  pointer-events: none;
+}
+
+.main,
+.shift,
+.altgr {
+  fill: var(--muted);
+  font-family: var(--font-mono), monospace;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.main {
+  font-size: 15px;
+  fill: var(--text);
+}
+.main[data-small] {
+  font-size: 10px;
+  fill: var(--dim);
+}
+.shift {
+  font-size: 10px;
+  fill: var(--dim);
+}
+.altgr {
+  font-size: 9px;
+  fill: var(--dim);
+  opacity: 0.8;
+}

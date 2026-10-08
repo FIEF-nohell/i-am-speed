@@ -1,0 +1,79 @@
+.frame {
+  position: relative;
+  overflow: hidden;
+  height: calc(var(--type-size) * var(--type-leading) * 3);
+  font-size: var(--type-size);
+  line-height: calc(var(--type-size) * var(--type-leading));
+  letter-spacing: 0;
+  cursor: text;
+}
+
+.inner {
+  position: relative;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.word {
+  display: inline-block;
+  white-space: nowrap;
+}
+.ch {
+  color: var(--dim);
+}
+.ch[data-state="typed"] {
+  color: var(--text);
+}
+.ch[data-state="wrong"],
+.ch[data-state="error-pending"] {
+  color: var(--error);
+}
+.ch[data-state="wrong"][data-space] {
+  background: var(--error-soft);
+}
+.ch[data-state="error-pending"][data-space] {
+  background: var(--error-soft);
+}
+
+.caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background: var(--accent);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.caret[data-style="line"] {
+  width: 2px;
+  border-radius: 1px;
+  margin-left: -1px;
+}
+.caret[data-style="block"] {
+  background: var(--accent-soft);
+  border-radius: 3px;
+}
+.caret[data-style="underline"] {
+  background: transparent;
+  border-bottom: 2px solid var(--accent);
+  box-sizing: border-box;
+}
+.caret[data-idle] {
+  animation: blink 1.1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret[data-idle] {
+    animation: none;
+  }
+}
+:global([data-motion="reduce"]) .caret[data-idle] {
+  animation: none;
+}

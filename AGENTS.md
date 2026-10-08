@@ -158,19 +158,22 @@ This rule applies to any agent that edits `.claude/agents/` (including the learn
 ## Project-specific section
 
 ### Stack
-- unknown: greenfield. The project is a stub (`project.md` reads "coming soon"); no stack has been chosen.
-- Do not assume a framework until the user picks one.
+- "i am speed": a touch-typing trainer for the Austrian QWERTZ layout. Next.js App Router, React, TypeScript strict, static export (`output: 'export'`), plain CSS with variable tokens, Recharts, lucide-react, Vitest, Playwright. No backend; data in localStorage only.
+- Product spec: `PROJECT.md`. Plan: `PLAN.md`. Decisions: `DECISIONS.md`. Content sources: `SOURCES.md`.
 
 ### How to run
-unknown: no dev or build command exists yet.
+`npm install`, `npm run dev` (dev), `npm run build` (static export to `out/`), `npm start` (serve `out/`). See `README.md`.
 
 ### Verification
-TBD: no verification commands exist yet. Fill in `.docs/rules/verification.md` when the stack lands.
+`npm run check` (must be green before pushing), `npm run test:e2e`. See `.docs/rules/verification.md`.
 
 ### Key paths
 | Path | Purpose |
 |------|---------|
-| `project.md` | Project stub (placeholder content) |
+| `src/features/` | Feature modules (keyboard, engine, lessons, content, storage, typing, results, stats, settings) |
+| `src/components/ui/` | Shared UI primitives |
+| `src/content/` | Static word, sentence and passage JSON (generated) |
+| `brand/` | SVG sources and palette; `npm run brand` renders derived assets |
 | `.claude/` | Agents, commands, hooks, settings, bootstrap manifest |
 | `.docs/` | Knowledge base: plans, rules, learnings, decisions, research |
 

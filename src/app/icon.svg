@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .dot { fill: #d9dde0; }
+    .caret { fill: #6cd3bb; }
+    @media (prefers-color-scheme: light) { .dot { fill: #24272a; } .caret { fill: #0b7a66; } }
+  </style>
+  <circle class="dot" cx="16" cy="6.5" r="3.2"/>
+  <rect class="caret" x="13" y="13" width="6" height="16" rx="3"/>
+</svg>

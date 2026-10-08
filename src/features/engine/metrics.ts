@@ -124,7 +124,10 @@ export function computeMetrics(state: EngineState): Metrics {
   };
 }
 
-export function slowestKeys(perKey: Record<string, KeyStat>, count: number): { key: string; ms: number }[] {
+export function slowestKeys(
+  perKey: Record<string, KeyStat>,
+  count: number,
+): { key: string; ms: number }[] {
   return Object.entries(perKey)
     .filter(([key, s]) => key !== " " && s.timedHits >= 2)
     .map(([key, s]) => ({ key, ms: s.totalMs / s.timedHits }))

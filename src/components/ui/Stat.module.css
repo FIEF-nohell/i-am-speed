@@ -1,0 +1,27 @@
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.label {
+  font-size: var(--text-sm);
+  color: var(--dim);
+}
+.value {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: 1.15;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.stat[data-size="lead"] .value {
+  font-size: var(--text-display);
+}
+.unit {
+  margin-left: 0.3em;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.stat[data-accent] .value {
+  color: var(--accent);
+}

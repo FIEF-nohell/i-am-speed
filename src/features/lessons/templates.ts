@@ -12,7 +12,8 @@ const TLDS = ["com", "de", "at", "org", "net"];
 
 type Template = (c: TemplateContext) => string;
 
-const num = (c: TemplateContext, min = 1, max = 3): string => digitsToken(c.rng, "0123456789", min, max);
+const num = (c: TemplateContext, min = 1, max = 3): string =>
+  digitsToken(c.rng, "0123456789", min, max);
 
 export const SYMBOL_TEMPLATES: Record<string, Template[]> = {
   ";": [(c) => `${c.word()}; ${c.word()}`],
@@ -55,5 +56,11 @@ export function dateToken(rng: Rng): string {
   const y = String(int(rng, 1990, 2039));
   const h = String(int(rng, 0, 23)).padStart(2, "0");
   const min = String(int(rng, 0, 59)).padStart(2, "0");
-  return pick(rng, [`${d}.${m}.${y}`, `${y}-${m}-${d}`, `${h}:${min}`, `${d}.${m}.`, `${h}:${min}:${min}`]);
+  return pick(rng, [
+    `${d}.${m}.${y}`,
+    `${y}-${m}-${d}`,
+    `${h}:${min}`,
+    `${d}.${m}.`,
+    `${h}:${min}:${min}`,
+  ]);
 }

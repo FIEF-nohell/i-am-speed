@@ -1,0 +1,28 @@
+.back {
+  margin-bottom: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--dim);
+}
+.back a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.quick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin-bottom: var(--space-5);
+}

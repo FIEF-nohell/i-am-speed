@@ -1,0 +1,33 @@
+.section {
+  margin-top: var(--space-7);
+}
+.section:first-child {
+  margin-top: 0;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.desc {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 36rem;
+}
+.aside {
+  font-size: var(--text-sm);
+  color: var(--dim);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

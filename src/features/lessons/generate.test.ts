@@ -9,7 +9,11 @@ import { generateLessonText } from "./generate";
 describe("curriculum", () => {
   it("has unique stable ids and every phase has lessons", () => {
     expect(new Set(LESSONS.map((l) => l.id)).size).toBe(LESSONS.length);
-    for (const p of PHASES) expect(LESSONS.some((l) => l.phase === p.id), `phase ${p.id}`).toBe(true);
+    for (const p of PHASES)
+      expect(
+        LESSONS.some((l) => l.phase === p.id),
+        `phase ${p.id}`,
+      ).toBe(true);
   });
 
   it("allowed sets are typeable and contain their new chars", () => {
@@ -34,10 +38,13 @@ describe("lesson generation", () => {
         for (let seed = 1; seed <= 6; seed++) {
           const text = generateLessonText(lesson, corpus, createRng(seed * 7919));
           expect(text.length, `${lesson.id} empty`).toBeGreaterThan(0);
-          expect(text.length, `${lesson.id} too short`).toBeGreaterThanOrEqual(Math.min(lesson.lengthTarget * 0.6, 40));
+          expect(text.length, `${lesson.id} too short`).toBeGreaterThanOrEqual(
+            Math.min(lesson.lengthTarget * 0.6, 40),
+          );
           expect(text, `${lesson.id} double space`).not.toMatch(/ {2}/);
           expect(text).toBe(text.trim());
-          for (const ch of text) expect(allowed.has(ch), `${lesson.id} (${lang}) has "${ch}"`).toBe(true);
+          for (const ch of text)
+            expect(allowed.has(ch), `${lesson.id} (${lang}) has "${ch}"`).toBe(true);
         }
       }
     });
@@ -46,8 +53,12 @@ describe("lesson generation", () => {
   it("is deterministic for a seed and varies across seeds", () => {
     const corpus = readCorpus("de");
     const lesson = LESSON_BY_ID.get("home-03")!;
-    expect(generateLessonText(lesson, corpus, createRng(1))).toBe(generateLessonText(lesson, corpus, createRng(1)));
-    expect(generateLessonText(lesson, corpus, createRng(1))).not.toBe(generateLessonText(lesson, corpus, createRng(2)));
+    expect(generateLessonText(lesson, corpus, createRng(1))).toBe(
+      generateLessonText(lesson, corpus, createRng(1)),
+    );
+    expect(generateLessonText(lesson, corpus, createRng(1))).not.toBe(
+      generateLessonText(lesson, corpus, createRng(2)),
+    );
   });
 
   it("prefers real words once enough exist", () => {

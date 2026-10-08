@@ -1,0 +1,11 @@
+.notice {
+  padding: var(--space-3) 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  border-top: var(--stroke) solid var(--line);
+  border-bottom: var(--stroke) solid var(--line);
+}
+
+.notice[data-tone="error"] {
+  color: var(--error);
+}

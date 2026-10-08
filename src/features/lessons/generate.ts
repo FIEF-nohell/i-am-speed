@@ -14,7 +14,8 @@ function wordPool(corpus: Corpus, from: number, to: number, maxLen = 9): string[
   const out: string[] = [];
   for (const w of corpus.words.slice(from, to)) {
     const lower = w.toLowerCase();
-    if (lower.length >= 2 && lower.length <= maxLen && isLettersOnly(lower, LETTERS)) out.push(lower);
+    if (lower.length >= 2 && lower.length <= maxLen && isLettersOnly(lower, LETTERS))
+      out.push(lower);
   }
   return out.length ? out : ["haus", "tag", "zeit"];
 }
@@ -22,7 +23,10 @@ function wordPool(corpus: Corpus, from: number, to: number, maxLen = 9): string[
 /** Scale a [0, 4000) style band to the actual list length. */
 function slice<T>(items: readonly T[], band: readonly [number, number], scaleTo: number): T[] {
   const k = items.length / scaleTo;
-  return items.slice(Math.floor(band[0] * k), Math.max(Math.ceil(band[1] * k), Math.floor(band[0] * k) + 1));
+  return items.slice(
+    Math.floor(band[0] * k),
+    Math.max(Math.ceil(band[1] * k), Math.floor(band[0] * k) + 1),
+  );
 }
 
 function fromSentences(lesson: Lesson, pool: readonly string[], rng: Rng): string {
@@ -32,7 +36,12 @@ function fromSentences(lesson: Lesson, pool: readonly string[], rng: Rng): strin
   return b.text();
 }
 
-type Gen<S extends LessonSpec["type"]> = (lesson: Lesson, spec: Extract<LessonSpec, { type: S }>, corpus: Corpus, rng: Rng) => string;
+type Gen<S extends LessonSpec["type"]> = (
+  lesson: Lesson,
+  spec: Extract<LessonSpec, { type: S }>,
+  corpus: Corpus,
+  rng: Rng,
+) => string;
 
 const capsText: Gen<"caps"> = (lesson, spec, corpus, rng) => {
   if (spec.mode === "sentences") {
@@ -42,7 +51,10 @@ const capsText: Gen<"caps"> = (lesson, spec, corpus, rng) => {
   }
   const words = wordPool(corpus, 0, 3000, 8);
   const side = spec.mode === "rightHand" ? "right" : "left";
-  const pool = spec.mode === "rightHand" || spec.mode === "leftHand" ? words.filter((w) => fingerOf(w[0])?.startsWith(side)) : words;
+  const pool =
+    spec.mode === "rightHand" || spec.mode === "leftHand"
+      ? words.filter((w) => fingerOf(w[0])?.startsWith(side))
+      : words;
   const b = new TextBuilder(lesson.chars, lesson.lengthTarget);
   fill(b, () => {
     const w = pick(rng, pool);
@@ -66,7 +78,14 @@ const datesText: Gen<"dates"> = (lesson, _spec, _corpus, rng) => {
   return b.text();
 };
 
-function numberAndWords(lesson: Lesson, corpus: Corpus, rng: Rng, from: number, to: number, digitShare: number): string {
+function numberAndWords(
+  lesson: Lesson,
+  corpus: Corpus,
+  rng: Rng,
+  from: number,
+  to: number,
+  digitShare: number,
+): string {
   const words = wordPool(corpus, from, to, 7);
   const b = new TextBuilder(lesson.chars, lesson.lengthTarget);
   fill(b, () => {
@@ -88,7 +107,12 @@ const symbolsText: Gen<"symbols"> = (lesson, spec, corpus, rng) => {
 
 const wordsText: Gen<"words"> = (lesson, spec, corpus, rng) => {
   const scale = corpus.words.length / 30000;
-  const pool = wordPool(corpus, Math.floor(spec.band[0] * scale), Math.ceil(spec.band[1] * scale), 14);
+  const pool = wordPool(
+    corpus,
+    Math.floor(spec.band[0] * scale),
+    Math.ceil(spec.band[1] * scale),
+    14,
+  );
   const b = new TextBuilder(lesson.chars, lesson.lengthTarget);
   fill(b, () => {
     const w = pick(rng, pool);
@@ -110,7 +134,9 @@ const sentencesText: Gen<"sentences"> = (lesson, spec, corpus, rng) => {
 
 const paragraphsText: Gen<"paragraphs"> = (lesson, spec, corpus, rng) => {
   if (spec.withNumbers) {
-    const rich = corpus.sentences.filter((s) => /\d/.test(s) || (s.match(/[,;:!?"()]/g)?.length ?? 0) >= 2);
+    const rich = corpus.sentences.filter(
+      (s) => /\d/.test(s) || (s.match(/[,;:!?"()]/g)?.length ?? 0) >= 2,
+    );
     return fromSentences(lesson, rich.length >= 20 ? rich : corpus.sentences, rng);
   }
   const sorted = [...corpus.passages].sort((a, b) => a.length - b.length);
@@ -157,6 +183,16 @@ export function generateLessonText(lesson: Lesson, corpus: Corpus, rng: Rng): st
   }
   // Last line of defence, and a guarantee for the validator: an empty result becomes a safe drill.
   const allowed = new Set(lesson.chars);
-  const clean = [...text].filter((c) => allowed.has(c)).join("").replace(/\s+/g, " ").trim();
-  return clean || [...lesson.chars].filter((c) => c !== " ").slice(0, 8).join("");
+  const clean = [...text]
+    .filter((c) => allowed.has(c))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+  return (
+    clean ||
+    [...lesson.chars]
+      .filter((c) => c !== " ")
+      .slice(0, 8)
+      .join("")
+  );
 }

@@ -13,7 +13,11 @@ export class TypingSession {
   private state: EngineState;
   private listeners = new Set<Listener>();
 
-  constructor(target: string, config: EngineConfig, private readonly now: () => number = () => performance.now()) {
+  constructor(
+    target: string,
+    config: EngineConfig,
+    private readonly now: () => number = () => performance.now(),
+  ) {
     this.state = createState(target, config);
   }
 
@@ -39,6 +43,14 @@ export class TypingSession {
     );
     this.emit();
     return true;
+  }
+
+  /** Finish a running attempt `elapsedMs` after its first keystroke (time-limited tests). */
+  endAfter(elapsedMs: number): void {
+    const startedAt = this.state.startedAt;
+    if (startedAt === null) return;
+    this.state = reduce(this.state, { kind: "end", t: startedAt + elapsedMs });
+    this.emit();
   }
 
   restart(): void {

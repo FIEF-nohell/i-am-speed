@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 48">
+  <style>
+    .dot { fill: #d9dde0; } .caret { fill: #6cd3bb; } .word { fill: #d9dde0; font: 600 28px "Geist", system-ui, sans-serif; letter-spacing: -0.5px; }
+    @media (prefers-color-scheme: light) { .dot, .word { fill: #24272a; } .caret { fill: #0b7a66; } }
+  </style>
+  <g transform="translate(0 4) scale(1.3)"><circle class="dot" cx="16" cy="6.5" r="3.2"/><rect class="caret" x="13" y="13" width="6" height="16" rx="3"/></g>
+  <text class="word" x="44" y="34">i am speed</text>
+</svg>

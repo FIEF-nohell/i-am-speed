@@ -1,0 +1,35 @@
+.toggle {
+  position: relative;
+  width: 2.5rem;
+  height: 1.4rem;
+  padding: 0;
+  border: var(--stroke) solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: -0.475rem;
+  border-radius: 50%;
+  background: var(--dim);
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+
+.toggle[data-on="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.toggle[data-on="true"] .thumb {
+  transform: translateX(1.1rem);
+  background: var(--accent);
+}

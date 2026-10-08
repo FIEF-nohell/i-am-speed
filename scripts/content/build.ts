@@ -16,7 +16,12 @@ interface WordCount {
 }
 
 /** Ranked, canonical-case word list from raw sentence/paragraph texts. */
-export function buildWordList(texts: Iterable<string>, lang: Lang, limit: number, minCount: number): string[] {
+export function buildWordList(
+  texts: Iterable<string>,
+  lang: Lang,
+  limit: number,
+  minCount: number,
+): string[] {
   const counts = new Map<string, WordCount>();
   for (const text of texts) {
     for (const w of tokenise(text)) {
@@ -41,7 +46,10 @@ export function buildWordList(texts: Iterable<string>, lang: Lang, limit: number
     const normalised = normaliseText(word);
     if (normalised) out.push([normalised, c.total]);
   }
-  return out.sort((a, b) => b[1] - a[1]).slice(0, limit).map(([w]) => w);
+  return out
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([w]) => w);
 }
 
 const SENTENCE_END = /[.!?]$/;
@@ -51,16 +59,22 @@ export function acceptSentence(raw: string, min = 28, max = 95): string | null {
   if (!s || s.length < min || s.length > max || !SENTENCE_END.test(s)) return null;
   if (isOffensive(s)) return null;
   if (tokenise(s).some((w) => BLOCKED_NAMES.has(w.toLowerCase()))) return null;
-  if (/\d{5,}/.test(s) || /["]/.test(s) && (s.match(/"/g)?.length ?? 0) % 2 === 1) return null;
+  if (/\d{5,}/.test(s) || (/["]/.test(s) && (s.match(/"/g)?.length ?? 0) % 2 === 1)) return null;
   return s;
 }
 
 /** Sentences easiest first: common words and short length score lower. */
-export function rankSentences(sentences: string[], wordRank: Map<string, number>, limit: number): string[] {
+export function rankSentences(
+  sentences: string[],
+  wordRank: Map<string, number>,
+  limit: number,
+): string[] {
   const score = (s: string): number => {
     const words = tokenise(s);
     if (words.length === 0) return 1e9;
-    const rarity = words.reduce((a, w) => a + Math.log1p(wordRank.get(w.toLowerCase()) ?? 50000), 0) / words.length;
+    const rarity =
+      words.reduce((a, w) => a + Math.log1p(wordRank.get(w.toLowerCase()) ?? 50000), 0) /
+      words.length;
     return rarity * 10 + s.length / 8;
   };
   const unique = [...new Set(sentences)];
@@ -75,7 +89,8 @@ const OLD_GERMAN = /\b\w*(Thür|thun\b|Theil|\bseyn\b|\bsey\b|Rath\b|Thränen|Th
 
 export function acceptPassage(raw: string, lang: Lang): string | null {
   const s = normaliseText(raw);
-  if (!s || s.length < 200 || s.length > 560 || !SENTENCE_END.test(s.replace(/["']$/, ""))) return null;
+  if (!s || s.length < 200 || s.length > 560 || !SENTENCE_END.test(s.replace(/["']$/, "")))
+    return null;
   if (isOffensive(s) || /\d/.test(s) || /[A-Z]{5,}/.test(s)) return null;
   if (lang === "de" && OLD_GERMAN.test(s)) return null;
   if ((s.match(/"/g)?.length ?? 0) % 2 === 1) return null;

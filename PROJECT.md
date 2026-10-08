@@ -44,6 +44,7 @@ Monkeytype is a typing speed test with a very clean UI, but it does not teach to
 I maintain a repository called `claude-bootstrap`: `https://github.com/FIEF-nohell/claude-bootstrap`, branch `master`. It has a `modules/` directory containing `design-studio` (published as v5, with a brand-signature workflow) and a `registry.json`. It includes a command or workflow that comes up with the colour palette and overall brand identity for a new app. It is normally run interactively with a human. You must run it headless, with no human present.
 
 Steps:
+
 1. Find it. Check whether it is already installed locally (the project's `.claude/` folder, `~/.claude/`, sibling directories). If not, clone it (`git clone` or `gh repo clone`, into a temp directory OUTSIDE this project, never commit it into this repo). If the repo is private and cloning fails, log that in DECISIONS.md and do the palette work yourself following the rules in section 8.
 2. Read `registry.json` and the `design-studio` module's docs to find the exact command and any non-interactive options. Do not guess command names. If you do not know what I am talking about, look it up in that repo.
 3. Run it headless. Where it would ask a human questions, answer them yourself from this file: calm, minimal, dark-first, one accent colour, Monkeytype-like restraint, a typing trainer for the Austrian keyboard, name "i am speed". If it cannot run non-interactively at all, work through its workflow by hand and follow its output format.

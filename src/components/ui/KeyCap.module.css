@@ -1,0 +1,19 @@
+.cap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7em;
+  height: 1.7em;
+  padding: 0 0.4em;
+  border: var(--stroke) solid color-mix(in srgb, var(--tint) 45%, var(--line));
+  border-radius: var(--radius-key);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85em;
+  color: var(--text);
+  background: transparent;
+}
+
+.cap[data-active] {
+  border-color: var(--accent);
+  color: var(--accent);
+}

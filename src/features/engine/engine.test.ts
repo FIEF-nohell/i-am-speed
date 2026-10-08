@@ -2,9 +2,17 @@ import { describe, expect, it } from "vitest";
 import { createState, reduce, wordStart } from "./engine";
 import { computeMetrics, consistencyOf, slowestKeys, wpmOf } from "./metrics";
 import { resolveKey, type KeyLike } from "./input";
-import { DEFAULT_ENGINE_CONFIG, type EngineConfig, type EngineInput, type EngineState } from "./types";
+import {
+  DEFAULT_ENGINE_CONFIG,
+  type EngineConfig,
+  type EngineInput,
+  type EngineState,
+} from "./types";
 
-const cfg = (over: Partial<EngineConfig> = {}): EngineConfig => ({ ...DEFAULT_ENGINE_CONFIG, ...over });
+const cfg = (over: Partial<EngineConfig> = {}): EngineConfig => ({
+  ...DEFAULT_ENGINE_CONFIG,
+  ...over,
+});
 
 /** Types a string, 100 ms per key; "<" means backspace, "!" is a dead key. */
 function run(target: string, keys: string, config: Partial<EngineConfig> = {}): EngineState {
@@ -13,7 +21,11 @@ function run(target: string, keys: string, config: Partial<EngineConfig> = {}): 
   for (const ch of keys) {
     t += 100;
     const input: EngineInput =
-      ch === "<" ? { kind: "backspace", t } : ch === "!" ? { kind: "dead", t, modifier: "none" } : { kind: "char", char: ch, t, modifier: "none" };
+      ch === "<"
+        ? { kind: "backspace", t }
+        : ch === "!"
+          ? { kind: "dead", t, modifier: "none" }
+          : { kind: "char", char: ch, t, modifier: "none" };
     s = reduce(s, input);
   }
   return s;
@@ -139,22 +151,48 @@ describe("metrics", () => {
     s = reduce(s, { kind: "char", char: "b", t: 2500, modifier: "none" });
     const m = computeMetrics(s);
     expect(m.series).toHaveLength(3);
-    expect(slowestKeys({ b: { attempts: 2, errors: 0, totalMs: 900, timedHits: 2 } }, 3)[0].key).toBe("b");
+    expect(
+      slowestKeys({ b: { attempts: 2, errors: 0, totalMs: 900, timedHits: 2 } }, 3)[0].key,
+    ).toBe("b");
   });
 });
 
 describe("resolveKey", () => {
-  const k = (over: Partial<KeyLike>): KeyLike => ({ key: "a", ctrlKey: false, altKey: false, metaKey: false, shiftKey: false, altGraph: false, ...over });
+  const k = (over: Partial<KeyLike>): KeyLike => ({
+    key: "a",
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    shiftKey: false,
+    altGraph: false,
+    ...over,
+  });
   it("accepts plain, shifted and AltGr chars (Linux AltGraph state)", () => {
     expect(resolveKey(k({ key: "a" }))).toEqual({ kind: "char", char: "a", modifier: "none" });
-    expect(resolveKey(k({ key: "A", shiftKey: true }))).toEqual({ kind: "char", char: "A", modifier: "shift" });
-    expect(resolveKey(k({ key: "@", altGraph: true }))).toEqual({ kind: "char", char: "@", modifier: "altgr" });
+    expect(resolveKey(k({ key: "A", shiftKey: true }))).toEqual({
+      kind: "char",
+      char: "A",
+      modifier: "shift",
+    });
+    expect(resolveKey(k({ key: "@", altGraph: true }))).toEqual({
+      kind: "char",
+      char: "@",
+      modifier: "altgr",
+    });
   });
   it("treats Windows Ctrl+Alt as AltGr, not a shortcut", () => {
-    expect(resolveKey(k({ key: "{", ctrlKey: true, altKey: true }))).toEqual({ kind: "char", char: "{", modifier: "altgr" });
+    expect(resolveKey(k({ key: "{", ctrlKey: true, altKey: true }))).toEqual({
+      kind: "char",
+      char: "{",
+      modifier: "altgr",
+    });
   });
   it("accepts macOS Option chars and ignores real shortcuts", () => {
-    expect(resolveKey(k({ key: "|", altKey: true }))).toEqual({ kind: "char", char: "|", modifier: "altgr" });
+    expect(resolveKey(k({ key: "|", altKey: true }))).toEqual({
+      kind: "char",
+      char: "|",
+      modifier: "altgr",
+    });
     expect(resolveKey(k({ key: "c", ctrlKey: true }))).toEqual({ kind: "ignore" });
     expect(resolveKey(k({ key: "c", metaKey: true }))).toEqual({ kind: "ignore" });
   });
@@ -163,5 +201,16 @@ describe("resolveKey", () => {
     expect(resolveKey(k({ key: "Backspace" })).kind).toBe("backspace");
     expect(resolveKey(k({ key: "Shift" })).kind).toBe("ignore");
     expect(resolveKey(k({ key: "Enter" })).kind).toBe("ignore");
+  });
+});
+
+describe("end", () => {
+  it("finishes a running attempt at the given time and ignores idle ones", () => {
+    const running = run("abcdef", "abc", { onError: "continue" });
+    const ended = reduce(running, { kind: "end", t: running.startedAt! + 5000 });
+    expect(ended.status).toBe("finished");
+    expect(ended.elapsed).toBe(5000);
+    const idle = createState("abc", cfg());
+    expect(reduce(idle, { kind: "end", t: 10 })).toBe(idle);
   });
 });

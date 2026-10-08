@@ -12,7 +12,8 @@ function pseudoWord(rng: Rng, letters: string, focus: string): string {
   for (let i = 0; i < len; i++) {
     let ch = focus && rng() < 0.55 ? pick(rng, [...focus]) : pick(rng, [...letters]);
     // No triple repeats, they read badly and train nothing.
-    if (out.length >= 2 && out[out.length - 1] === ch && out[out.length - 2] === ch) ch = pick(rng, [...letters]);
+    if (out.length >= 2 && out[out.length - 1] === ch && out[out.length - 2] === ch)
+      ch = pick(rng, [...letters]);
     out += ch;
   }
   return out;
@@ -42,16 +43,22 @@ export function generateDrill(lesson: Lesson, corpus: Corpus, rng: Rng): string 
   const word = (): string =>
     needPseudo && rng() < (real.length < 30 ? 1 : 0.5)
       ? pseudoWord(rng, allowedLetters, focus)
-      : pickWeighted(rng, real, (w) => (focus && hasFocus(w) ? 9 : 1) / Math.sqrt(1 + (rank.get(w) ?? 0) / 300));
+      : pickWeighted(
+          rng,
+          real,
+          (w) => (focus && hasFocus(w) ? 9 : 1) / Math.sqrt(1 + (rank.get(w) ?? 0) / 300),
+        );
 
   fill(builder, () => {
     const w = word();
     if (!punct) return w;
     const roll = rng();
     const boost = newPunct ? 0.4 : 0.15;
-    if (punct.includes("-") && roll < (newPunct.includes("-") ? 0.3 : 0.08)) return `${w}-${word()}`;
+    if (punct.includes("-") && roll < (newPunct.includes("-") ? 0.3 : 0.08))
+      return `${w}-${word()}`;
     if (punct.includes(",") && roll > 1 - (newPunct.includes(",") ? boost : 0.15)) return `${w},`;
-    if (punct.includes(".") && roll > 0.5 && roll < 0.5 + (newPunct.includes(".") ? boost : 0.12)) return `${w}.`;
+    if (punct.includes(".") && roll > 0.5 && roll < 0.5 + (newPunct.includes(".") ? boost : 0.12))
+      return `${w}.`;
     return w;
   });
   return builder.text().replace(/-$/, "");

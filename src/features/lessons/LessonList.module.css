@@ -1,0 +1,60 @@
+.list {
+  margin-top: var(--space-2);
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.25rem 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  color: var(--muted);
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+/* The caret signature: an accent bar marks the row you are about to open. */
+.row::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--space-3));
+  top: 22%;
+  bottom: 22%;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.row:hover,
+.row:focus-visible {
+  color: var(--text);
+}
+.row:hover::before,
+.row:focus-visible::before {
+  opacity: 1;
+}
+
+.mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: var(--stroke) solid var(--line);
+  border-radius: 50%;
+  color: var(--accent-ink);
+}
+
+.mark[data-done] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.title {
+  color: inherit;
+}
+.meta {
+  font-size: var(--text-sm);
+  color: var(--dim);
+}

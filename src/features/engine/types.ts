@@ -56,4 +56,6 @@ export interface EngineState {
 export type EngineInput =
   | { kind: "char"; char: string; t: number; modifier: Modifier }
   | { kind: "dead"; t: number; modifier: Modifier }
-  | { kind: "backspace"; t: number };
+  | { kind: "backspace"; t: number }
+  /** Ends a running attempt at absolute time `t` (time-limited tests). */
+  | { kind: "end"; t: number };

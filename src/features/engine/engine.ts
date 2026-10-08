@@ -65,7 +65,13 @@ function record(state: EngineState, ks: Keystroke, entries: readonly Entry[]): E
   return isDone(next) ? { ...next, status: "finished" } : next;
 }
 
-function applyChar(state: EngineState, typed: string, t: number, modifier: Keystroke["modifier"], isDead: boolean): EngineState {
+function applyChar(
+  state: EngineState,
+  typed: string,
+  t: number,
+  modifier: Keystroke["modifier"],
+  isDead: boolean,
+): EngineState {
   const startedAt = state.startedAt ?? t;
   const rel = t - startedAt;
   const base: EngineState = { ...state, startedAt };
@@ -101,7 +107,9 @@ function applyChar(state: EngineState, typed: string, t: number, modifier: Keyst
       return stay();
     case "stopAtWordEnd": {
       // The space ending a word is a wall: no extra chars, and no leaving with errors.
-      return expected === " " || typed === " " ? stay() : record(base, ks, [...state.entries, { typed, correct: false }]);
+      return expected === " " || typed === " "
+        ? stay()
+        : record(base, ks, [...state.entries, { typed, correct: false }]);
     }
     case "continue":
     case "restartAfterN":
@@ -131,5 +139,9 @@ export function reduce(state: EngineState, input: EngineInput): EngineState {
       return applyChar(state, DEAD, input.t, input.modifier, true);
     case "backspace":
       return applyBackspace(state);
+    case "end":
+      return state.status === "running" && state.startedAt !== null
+        ? { ...state, status: "finished", elapsed: Math.max(0, input.t - state.startedAt) }
+        : state;
   }
 }

@@ -1,0 +1,21 @@
+.group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.option {
+  padding: var(--space-1) 0;
+  border: 0;
+  background: transparent;
+  color: var(--dim);
+  font-size: var(--text-sm);
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+.option:hover {
+  color: var(--text);
+}
+.option[aria-checked="true"] {
+  color: var(--accent);
+}

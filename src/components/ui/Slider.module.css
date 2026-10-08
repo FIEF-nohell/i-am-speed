@@ -1,0 +1,19 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.value {
+  min-width: 1.5rem;
+  text-align: right;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider {
+  width: 8rem;
+  height: 1.25rem;
+  background: transparent;
+  accent-color: var(--accent);
+}
