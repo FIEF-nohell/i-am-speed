@@ -1,0 +1,398 @@
+{
+  "schema-version": 1,
+  "bootstrap-version": 13,
+  "update-source": {
+    "enabled": true,
+    "trusted": true,
+    "metadata-url": "https://raw.githubusercontent.com/FIEF-nohell/claude-bootstrap/master/bootstrap-release.json",
+    "details-url": "https://github.com/FIEF-nohell/claude-bootstrap#bootstrap-update-details"
+  },
+  "module-source": {
+    "enabled": true,
+    "trusted": true,
+    "registry-url": "https://raw.githubusercontent.com/FIEF-nohell/claude-bootstrap/master/modules/registry.json",
+    "repository": "FIEF-nohell/claude-bootstrap"
+  },
+  "artifacts": [
+    {
+      "path": ".gitignore",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:bd6b8be5f7c33c4a8640abb2b9e730170b9114b8f2a46e4ba883dba6131e6887",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.3 Write .gitignore"
+      }
+    },
+    {
+      "path": ".claude/settings.json",
+      "ownership": "merged",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": null,
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.4 Write .claude/settings.json"
+      },
+      "json-entries": [
+        {
+          "pointer": "/permissions/allow",
+          "digest": "sha256:583b031e62ec5ee447b0f6aec887134dbd43e4d05bf4b4fa24f77340aa6a24fd"
+        },
+        {
+          "pointer": "/permissions/deny",
+          "digest": "sha256:0352c445e6c1aa21f690d37ad6d8d2917cf5cd2ddf3c7e87bfa962a4e33a28e8"
+        },
+        {
+          "pointer": "/hooks/SessionStart",
+          "digest": "sha256:d8b8cd8686c2138630f2ed7ec2be5166922c76c6eb044cbd3b35e912f245241e"
+        }
+      ]
+    },
+    {
+      "path": ".claude/hooks/session-start.ps1",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:df9b393a750e7afc6685f83be74117dd7344d5d736808f3d4761617c759cc1d9",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5.5 Create the session-start hook, verifier, and passive notifier"
+      }
+    },
+    {
+      "path": ".claude/hooks/bootstrap-update.ps1",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:29c9ca84351f1ed1ec19e214cb667aa84971328b7556c906002741f9804ff767",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5.5 Create the session-start hook, verifier, and passive notifier"
+      }
+    },
+    {
+      "path": ".claude/hooks/verify-governance.ps1",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:cea95225b02572c2b3964a625b5d2ceb0a2f543921d44b592c8982015c4412cf",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5.5 Create the session-start hook, verifier, and passive notifier"
+      }
+    },
+    {
+      "path": ".claude/hooks/bootstrap-runtime.py",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:c4b5f62b5b679bb20456d9122f92144f957a70b3862fc089ed34fb848959c117",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5.5 Create the session-start hook, verifier, and passive notifier"
+      }
+    },
+    {
+      "path": ".claude/hooks/retrieve.py",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:c4c882806e94fdbe4f40a737fdccca837f62fd66e9039c325e563269da09bf87",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5.7 Local retrieval helper (authored for this run; no template in the prompt)"
+      }
+    },
+    {
+      "path": ".claude/agents/planner.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:0e16edfcd9d28493035ea0e9545a4dd8423b8c4f6aa2d305a060fee2e1d8a55f",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.6 Create the core agents"
+      }
+    },
+    {
+      "path": ".claude/agents/implementer.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:8bdc40bcd38596142e8b70ea49cb69a8527237f2bb248fe3d8f8341be1fb8585",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.6 Create the core agents"
+      }
+    },
+    {
+      "path": ".claude/agents/reviewer.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:5b36570b395b76199df868f417b4de482f48dd7da42a9fad5e5e92b7cd256343",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.6 Create the core agents"
+      }
+    },
+    {
+      "path": ".claude/agents/researcher.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:e9be70f2e815b70a10a67c1470e4fcfa88cc38faedda07abfb2a727ce9361222",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.6 Create the core agents"
+      }
+    },
+    {
+      "path": ".claude/agents/debugger.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:c1852d56bb00919c2786b941aecbf86854806cc4e8339096202e984961b0e167",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.6 Create the core agents"
+      }
+    },
+    {
+      "path": ".claude/agents/learner.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:ff0a52e55c9f2be0b453706767385b7ddf2b8ee0d2ba9abe0963e3c7db027f86",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.6 Create the core agents"
+      }
+    },
+    {
+      "path": ".claude/commands/learn.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:2d3df54839afbe408f27694dc3f6d4b3185990c1d9f74350b576edea8c482a05",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.7 Create slash commands"
+      }
+    },
+    {
+      "path": ".claude/commands/design-studio.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:ca5d4f9cde7d6f06a4452aaf8cf266f5b170ae39b3ffb58ab7860fd69f9e023b",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.7 Create slash commands (launcher)"
+      }
+    },
+    {
+      "path": "CLAUDE.md",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:c25af892746707fb98ac96329c5e96a11cd96ac5de7f61926380ec5b2bb5bd38",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.8 CLAUDE.md pointer stub"
+      }
+    },
+    {
+      "path": "AGENTS.md",
+      "ownership": "merged",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": null,
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.8 AGENTS.md skeleton"
+      },
+      "blocks": [
+        {
+          "id": "bootstrap-session",
+          "digest": "sha256:96511b1b3808b18a559899b62f9e2c1584035ffd4843cfdd70830310a8e83f5f"
+        }
+      ]
+    },
+    {
+      "path": ".docs/rules/plan-execution.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:4941f951291d8b2d60a8c7c2b6cb447bd0a95f25b12c61bfc46a41e053ac07ac",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 seeded rule plan-execution"
+      }
+    },
+    {
+      "path": ".docs/rules/agent-docs-sync.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:1277a46a265e91330601557e557340c3e37205261d75b1ed87f0b069f43b7043",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 seeded rule agent-docs-sync"
+      }
+    },
+    {
+      "path": ".docs/rules/docs-current-state-only.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:bda22e8b608f1131ea181bdc00de22b6526e6338e590cf43b0414ba9f450b36c",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 seeded rule docs-current-state-only"
+      }
+    },
+    {
+      "path": ".docs/rules/verification.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:a324f964b3bfc62e607b9b375760c75f2b727e4ed9d1b68ae026f2d5905899f8",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 seeded rule verification"
+      }
+    },
+    {
+      "path": ".docs/rules/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:c698f9871ad7ef74f6085e299d3a799c8a016b845ce3e21672b48984139c0d95",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".docs/evidence/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:40693d73302561175e53618290b6ebfd23708b7e9352a84b25c3a2a7263f0d51",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".docs/evaluations/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:d587fb8c681daf7147195ffb1517bb444722507170d47044116cc6f94be46c29",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".docs/plans/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:42b591dc2c5c23887ffe8eda5de88e75c2b44a4cd739f1bd26fd8d8c2b299bb5",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".docs/learnings/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:fec50a4c13761627f8dfea70c8e4c44572b6bb23c4ee1f0d7cb0fba6ed70d52c",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".docs/decisions/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:523da15d5b76752d41ae15892472db64e29feedcced9554346cb9b4760dfde39",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".docs/styleguide/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:e9379a1c07137c4c19d0e23026203687340787dd0ecf64b9d011a19d79c0fd7f",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".docs/research/README.md",
+      "ownership": "seeded-user-editable",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": "sha256:86784d480e9064f9e38e82ef67ac9bdab1b7f4939a58e9482a54256035f79a0c",
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.5 .docs skeleton README"
+      }
+    },
+    {
+      "path": ".claude/bootstrap-manifest.json",
+      "ownership": "managed",
+      "bootstrap-version": 13,
+      "template-version": 13,
+      "digest": null,
+      "source": {
+        "repository": "FIEF-nohell/claude-bootstrap",
+        "path": "claude-bootstrap-prompt.md",
+        "section": "1.0.6 Bootstrap manifest and ownership contract"
+      }
+    }
+  ]
+}
