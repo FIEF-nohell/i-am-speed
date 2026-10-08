@@ -13,10 +13,9 @@ import { PASS_ACCURACY } from "@/features/lessons/types";
 import { formatDuration } from "@/features/stats/aggregate";
 import { useData, useHydrated } from "@/features/storage/store";
 import { heatByCode } from "./heat";
+import { AnimatedStat } from "./AnimatedStat";
 import { WpmChart } from "./WpmChart";
 import styles from "./ResultsView.module.css";
-
-const f1 = (n: number): string => (Math.round(n * 10) / 10).toFixed(1);
 
 export function ResultsView() {
   const { lastResult: result } = useData();
@@ -80,10 +79,22 @@ export function ResultsView() {
       </h1>
 
       <dl className={styles.stats}>
-        <Stat size="lead" accent label="speed" value={f1(attempt.netWpm)} unit="wpm" />
-        <Stat size="lead" label="accuracy" value={f1(attempt.accuracy)} unit="%" />
-        <Stat label="raw" value={f1(attempt.rawWpm)} unit="wpm" />
-        <Stat label="consistency" value={`${Math.round(attempt.consistency)}`} unit="%" />
+        <AnimatedStat size="lead" accent label="speed" target={attempt.netWpm} unit="wpm" />
+        <AnimatedStat
+          size="lead"
+          label="accuracy"
+          target={attempt.accuracy}
+          unit="%"
+          delayMs={120}
+        />
+        <AnimatedStat label="raw" target={attempt.rawWpm} unit="wpm" delayMs={240} />
+        <AnimatedStat
+          label="consistency"
+          target={Math.round(attempt.consistency)}
+          decimals={0}
+          unit="%"
+          delayMs={360}
+        />
         <Stat label="time" value={formatDuration(attempt.durationMs)} />
         <Stat label="errors" value={`${attempt.errors}`} />
       </dl>

@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { PageTransition } from "@/components/PageTransition";
 import { ThemeScript } from "@/components/ThemeScript";
 import { ThemeSync } from "@/components/ThemeSync";
 import { SITE, absoluteUrl } from "@/config/site";
@@ -81,7 +82,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeSync />
         <Header />
         <main id="main" className="page">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
         <Footer />
       </body>

@@ -77,7 +77,12 @@ function KeyShape({
           height={h}
           rx={6}
           className={styles.heat}
-          style={{ opacity: Math.min(0.75, heat * 0.85) }}
+          style={
+            {
+              "--o": Math.min(0.75, heat * 0.85),
+              "--delay": `${Math.round(k.rect.x * 22 + k.rect.y * 40)}ms`,
+            } as React.CSSProperties
+          }
         />
       )}
       <text

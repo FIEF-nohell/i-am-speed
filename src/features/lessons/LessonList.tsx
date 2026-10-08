@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { staggerStyle } from "@/lib/motion";
 import { Section } from "@/components/ui/Section";
 import { completedPerPhase } from "@/features/stats/aggregate";
 import { useData } from "@/features/storage/store";
@@ -21,6 +22,8 @@ export function LessonList() {
       {PHASES.map((phase, i) => (
         <Section
           key={phase.id}
+          className="enter"
+          style={staggerStyle(i * 2)}
           id={phase.slug}
           title={`${phase.id}  ${phase.title}`}
           description={phase.description}

@@ -10,3 +10,7 @@
 .select:hover {
   border-color: var(--dim);
 }
+
+.select {
+  transition: border-color var(--dur-base) var(--ease-out);
+}

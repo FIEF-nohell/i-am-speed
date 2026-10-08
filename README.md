@@ -63,6 +63,18 @@ A new kind of lesson needs a generator in `src/features/lessons/generate.ts` and
 
 `src/features/keyboard/layout/atQwertz.ts` is the single table (characters per layer, finger, board geometry). Everything else is derived from it. Input is judged by the produced character (`event.key`), never `event.code`, so any OS layout works. Dead keys (`^`, `´`, backtick) are excluded from all text and count as a wrong keystroke if pressed. AltGr is detected via `getModifierState("AltGraph")` and the Windows Ctrl+Alt report.
 
+## Motion
+
+One system, defined once: `src/lib/motion.ts` (durations, easings, stagger, `tween`, reduced-motion check) mirrored by CSS variables in `src/styles/motion.css`. A unit test fails if the two drift apart.
+
+- Durations: fast 120 ms (hover, press, caret step), base 200 ms (colour), slow 320 ms (page entrance, theme fade), reveal 900 ms (the one-time results count-up and chart draw). UI transitions stay under 400 ms.
+- Only `transform` and `opacity` animate (plus colour on the theme fade). No layout properties, no layout shift (tabular figures, fixed chart heights).
+- Nothing runs on the keystroke path. The caret and character states are plain CSS transitions on state the engine already produced; the engine never waits on an animation. `e2e/motion.spec.ts` checks key-handler cost and long tasks.
+- Reduced motion: the system preference or the in-app "reduce motion" switch turns durations to 0 and removes entrance animations; counts show their final value at once and charts do not draw.
+- The results reveal is skippable: any key press or click jumps to the final numbers.
+
+Add an animation: use the `.enter` class (optionally `style={staggerStyle(i)}`) for entrances, `--dur-*` and `--ease-*` variables for CSS transitions, `tween()` for number counting. Add a new duration or easing in `motion.ts` and `motion.css` together, never inline. Review aids: `MOTION=1 npx playwright test e2e/motion-capture.spec.ts` writes a video and frame sequences to `screenshots/`.
+
 ## Deploy (Vercel)
 
 No special configuration. Standard settings:

@@ -1,0 +1,115 @@
+/* Motion system, CSS side. Values mirror src/lib/motion.ts (a unit test asserts it). */
+:root {
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-reveal: 900ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.6, 0, 0.2, 1);
+  --ease-settle: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --stagger: 18ms;
+}
+
+/* Entrances: opacity and a few pixels of travel. Applied once, on mount. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.enter {
+  animation: enter var(--dur-slow) var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+.page-enter {
+  animation: enter var(--dur-slow) var(--ease-out) both;
+}
+
+/* Logo mark: the caret grows, the dot lands. Once per load. */
+@keyframes caret-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes dot-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.mark-caret {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: caret-grow 480ms var(--ease-settle) both;
+}
+
+.mark-dot {
+  animation: dot-drop var(--dur-slow) var(--ease-out) 200ms both;
+}
+
+/* Theme switch: briefly transition colours everywhere, only while the class is on <html>. */
+.theme-fade,
+.theme-fade *,
+.theme-fade *::before,
+.theme-fade *::after {
+  transition:
+    background-color var(--dur-slow) var(--ease-out),
+    color var(--dur-slow) var(--ease-out),
+    border-color var(--dur-slow) var(--ease-out),
+    fill var(--dur-slow) var(--ease-out),
+    stroke var(--dur-slow) var(--ease-out) !important;
+}
+
+/* Reduced motion (system or in-app): no movement. State changes become instant. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-reveal: 0ms;
+  }
+  .enter,
+  .page-enter,
+  .mark-caret,
+  .mark-dot {
+    animation: none;
+  }
+}
+
+[data-motion="reduce"] {
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-slow: 0ms;
+  --dur-reveal: 0ms;
+}
+
+[data-motion="reduce"] .enter,
+[data-motion="reduce"] .page-enter,
+[data-motion="reduce"] .mark-caret,
+[data-motion="reduce"] .mark-dot {
+  animation: none;
+}

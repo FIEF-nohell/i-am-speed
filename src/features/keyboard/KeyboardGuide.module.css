@@ -56,3 +56,41 @@
   fill: var(--dim);
   opacity: 0.8;
 }
+
+/* Motion: key press squeeze, heatmap reveal (opacity only, staggered by key position). */
+.cap {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    fill var(--dur-fast) var(--ease-out),
+    stroke var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.cap[data-down] {
+  transform: scale(0.94);
+}
+.heat {
+  opacity: var(--o, 0.5);
+  animation: heat-in var(--dur-reveal) var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes heat-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heat {
+    animation: none;
+  }
+  .cap[data-down] {
+    transform: none;
+  }
+}
+:global([data-motion="reduce"]) .heat {
+  animation: none;
+}
+:global([data-motion="reduce"]) .cap[data-down] {
+  transform: none;
+}

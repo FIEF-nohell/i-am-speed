@@ -41,3 +41,14 @@
   height: 1.1em;
   flex: none;
 }
+
+.button {
+  transition:
+    color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    filter var(--dur-base) var(--ease-out);
+}
+.button:active {
+  transform: scale(0.97);
+}

@@ -19,3 +19,7 @@
 .option[aria-checked="true"] {
   color: var(--accent);
 }
+
+.option:active {
+  transform: translateY(1px);
+}

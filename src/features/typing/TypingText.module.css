@@ -77,3 +77,14 @@
 :global([data-motion="reduce"]) .caret[data-idle] {
   animation: none;
 }
+
+/* Typing feel. Pure CSS state changes: nothing here runs in the key handler. */
+.ch {
+  transition: color 90ms linear;
+}
+.caret {
+  transition: transform 95ms var(--ease-out);
+}
+:global([data-motion="reduce"]) .caret {
+  transition: none;
+}

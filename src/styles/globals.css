@@ -1,4 +1,5 @@
 @import "./themes.css";
+@import "./motion.css";
 
 :root {
   --space-1: 0.25rem;
@@ -27,13 +28,6 @@
 
   --type-size: 1.5rem;
   --type-leading: 2.1;
-
-  /* Motion tokens live here so every duration and easing is defined once (see src/lib/motion.ts). */
-  --dur-fast: 120ms;
-  --dur-base: 200ms;
-  --dur-slow: 320ms;
-  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.6, 0, 0.2, 1);
 }
 
 [data-size="sm"] {
@@ -126,19 +120,6 @@ a:hover {
 
 .mono {
   font-family: var(--font-mono), ui-monospace, monospace;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --dur-fast: 0ms;
-    --dur-base: 0ms;
-    --dur-slow: 0ms;
-  }
-}
-[data-motion="reduce"] {
-  --dur-fast: 0ms;
-  --dur-base: 0ms;
-  --dur-slow: 0ms;
 }
 
 .page {

@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 created: 2026-10-09
 updated: 2026-10-09
 base: 3fa0395
@@ -60,9 +60,10 @@ Everything in PROJECT.md section 19, including the motion pass (section 17b), gr
 
 ### M9 Motion design final pass (only after M1-M8 green and pushed)
 
-- [ ] Motion system, interactions, reduced-motion, videos/frames review, perf check, README Motion section, green, push
+- [x] Motion system, interactions, reduced-motion, videos/frames review, perf check, README Motion section, green, push
 
 ## Log
 
 - 2026-10-09 PLAN.md written. Brand repo cloned to OS temp dir; design-studio v5 has no palette CLI, workflow executed by hand.
 - 2026-10-09 M1-M7 pushed (d23bfaa). CI workflow parked in ci/ (token lacks workflow scope), see DECISIONS D10.
+- 2026-10-09 M9 motion pass done: motion.ts/css system, reveal, micro-interactions, reduced motion, perf tests.

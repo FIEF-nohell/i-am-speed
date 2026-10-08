@@ -19,10 +19,14 @@ import {
   STROKE_WIDTH,
   TOOLTIP_STYLE,
 } from "@/components/charts/chartTheme";
+import { DURATION } from "@/lib/motion";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import { ChartFrame } from "@/components/ui/ChartFrame";
 import type { WpmPoint } from "@/features/engine/metrics";
 
 export function WpmChart({ series }: { series: WpmPoint[] }) {
+  const reduced = useReducedMotion();
+  const animate = !reduced;
   const data = series.map((p) => ({
     ...p,
     wpm: Math.round(p.wpm * 10) / 10,
@@ -60,7 +64,9 @@ export function WpmChart({ series }: { series: WpmPoint[] }) {
             stroke={LINE_SECONDARY}
             strokeWidth={1}
             dot={false}
-            isAnimationActive={false}
+            isAnimationActive={animate}
+            animationDuration={DURATION.reveal}
+            animationEasing="ease-out"
           />
           <Line
             yAxisId="wpm"
@@ -70,7 +76,10 @@ export function WpmChart({ series }: { series: WpmPoint[] }) {
             stroke={LINE_PRIMARY}
             strokeWidth={STROKE_WIDTH}
             dot={false}
-            isAnimationActive={false}
+            isAnimationActive={animate}
+            animationBegin={150}
+            animationDuration={DURATION.reveal}
+            animationEasing="ease-out"
           />
           <Line
             yAxisId="err"
@@ -79,7 +88,9 @@ export function WpmChart({ series }: { series: WpmPoint[] }) {
             stroke="none"
             dot={{ r: 3, fill: ERROR_COLOR, stroke: "none" }}
             activeDot={{ r: 4 }}
-            isAnimationActive={false}
+            isAnimationActive={animate}
+            animationBegin={DURATION.reveal}
+            animationDuration={DURATION.base}
             connectNulls={false}
           />
         </ComposedChart>
