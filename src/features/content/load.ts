@@ -27,6 +27,8 @@ export function loadCorpus(lang: Lang): Promise<Corpus> {
   let p = cache.get(lang);
   if (!p) {
     p = loadUncached(lang);
+    // A failed chunk load (stale deploy, flaky network) must not stay cached.
+    p.catch(() => cache.delete(lang));
     cache.set(lang, p);
   }
   return p;

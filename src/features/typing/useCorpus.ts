@@ -9,9 +9,11 @@ export function useCorpus(lang: Lang): Corpus | null {
   const [loaded, setLoaded] = useState<{ lang: Lang; corpus: Corpus } | null>(null);
   useEffect(() => {
     let cancelled = false;
-    loadCorpus(lang).then((corpus) => {
-      if (!cancelled) setLoaded({ lang, corpus });
-    });
+    loadCorpus(lang)
+      .then((corpus) => {
+        if (!cancelled) setLoaded({ lang, corpus });
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };

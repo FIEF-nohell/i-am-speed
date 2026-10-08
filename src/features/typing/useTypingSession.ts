@@ -12,6 +12,8 @@ interface Options {
   onRestart: () => void;
   /** Called on every consumed keystroke, outside the engine (sound). */
   onKey?: () => void;
+  /** Time limit in ms for timed tests. */
+  limitMs?: number | null;
   /** Called when "restart after N" fails the attempt. */
   onFail?: () => void;
   /** Bumped by the caller to start a fresh session with the same text. */
@@ -35,13 +37,24 @@ function isFormTarget(t: EventTarget | null): boolean {
 }
 
 /** Owns a TypingSession, wires the global key listener, and tracks physically held keys. */
-export function useTypingSession({ text, config, onRestart, onKey, onFail, runId }: Options) {
+export function useTypingSession({
+  text,
+  config,
+  onRestart,
+  onKey,
+  onFail,
+  runId,
+  limitMs = null,
+}: Options) {
   const { onError, restartAfter, backspace } = config;
   const session = useMemo(
-    () => (text ? new TypingSession(text, { onError, restartAfter, backspace }) : null),
+    () =>
+      text
+        ? new TypingSession(text, { onError, restartAfter, backspace }, undefined, limitMs)
+        : null,
     // runId deliberately restarts the session with identical text.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [text, onError, restartAfter, backspace, runId],
+    [text, onError, restartAfter, backspace, runId, limitMs],
   );
   const [pressed, setPressed] = useState<ReadonlySet<string>>(new Set());
 
@@ -66,6 +79,11 @@ export function useTypingSession({ text, config, onRestart, onKey, onFail, runId
       if (e.key === "Tab" || e.key === "Escape") {
         e.preventDefault();
         onRestart();
+        return;
+      }
+      // Held keys: only backspace auto-repeats. A held letter would otherwise count as a burst of mistakes.
+      if (e.repeat && e.key !== "Backspace") {
+        e.preventDefault();
         return;
       }
       if (session.press(keyLikeFromEvent(e))) {

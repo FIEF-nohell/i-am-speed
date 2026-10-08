@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowRight, ChevronLeft, RotateCcw } from "lucide-react";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Section } from "@/components/ui/Section";
 import { Stat } from "@/components/ui/Stat";
@@ -20,7 +21,32 @@ const f1 = (n: number): string => (Math.round(n * 10) / 10).toFixed(1);
 export function ResultsView() {
   const { lastResult: result } = useData();
   const hydrated = useHydrated();
+  const router = useRouter();
   const heat = useMemo(() => (result ? heatByCode(result.perKey) : {}), [result]);
+
+  const sourceId = result?.attempt.source;
+  const nextId = sourceId ? nextLesson(sourceId)?.id : undefined;
+  const retryTo = sourceId && LESSON_BY_ID.has(sourceId) ? `/lesson/${sourceId}/` : "/test/";
+
+  // Enter continues (next lesson, or the test again); Tab or Escape retries.
+  useEffect(() => {
+    if (!sourceId) return;
+    const onKey = (e: KeyboardEvent): void => {
+      const t = e.target;
+      if (
+        t instanceof HTMLElement &&
+        ["INPUT", "SELECT", "TEXTAREA", "BUTTON", "A"].includes(t.tagName)
+      )
+        return;
+      if (e.key === "Enter") router.push(nextId ? `/lesson/${nextId}/` : retryTo);
+      else if (e.key === "Tab" || e.key === "Escape") {
+        e.preventDefault();
+        router.push(retryTo);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sourceId, nextId, retryTo, router]);
 
   if (!hydrated) return <div style={{ minHeight: "30rem" }} />;
   if (!result) {

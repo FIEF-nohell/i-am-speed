@@ -75,6 +75,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeScript />
       </head>
       <body>
+        <a href="#main" className="skip">
+          skip to content
+        </a>
         <ThemeSync />
         <Header />
         <main id="main" className="page">

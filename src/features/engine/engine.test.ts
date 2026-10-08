@@ -67,6 +67,14 @@ describe("stop at word end", () => {
     const s = run("ab cd", "abx", { onError: "stopAtWordEnd" });
     expect(s.entries).toHaveLength(2);
   });
+  it("still allows backspace when backspace is disabled, and refuses the right space without an error", () => {
+    let s = run("ab cd", "xb", { onError: "stopAtWordEnd", backspace: "off" });
+    const before = s.keystrokes.length;
+    s = reduce(s, { kind: "char", char: " ", t: 9000, modifier: "none" });
+    expect(s.keystrokes).toHaveLength(before);
+    s = reduce(s, { kind: "backspace", t: 9100 });
+    expect(s.entries).toHaveLength(1);
+  });
   it("does not finish with an unfixed error in the last word", () => {
     const s = run("ab", "ax", { onError: "stopAtWordEnd" });
     expect(s.entries).toHaveLength(2);
@@ -179,6 +187,10 @@ describe("resolveKey", () => {
       char: "@",
       modifier: "altgr",
     });
+  });
+  it("ignores Alt+letter menu shortcuts and ctrl/alt+backspace", () => {
+    expect(resolveKey(k({ key: "f", altKey: true })).kind).toBe("ignore");
+    expect(resolveKey(k({ key: "Backspace", ctrlKey: true })).kind).toBe("ignore");
   });
   it("treats Windows Ctrl+Alt as AltGr, not a shortcut", () => {
     expect(resolveKey(k({ key: "{", ctrlKey: true, altKey: true }))).toEqual({

@@ -11,6 +11,7 @@ import { TypingScreen } from "./TypingScreen";
 import { useCorpus } from "./useCorpus";
 import { useFinish } from "./useFinish";
 import { useHasPhysicalKeyboard } from "./usePhysicalKeyboard";
+import { useKeyTick } from "./useKeyTick";
 import { useTypingSession } from "./useTypingSession";
 import styles from "./Runner.module.css";
 
@@ -43,15 +44,21 @@ export function TestRunner() {
   const [now, setNow] = useState(0);
   const mode = settings.testMode;
 
+  const { kind, value } = mode;
   const text = useMemo(
-    () => (corpus && hydrated ? testText(corpus, mode, createRng(seed)) : null),
-    [corpus, hydrated, mode, seed],
+    () =>
+      corpus && hydrated ? testText(corpus, { kind, value } as TestMode, createRng(seed)) : null,
+    [corpus, hydrated, kind, value, seed],
   );
   const restart = useCallback(() => setSeed(randomSeed()), []);
+  const onKey = useKeyTick(settings.sound);
   const { session, state, pressed } = useTypingSession({
     text,
     config: engineConfigOf(settings),
     onRestart: restart,
+    onFail: restart,
+    limitMs: mode.kind === "time" ? mode.value * 1000 : null,
+    onKey,
     runId: 0,
   });
   useFinish({ state, source: testSource(mode), lang: settings.lang });
@@ -64,7 +71,7 @@ export function TestRunner() {
       const elapsed = performance.now() - (state.startedAt ?? 0);
       setNow(elapsed);
       if (elapsed >= limitMs) session?.endAfter(limitMs);
-    }, 100);
+    }, 50);
     return () => window.clearInterval(id);
   }, [limitMs, state.startedAt, state.status, session]);
 

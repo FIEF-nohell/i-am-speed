@@ -85,7 +85,9 @@ function applyChar(
     expected === " " &&
     hasUncorrectedErrors(state.entries, wordStart(state.target, pos), pos);
   // "Stop at word end": even the right space is refused while the word still has errors.
-  const correct = !isDead && typed === expected && !leavingDirty;
+  // The right space is simply refused (no keystroke, no error) while the word still has errors.
+  if (leavingDirty && typed === " ") return state.startedAt === null ? { ...state } : state;
+  const correct = !isDead && typed === expected;
   const ks: Keystroke = {
     pos,
     expected,
@@ -119,8 +121,13 @@ function applyChar(
 
 function canBackspace(state: EngineState): boolean {
   const pos = state.entries.length;
-  if (pos === 0 || state.config.backspace === "off") return false;
-  if (state.config.backspace === "full") return true;
+  // "Stop at word end" is unplayable without a way to fix errors, so it always allows backspace in the word.
+  const mode =
+    state.config.backspace === "off" && state.config.onError === "stopAtWordEnd"
+      ? "word"
+      : state.config.backspace;
+  if (pos === 0 || mode === "off") return false;
+  if (mode === "full") return true;
   return pos > wordStart(state.target, pos);
 }
 

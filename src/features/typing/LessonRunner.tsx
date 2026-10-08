@@ -16,6 +16,7 @@ import { TypingScreen } from "./TypingScreen";
 import { useCorpus } from "./useCorpus";
 import { useFinish } from "./useFinish";
 import { useHasPhysicalKeyboard } from "./usePhysicalKeyboard";
+import { useKeyTick } from "./useKeyTick";
 import { useTypingSession } from "./useTypingSession";
 import styles from "./Runner.module.css";
 
@@ -46,10 +47,12 @@ export function LessonRunner({ lessonId }: { lessonId: string }) {
     setRunId((r) => r + 1);
   }, [settings.restartAfter]);
 
+  const onKey = useKeyTick(settings.sound);
   const { state, pressed } = useTypingSession({
     text,
     config: engineConfigOf(settings),
     onRestart: restart,
+    onKey,
     onFail,
     runId,
   });

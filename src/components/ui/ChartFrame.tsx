@@ -17,7 +17,7 @@ export function ChartFrame({ title, summary, height = 220, children, empty }: Pr
       <figcaption className={styles.title}>{title}</figcaption>
       <div
         className={styles.body}
-        style={{ height }}
+        style={{ height: empty ? 72 : height }}
         role="img"
         aria-label={`${title}. ${summary}`}
       >

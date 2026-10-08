@@ -17,6 +17,8 @@ export class TypingSession {
     target: string,
     config: EngineConfig,
     private readonly now: () => number = () => performance.now(),
+    /** Time-limited tests: keys arriving after the limit end the attempt instead of being typed. */
+    private readonly limitMs: number | null = null,
   ) {
     this.state = createState(target, config);
   }
@@ -33,6 +35,16 @@ export class TypingSession {
     const r = resolveKey(key);
     if (r.kind === "ignore") return false;
     const t = this.now();
+    const started = this.state.startedAt;
+    if (
+      this.limitMs !== null &&
+      started !== null &&
+      this.state.status === "running" &&
+      t - started >= this.limitMs
+    ) {
+      this.endAfter(this.limitMs);
+      return true;
+    }
     this.state = reduce(
       this.state,
       r.kind === "backspace"

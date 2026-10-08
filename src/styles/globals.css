@@ -163,3 +163,16 @@ a:hover {
   max-width: 34rem;
   margin-bottom: var(--space-7);
 }
+
+.skip {
+  position: absolute;
+  left: var(--space-3);
+  top: -3rem;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border-radius: var(--radius-ui);
+  z-index: 10;
+}
+.skip:focus {
+  top: var(--space-3);
+}

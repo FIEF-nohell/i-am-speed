@@ -7,8 +7,8 @@
 }
 
 .cap {
-  fill: color-mix(in srgb, var(--tint) 10%, transparent);
-  stroke: color-mix(in srgb, var(--tint) 38%, var(--line));
+  fill: color-mix(in srgb, var(--tint) 7%, transparent);
+  stroke: color-mix(in srgb, var(--tint) 30%, var(--line));
   stroke-width: 1;
   transition:
     fill var(--dur-fast) var(--ease-out),

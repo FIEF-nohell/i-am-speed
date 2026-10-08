@@ -81,8 +81,14 @@ export function exportJson(): string {
 export function importJson(text: string): string | null {
   try {
     const parsed: unknown = JSON.parse(text);
-    if (typeof parsed !== "object" || parsed === null)
-      return "That file is not an i am speed export.";
+    const o = parsed as Record<string, unknown>;
+    const looksRight =
+      typeof parsed === "object" &&
+      parsed !== null &&
+      typeof o.version === "number" &&
+      typeof o.settings === "object" &&
+      o.settings !== null;
+    if (!looksRight) return "That file is not an i am speed export. Nothing was changed.";
     commit(migrate(parsed));
     return null;
   } catch {
