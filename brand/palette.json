@@ -1,0 +1,78 @@
+{
+  "name": "i am speed",
+  "signature": "caret",
+  "defaultTheme": "dark",
+  "themes": {
+    "dark": {
+      "label": "dark",
+      "scheme": "dark",
+      "canvas": "#16181a",
+      "surface": "#1d2023",
+      "line": "#2b2f33",
+      "text": "#d9dde0",
+      "dim": "#7b838a",
+      "muted": "#8d949a",
+      "accent": "#6cd3bb",
+      "accentInk": "#0e1916",
+      "error": "#e8707a",
+      "fingerS": "34%",
+      "fingerL": "62%"
+    },
+    "light": {
+      "label": "light",
+      "scheme": "light",
+      "canvas": "#f5f3ef",
+      "surface": "#ebe8e2",
+      "line": "#dad6ce",
+      "text": "#24272a",
+      "dim": "#696e73",
+      "muted": "#5a6065",
+      "accent": "#0b7a66",
+      "accentInk": "#f5f3ef",
+      "error": "#bf343c",
+      "fingerS": "38%",
+      "fingerL": "48%"
+    },
+    "dusk": {
+      "label": "dusk",
+      "scheme": "dark",
+      "canvas": "#171a24",
+      "surface": "#1e2230",
+      "line": "#2c3144",
+      "text": "#d2d6e6",
+      "dim": "#7c839e",
+      "muted": "#8e95b0",
+      "accent": "#93a6ff",
+      "accentInk": "#0f1220",
+      "error": "#ea7a89",
+      "fingerS": "36%",
+      "fingerL": "66%"
+    },
+    "ember": {
+      "label": "ember",
+      "scheme": "dark",
+      "canvas": "#1b1816",
+      "surface": "#231f1c",
+      "line": "#332d28",
+      "text": "#e4dcd2",
+      "dim": "#8c8176",
+      "muted": "#9a8f83",
+      "accent": "#e3a75b",
+      "accentInk": "#1d1409",
+      "error": "#e8695f",
+      "fingerS": "32%",
+      "fingerL": "62%"
+    }
+  },
+  "fingerHues": {
+    "leftPinky": 350,
+    "leftRing": 28,
+    "leftMiddle": 62,
+    "leftIndex": 150,
+    "rightIndex": 190,
+    "rightMiddle": 225,
+    "rightRing": 265,
+    "rightPinky": 305,
+    "thumb": 210
+  }
+}

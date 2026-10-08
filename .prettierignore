@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+package-lock.json
+src/content
+public
+*.svg
+.claude
+.docs
+AGENTS.md
+CLAUDE.md
+playwright-report
+test-results
+screenshots
