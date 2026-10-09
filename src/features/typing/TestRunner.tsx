@@ -83,6 +83,11 @@ export function TestRunner() {
       ? `${Math.max(0, Math.ceil((limitMs - (state.startedAt === null ? 0 : now)) / 1000))}s`
       : `${typedWords} / ${mode.value} words`;
 
+  const remaining =
+    limitMs === null
+      ? null
+      : Math.max(0, Math.ceil((limitMs - (state.startedAt === null ? 0 : now)) / 1000));
+
   return (
     <div>
       <div className={styles.modes}>
@@ -103,6 +108,16 @@ export function TestRunner() {
           }
         />
       </div>
+      {remaining !== null && (
+        <div
+          className={styles.countdown}
+          data-running={state.status === "running" || undefined}
+          role="timer"
+          aria-label={`${remaining} seconds left`}
+        >
+          {remaining}
+        </div>
+      )}
       <TypingScreen
         state={state}
         settings={settings}
