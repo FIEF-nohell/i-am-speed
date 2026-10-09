@@ -100,6 +100,10 @@ describe("restart after N", () => {
 });
 
 describe("backspace modes", () => {
+  it("word mode crosses back to fix an error in an earlier word", () => {
+    const s = run("ab cd", "ax c<<<b", { onError: "continue", backspace: "word" });
+    expect(s.entries.map((e) => e.typed).join("")).toBe("ab");
+  });
   it("off ignores backspace", () => {
     const s = run("abc", "ax<", { onError: "restartAfterN", restartAfter: 5, backspace: "off" });
     expect(s.entries).toHaveLength(2);

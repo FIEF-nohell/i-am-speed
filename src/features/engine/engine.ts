@@ -130,7 +130,11 @@ function canBackspace(state: EngineState): boolean {
       : state.config.backspace;
   if (pos === 0 || mode === "off") return false;
   if (mode === "full") return true;
-  return pos > wordStart(state.target, pos);
+  const start = wordStart(state.target, pos);
+  if (pos > start) return true;
+  // At a word boundary: allow crossing back while an earlier word still has an unfixed error,
+  // because the run cannot finish until it is fixed.
+  return state.config.onError !== "block" && hasUncorrectedErrors(state.entries, 0, pos);
 }
 
 function applyBackspace(state: EngineState): EngineState {
