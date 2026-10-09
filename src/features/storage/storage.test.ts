@@ -45,7 +45,7 @@ describe("migrate and recovery", () => {
     });
     expect(d.settings.theme).toBe("dark");
     expect(d.settings.restartAfter).toBe(10);
-    expect(d.settings.onError).toBe("block");
+    expect(d.settings.onError).toBe("continue");
     expect(d.settings.testMode).toEqual({ kind: "time", value: 30 });
     expect(d.attempts).toEqual([]);
     expect(Object.keys(d.lessons)).toEqual(["home-02"]);

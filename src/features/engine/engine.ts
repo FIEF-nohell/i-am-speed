@@ -48,7 +48,8 @@ function wordsAreClean(state: EngineState): boolean {
 function isDone(state: EngineState): boolean {
   if (state.entries.length < state.target.length) return false;
   // "stop at word end" cannot finish with an unfixed error in the last word.
-  return state.config.onError !== "stopAtWordEnd" || wordsAreClean(state);
+  // A wrong last letter must be erased and fixed before the run ends.
+  return state.config.onError === "block" || wordsAreClean(state);
 }
 
 function record(state: EngineState, ks: Keystroke, entries: readonly Entry[]): EngineState {
@@ -123,7 +124,8 @@ function canBackspace(state: EngineState): boolean {
   const pos = state.entries.length;
   // "Stop at word end" is unplayable without a way to fix errors, so it always allows backspace in the word.
   const mode =
-    state.config.backspace === "off" && state.config.onError === "stopAtWordEnd"
+    state.config.backspace === "off" &&
+    (state.config.onError === "stopAtWordEnd" || state.config.onError === "continue")
       ? "word"
       : state.config.backspace;
   if (pos === 0 || mode === "off") return false;

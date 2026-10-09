@@ -35,7 +35,9 @@ describe("continue mode", () => {
   it("marks wrong chars, advances and finishes", () => {
     const s = run("abc", "axc", { onError: "continue" });
     expect(s.entries.map((e) => e.correct)).toEqual([true, false, true]);
-    expect(s.status).toBe("finished");
+    expect(s.status).toBe("running");
+    const fixed = run("abc", "axc<<bc", { onError: "continue" });
+    expect(fixed.status).toBe("finished");
     expect(computeMetrics(s).errors).toBe(1);
   });
 });
@@ -99,7 +101,7 @@ describe("restart after N", () => {
 
 describe("backspace modes", () => {
   it("off ignores backspace", () => {
-    const s = run("abc", "ax<", { onError: "continue", backspace: "off" });
+    const s = run("abc", "ax<", { onError: "restartAfterN", restartAfter: 5, backspace: "off" });
     expect(s.entries).toHaveLength(2);
   });
   it("word stops at the word start", () => {

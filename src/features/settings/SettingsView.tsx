@@ -29,14 +29,15 @@ import {
 } from "./settings";
 
 const ON_ERROR: { value: OnError; label: string }[] = [
+  { value: "continue", label: "continue" },
   { value: "block", label: "block" },
+  { value: "stopAtWordEnd", label: "stop at word end" },
   { value: "restartAfterN", label: "restart after n" },
 ];
 const ON_ERROR_HINT: Record<OnError, string> = {
-  block:
-    "A wrong key turns the letter red and the caret stays until you type the right one. No erasing.",
-  continue: "",
-  stopAtWordEnd: "",
+  block: "A wrong key counts as a mistake and the caret waits for the right one.",
+  continue: "A wrong key is marked red and the caret moves on. Erase it to correct.",
+  stopAtWordEnd: "You can type on within a word, but cannot leave it until it is correct.",
   restartAfterN: "The lesson restarts after the chosen number of mistakes.",
 };
 

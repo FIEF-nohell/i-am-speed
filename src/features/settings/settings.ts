@@ -27,7 +27,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   lang: "de",
-  onError: "block",
+  onError: "continue",
   restartAfter: 3,
   backspace: "word",
   theme: "dark",
@@ -69,12 +69,7 @@ export function sanitiseSettings(input: unknown): Settings {
   const restart = typeof s.restartAfter === "number" ? Math.round(s.restartAfter) : d.restartAfter;
   return {
     lang: oneOf<Lang>(s.lang, ["de", "en"], d.lang),
-    // Caret-advancing modes were removed: a wrong key never moves the caret past the letter.
-    onError: oneOf(
-      s.onError === "continue" || s.onError === "stopAtWordEnd" ? "block" : s.onError,
-      ON_ERROR,
-      d.onError,
-    ),
+    onError: oneOf(s.onError, ON_ERROR, d.onError),
     restartAfter: Math.min(10, Math.max(1, restart)),
     backspace: oneOf(s.backspace, BACKSPACE, d.backspace),
     theme: oneOf(s.theme, THEMES, d.theme),
