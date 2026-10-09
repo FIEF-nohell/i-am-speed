@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { DEAD, type EngineState } from "@/features/engine/types";
+import type { EngineState } from "@/features/engine/types";
 import type { CaretStyle } from "@/features/settings/settings";
 import styles from "./TypingText.module.css";
 
@@ -97,13 +97,6 @@ function TypingTextImpl({ state, caret }: Props) {
   );
 }
 
-/** A wrong keystroke shows what was typed (not the target), except a space or dead key, which stay invisible. */
-function shownChar(state: EngineState, target: string, i: number): string {
-  const e = state.entries[i];
-  if (!e || e.correct || e.typed === " " || e.typed === DEAD) return target;
-  return e.typed;
-}
-
 function renderChars(
   target: string,
   words: Word[],
@@ -123,7 +116,7 @@ function renderChars(
       data-state={charState(state, i)}
       data-space={spaces.has(i) || undefined}
     >
-      {shownChar(state, chars[i], i)}
+      {chars[i]}
     </span>
   );
   let w = 0;
