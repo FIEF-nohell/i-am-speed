@@ -2,7 +2,7 @@ import type { FingerStat, KeyStat } from "@/features/engine/metrics";
 import { FINGERS } from "@/features/keyboard/layout/atQwertz";
 import type { Finger } from "@/features/keyboard/layout/types";
 import type { Lesson } from "@/features/lessons/types";
-import type { DayTotals, LessonProgress } from "@/features/storage/schema";
+import type { Attempt, DayTotals, LessonProgress } from "@/features/storage/schema";
 
 export interface WeakKey {
   key: string;
@@ -101,4 +101,61 @@ export function formatDuration(ms: number): string {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
+}
+
+export type DayRange = "7d" | "30d" | "all";
+
+const RANGE_DAYS: Record<Exclude<DayRange, "all">, number> = { "7d": 7, "30d": 30 };
+
+function shiftDay(date: string, delta: number): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const shifted = new Date(y, m - 1, d + delta);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${shifted.getFullYear()}-${p(shifted.getMonth() + 1)}-${p(shifted.getDate())}`;
+}
+
+/** Days inside the range ending at `today` (YYYY-MM-DD, local), today included. Order is kept. */
+export function filterDays(
+  series: readonly DayPoint[],
+  range: DayRange,
+  today: string,
+): DayPoint[] {
+  if (range === "all") return [...series];
+  const first = shiftDay(today, -(RANGE_DAYS[range] - 1));
+  return series.filter((d) => d.date >= first && d.date <= today);
+}
+
+/** The newest `count` attempts, newest first. Input is stored oldest first. */
+export function recentAttempts(attempts: readonly Attempt[], count: number): Attempt[] {
+  return attempts.slice(-count).reverse();
+}
+
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/** Short relative time: "just now", "5 min ago", "3 h ago", "yesterday", "4 days ago", "3 oct". */
+export function formatRelative(at: number, now: number): string {
+  const diff = now - at;
+  if (diff < 60_000) return "just now";
+  const then = new Date(at);
+  const today = new Date(now);
+  const dayGap = Math.round(
+    (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) -
+      Date.UTC(then.getFullYear(), then.getMonth(), then.getDate())) /
+      86_400_000,
+  );
+  if (dayGap === 0) {
+    return diff < 3_600_000
+      ? `${Math.floor(diff / 60_000)} min ago`
+      : `${Math.floor(diff / 3_600_000)} h ago`;
+  }
+  if (dayGap === 1) return "yesterday";
+  if (dayGap < 7) return `${dayGap} days ago`;
+  return `${then.getDate()} ${MONTHS[then.getMonth()]}`;
+}
+
+/** The finger with the lowest accuracy, if it has enough data to mean something. */
+export function weakestFinger(accuracies: readonly FingerAccuracy[], minAttempts = 20) {
+  const rated = accuracies.filter((f) => f.accuracy !== null && f.attempts >= minAttempts);
+  if (rated.length < 2) return null;
+  return rated.reduce((low, f) => ((f.accuracy ?? 100) < (low.accuracy ?? 100) ? f : low));
 }
