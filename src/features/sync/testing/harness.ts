@@ -27,6 +27,7 @@ export const userOf = (uid: string): AuthUser => ({
   email: `${uid}@example.com`,
   displayName: null,
   providerIds: ["password"],
+  emailVerified: true,
 });
 
 /** Pure helper: one more finished lesson attempt. */
