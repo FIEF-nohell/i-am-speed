@@ -109,7 +109,7 @@ test("network failure shows a calm message and re-enables the form", async ({ pa
   await page.getByLabel("email").fill("me@example.com");
   await page.getByLabel("password", { exact: true }).fill("some password");
   await page.getByLabel("password", { exact: true }).press("Enter");
-  await expect(page.getByRole("status").filter({ hasText: "Could not reach" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Could not reach" })).toBeVisible();
   await expect(page.getByRole("button", { name: "sign in" })).toBeEnabled();
   await expect(page.getByText(/auth\//)).toHaveCount(0);
 });
@@ -121,5 +121,5 @@ test("forgot password gives a neutral message, or a calm network one offline", a
 
   await page.getByLabel("email").fill("me@example.com");
   await page.getByLabel("email").press("Enter");
-  await expect(page.getByRole("status").filter({ hasText: "Could not reach" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Could not reach" })).toBeVisible();
 });

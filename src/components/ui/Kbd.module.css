@@ -1,0 +1,14 @@
+.kbd {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0.05rem 0.4rem;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--canvas);
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+}

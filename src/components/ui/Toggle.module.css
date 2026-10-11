@@ -3,7 +3,8 @@
   width: 2.5rem;
   height: 1.4rem;
   padding: 0;
-  border: var(--stroke) solid var(--line);
+  /* Panels set --toggle-off-border to --line-strong so the off state meets 3:1. */
+  border: var(--stroke) solid var(--toggle-off-border, var(--line));
   border-radius: 999px;
   background: transparent;
   transition:

@@ -6,12 +6,17 @@ interface Props {
   hint?: string;
   children: ReactNode;
   htmlFor?: string;
+  /**
+   * "never" (default): the control stays beside the label at every width. "narrow": a wide control
+   * (segmented, slider, picker) drops under the label below 36rem.
+   */
+  stack?: "never" | "narrow";
 }
 
 /** Label on the left, control on the right. Used by settings. */
-export function Row({ label, hint, children, htmlFor }: Props) {
+export function Row({ label, hint, children, htmlFor, stack = "never" }: Props) {
   return (
-    <div className={styles.row}>
+    <div className={styles.row} data-stack={stack}>
       <div className={styles.text}>
         <label htmlFor={htmlFor} className={styles.label}>
           {label}

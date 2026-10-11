@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import type { SelectHTMLAttributes } from "react";
 import styles from "./Select.module.css";
 
@@ -24,21 +25,24 @@ export function Select<T extends string | number>({
   ...rest
 }: Props<T>) {
   return (
-    <select
-      className={styles.select}
-      aria-label={label}
-      value={String(value)}
-      onChange={(e) => {
-        const picked = options.find((o) => String(o.value) === e.target.value);
-        if (picked) onChange(picked.value);
-      }}
-      {...rest}
-    >
-      {options.map((o) => (
-        <option key={o.value} value={String(o.value)}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <span className={styles.wrap}>
+      <select
+        className={styles.select}
+        aria-label={label}
+        value={String(value)}
+        onChange={(e) => {
+          const picked = options.find((o) => String(o.value) === e.target.value);
+          if (picked) onChange(picked.value);
+        }}
+        {...rest}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={String(o.value)}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className={styles.chevron} aria-hidden="true" />
+    </span>
   );
 }

@@ -4,8 +4,8 @@ interface Props {
   label: string;
   value: string;
   unit?: string;
-  /** "lead" makes the figure larger: used for the headline result. */
-  size?: "lead" | "normal";
+  /** "lead" makes the figure larger (headline result). "tile" is a compact figure for stat tiles. */
+  size?: "lead" | "normal" | "tile";
   accent?: boolean;
 }
 

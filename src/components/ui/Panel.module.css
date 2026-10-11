@@ -1,0 +1,50 @@
+.panel {
+  /* Controls inside a panel need a 3:1 boundary in their off state. */
+  --toggle-off-border: var(--line-strong);
+  padding: var(--space-5);
+  background: var(--panel);
+  border: var(--stroke) solid var(--line);
+  border-radius: var(--radius-panel);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.titles {
+  min-width: 0;
+}
+.title {
+  font-size: var(--text-section);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.desc {
+  margin-top: var(--space-1);
+  max-width: 36rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.aside {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 36rem) {
+  .panel {
+    padding: var(--space-4);
+  }
+  .head {
+    flex-wrap: wrap;
+  }
+}

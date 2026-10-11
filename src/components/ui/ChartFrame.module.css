@@ -1,18 +1,76 @@
 .frame {
   margin: 0;
 }
-.title {
-  font-size: var(--text-sm);
-  color: var(--dim);
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
   margin-bottom: var(--space-3);
 }
+.title {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-right: auto;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.swatch {
+  flex: none;
+  background: var(--swatch);
+}
+.swatch[data-kind="line"] {
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+}
+.swatch[data-kind="dot"] {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.aside {
+  display: flex;
+  align-items: center;
+}
+
 .body {
   width: 100%;
 }
+
+/* Empty: same height as the chart, a faint baseline and the summary centred. */
 .empty {
+  position: relative;
   height: 100%;
   display: grid;
   place-items: center;
-  color: var(--dim);
+  padding: 0 var(--space-4);
+  text-align: center;
+  color: var(--muted);
   font-size: var(--text-sm);
+}
+.empty::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12%;
+  border-top: var(--stroke) dashed var(--line);
+}
+.empty p {
+  position: relative;
+  max-width: 28rem;
 }

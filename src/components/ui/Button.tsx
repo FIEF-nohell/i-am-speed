@@ -1,35 +1,104 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 import Link from "next/link";
 import styles from "./Button.module.css";
 
-type Variant = "primary" | "quiet";
+/**
+ * "quiet" is an alias of "ghost". Omitting the variant keeps today's quiet look (and size) until
+ * every call site passes an explicit variant.
+ */
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "quiet";
+export type ButtonSize = "sm" | "md";
 
-interface Common {
-  variant?: Variant;
+interface Base {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  /** Danger only: filled error colour, for the final confirm step. */
+  solid?: boolean;
+  className?: string;
+}
+
+interface WithLabel {
   icon?: ReactNode;
+  iconOnly?: false;
   children: ReactNode;
 }
 
-export function Button({
-  variant = "quiet",
+/** An icon-only control has no visible text, so it must carry an accessible name. */
+interface IconOnly {
+  icon: ReactNode;
+  iconOnly: true;
+  "aria-label": string;
+  children?: never;
+}
+
+type Content = WithLabel | IconOnly;
+
+function classes({ variant, size, solid, className, iconOnly }: Base & { iconOnly?: boolean }) {
+  const kind = variant === "quiet" || variant === undefined ? "ghost" : variant;
+  // Without a variant or size the button keeps its original compact padding.
+  const legacy = size === undefined && variant === undefined;
+  return {
+    className: [styles.button, styles[kind], iconOnly ? styles.icon : "", className ?? ""]
+      .filter(Boolean)
+      .join(" "),
+    size: legacy ? "legacy" : (size ?? "md"),
+    solid: (kind === "danger" && solid) || undefined,
+  };
+}
+
+function Inner({
   icon,
+  iconOnly,
   children,
-  className = "",
-  ...rest
-}: Common & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: { icon?: ReactNode } & Pick<Content, "iconOnly"> & {
+    children?: ReactNode;
+  }) {
   return (
-    <button type="button" className={`${styles.button} ${styles[variant]} ${className}`} {...rest}>
+    <>
       {icon}
-      <span>{children}</span>
+      {!iconOnly && <span>{children}</span>}
+    </>
+  );
+}
+
+export function Button({
+  variant,
+  size,
+  solid,
+  className,
+  icon,
+  iconOnly,
+  children,
+  ...rest
+}: Base & Content & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">) {
+  const c = classes({ variant, size, solid, className, iconOnly });
+  return (
+    <button type="button" className={c.className} data-size={c.size} data-solid={c.solid} {...rest}>
+      <Inner icon={icon} iconOnly={iconOnly}>
+        {children}
+      </Inner>
     </button>
   );
 }
 
-export function ButtonLink({ variant = "quiet", icon, children, href }: Common & { href: string }) {
+export function ButtonLink({
+  variant,
+  size,
+  solid,
+  className,
+  icon,
+  iconOnly,
+  children,
+  href,
+  ...rest
+}: Base &
+  Content & { href: string } & Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "aria-current">) {
+  const c = classes({ variant, size, solid, className, iconOnly });
   return (
-    <Link href={href} className={`${styles.button} ${styles[variant]}`}>
-      {icon}
-      <span>{children}</span>
+    <Link href={href} className={c.className} data-size={c.size} data-solid={c.solid} {...rest}>
+      <Inner icon={icon} iconOnly={iconOnly}>
+        {children}
+      </Inner>
     </Link>
   );
 }
