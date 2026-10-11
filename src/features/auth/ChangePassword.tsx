@@ -24,7 +24,11 @@ export function ChangePassword() {
   if (!open) {
     return (
       <>
-        <Button icon={<KeyRound aria-hidden="true" />} onClick={() => setOpen(true)}>
+        <Button
+          variant="secondary"
+          icon={<KeyRound aria-hidden="true" />}
+          onClick={() => setOpen(true)}
+        >
           change password
         </Button>
         <FormMessage message={message} />
@@ -95,6 +99,7 @@ function ChangeForm(props: {
     <form
       ref={formRef}
       className={`${styles.form} ${styles.narrow}`}
+      aria-label="change password"
       noValidate
       onSubmit={props.onSubmit}
     >
@@ -135,7 +140,7 @@ function ChangeForm(props: {
         >
           {pending ? "saving" : "save password"}
         </Button>
-        <Button disabled={pending} onClick={props.onCancel}>
+        <Button variant="secondary" disabled={pending} onClick={props.onCancel}>
           cancel
         </Button>
       </div>
