@@ -71,3 +71,15 @@
 .dot[data-tone="error"] {
   background: var(--error);
 }
+
+.verify {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  margin-bottom: var(--space-5);
+  border-top: var(--stroke) solid var(--line);
+  border-bottom: var(--stroke) solid var(--line);
+}

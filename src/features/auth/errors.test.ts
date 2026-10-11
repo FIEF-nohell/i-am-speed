@@ -15,6 +15,7 @@ describe("mapAuthError", () => {
     ["auth/network-request-failed", "network"],
     ["auth/too-many-requests", "too-many-requests"],
     ["auth/requires-recent-login", "requires-recent-login"],
+    ["auth/user-disabled", "user-disabled"],
   ])("maps %s to %s", (firebaseCode, code) => {
     expect(mapAuthError({ code: firebaseCode }).code).toBe(code);
   });

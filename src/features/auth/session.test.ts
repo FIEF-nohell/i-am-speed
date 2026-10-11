@@ -2,7 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bootAuth, getAuthAdapter, resetAuthForTests, signOut, subscribeAuth } from "./session";
 import { AUTH_HINT_KEY, type AuthAdapter, type AuthResult, type AuthUser } from "./types";
 
-const USER: AuthUser = { uid: "u1", email: "a@b.c", displayName: null, providerIds: ["password"] };
+const USER: AuthUser = {
+  uid: "u1",
+  email: "a@b.c",
+  displayName: null,
+  providerIds: ["password"],
+  emailVerified: false,
+};
 const OK: AuthResult = { ok: true };
 
 function memoryStorage(initial: Record<string, string> = {}) {
@@ -25,6 +31,8 @@ function fakeAdapter() {
     signUpEmail: async () => OK,
     signInGoogle: async () => OK,
     sendPasswordReset: async () => OK,
+    sendVerificationEmail: async () => OK,
+    changePassword: async () => OK,
     reauthenticate: async () => OK,
     deleteUser: async () => OK,
     signOut: vi.fn(async () => cb(null)),

@@ -1,19 +1,21 @@
 "use client";
 
-import { LogOut, RefreshCw } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { LogIn, LogOut, RefreshCw, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { Row } from "@/components/ui/Row";
 import { Section } from "@/components/ui/Section";
 import { useHydrated } from "@/features/storage/store";
 import { getSyncActions, useSyncState } from "@/features/sync/state";
-import { AuthForm } from "./AuthForm";
+import styles from "./AccountView.module.css";
+import { ChangePassword } from "./ChangePassword";
 import { DeleteAccount, type DeleteMessage } from "./DeleteAccount";
 import { LinkDialog } from "./LinkDialog";
-import { signOut, useAuth } from "./session";
+import { bootAuth, signOut, useAuth } from "./session";
 import { SyncBadge } from "./SyncBadge";
 import { describeSync } from "./syncStatus";
+import { VerifyEmail } from "./VerifyEmail";
 
 const PROVIDER_LABEL: Record<string, string> = {
   password: "email and password",
@@ -26,6 +28,10 @@ export function AccountView() {
   const sync = useSyncState();
   const [notice, setNotice] = useState<DeleteMessage | null>(null);
   const [syncing, setSyncing] = useState(false);
+
+  useEffect(() => {
+    bootAuth();
+  }, []);
 
   if (!hydrated || auth.status === "unknown") return <div style={{ minHeight: "24rem" }} />;
 
@@ -49,6 +55,7 @@ export function AccountView() {
 
       {notice && <Notice tone={notice.error ? "error" : "neutral"}>{notice.text}</Notice>}
       <LinkDialog />
+      {user && <VerifyEmail user={user} />}
 
       {user ? (
         <>
@@ -83,6 +90,11 @@ export function AccountView() {
               </Button>
             </Row>
           </Section>
+          {user.providerIds.includes("password") && (
+            <Section title="password" description="Choose a new password for email sign-in.">
+              <ChangePassword />
+            </Section>
+          )}
           <Section
             title="delete account"
             description="Removes your account and everything synced to it."
@@ -91,8 +103,18 @@ export function AccountView() {
           </Section>
         </>
       ) : (
-        <Section title="sign in or create an account">
-          <AuthForm />
+        <Section
+          title="you are not signed in"
+          description="Everything works without an account and stays in this browser. An account adds sync across your devices, nothing else."
+        >
+          <div className={styles.actions}>
+            <ButtonLink variant="primary" href="/login/" icon={<LogIn aria-hidden="true" />}>
+              sign in
+            </ButtonLink>
+            <ButtonLink href="/signup/" icon={<UserPlus aria-hidden="true" />}>
+              create account
+            </ButtonLink>
+          </div>
         </Section>
       )}
     </div>

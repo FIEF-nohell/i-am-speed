@@ -6,10 +6,12 @@ import {
   onAuthStateChanged,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updatePassword,
   type User,
 } from "firebase/auth";
 import { mapAuthError } from "@/features/auth/errors";
@@ -23,6 +25,7 @@ function toUser(u: User): AuthUser {
     uid: u.uid,
     email: u.email,
     displayName: u.displayName,
+    emailVerified: u.emailVerified,
     providerIds: u.providerData.map((p) => p.providerId),
   };
 }
@@ -46,7 +49,23 @@ export function createFirebaseAuthAdapter({ auth }: FirebaseHandles): AuthAdapte
     },
     signInEmail: (email, password) => run(() => signInWithEmailAndPassword(auth, email, password)),
     signUpEmail: (email, password) =>
-      run(() => createUserWithEmailAndPassword(auth, email, password)),
+      run(async () => {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        // Verification is advisory: a failed mail must never fail the signup.
+        await sendEmailVerification(cred.user).catch(() => undefined);
+      }),
+    sendVerificationEmail: () =>
+      run(async () => {
+        if (!auth.currentUser) throw NEEDS_LOGIN;
+        await sendEmailVerification(auth.currentUser);
+      }),
+    changePassword: ({ current, next }) =>
+      run(async () => {
+        const user = auth.currentUser;
+        if (!user?.email) throw NEEDS_LOGIN;
+        await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, current));
+        await updatePassword(user, next);
+      }),
     signInGoogle: () => run(() => signInWithPopup(auth, new GoogleAuthProvider())),
     sendPasswordReset: (email) => run(() => sendPasswordResetEmail(auth, email)),
     reauthenticate: ({ password }) =>

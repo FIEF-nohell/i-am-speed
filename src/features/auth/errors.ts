@@ -4,13 +4,14 @@ const MESSAGES: Record<AuthErrorCode, string> = {
   "invalid-credentials": "That email and password do not match.",
   "invalid-email": "That does not look like a valid email address.",
   "email-in-use": "An account with this email already exists. Try signing in instead.",
-  "weak-password": "Pick a longer password, at least six characters.",
+  "weak-password": "Pick a longer password, at least eight characters.",
   "popup-closed": "The sign-in window was closed before it finished.",
   "popup-blocked":
     "Your browser blocked the sign-in window. Allow pop-ups for this site and retry.",
   network: "Could not reach the sign-in service. Check your connection and try again.",
   "too-many-requests": "Too many attempts. Wait a moment and try again.",
   "requires-recent-login": "Please confirm your identity again to continue.",
+  "user-disabled": "This account has been disabled.",
   unknown: "Something went wrong. Please try again.",
 };
 
@@ -27,6 +28,7 @@ const BY_FIREBASE_CODE: Record<string, AuthErrorCode> = {
   "auth/network-request-failed": "network",
   "auth/too-many-requests": "too-many-requests",
   "auth/requires-recent-login": "requires-recent-login",
+  "auth/user-disabled": "user-disabled",
 };
 
 export function messageFor(code: AuthErrorCode): string {

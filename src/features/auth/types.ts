@@ -2,6 +2,8 @@ export interface AuthUser {
   uid: string;
   email: string | null;
   displayName: string | null;
+  /** Verification is advisory only. Sync works for unverified users. */
+  emailVerified: boolean;
   /** e.g. ["password"], ["google.com"]. Drives the re-auth UI before deletion. */
   providerIds: string[];
 }
@@ -22,6 +24,7 @@ export type AuthErrorCode =
   | "network"
   | "too-many-requests"
   | "requires-recent-login"
+  | "user-disabled"
   | "unknown";
 
 export type AuthResult = { ok: true } | { ok: false; code: AuthErrorCode; message: string };
@@ -32,6 +35,10 @@ export interface AuthAdapter {
   signUpEmail(email: string, password: string): Promise<AuthResult>;
   signInGoogle(): Promise<AuthResult>;
   sendPasswordReset(email: string): Promise<AuthResult>;
+  /** Sends a verification mail to the signed-in user. */
+  sendVerificationEmail(): Promise<AuthResult>;
+  /** Re-authenticates with the current password, then sets the new one. Password-provider users only. */
+  changePassword(input: { current: string; next: string }): Promise<AuthResult>;
   /** password for the "password" provider; Google re-auths via popup when omitted. */
   reauthenticate(input: { password?: string }): Promise<AuthResult>;
   deleteUser(): Promise<AuthResult>;
