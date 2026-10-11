@@ -5,6 +5,7 @@ export type ThemeId = "dark" | "light" | "dusk" | "ember";
 export type FontSize = "sm" | "md" | "lg" | "xl";
 export type CaretStyle = "line" | "block" | "underline";
 export type KeyboardVisibility = "phases1to8" | "always" | "never";
+export type SoundPack = "soft" | "clicky" | "typewriter" | "bubble";
 export type TestMode =
   { kind: "time"; value: 15 | 30 | 60 } | { kind: "words"; value: 10 | 25 | 50 };
 
@@ -21,6 +22,11 @@ export interface Settings {
   highlightNext: boolean;
   fingerHint: boolean;
   sound: boolean;
+  soundPack: SoundPack;
+  /** Integer 0 to 100. */
+  soundVolume: number;
+  /** Play a distinct sound for a wrong key. */
+  soundErrors: boolean;
   reduceMotion: boolean;
   testMode: TestMode;
 }
@@ -38,11 +44,15 @@ export const DEFAULT_SETTINGS: Settings = {
   highlightNext: true,
   fingerHint: true,
   sound: false,
+  soundPack: "soft",
+  soundVolume: 60,
+  soundErrors: true,
   reduceMotion: false,
   testMode: { kind: "time", value: 30 },
 };
 
 export const THEMES: readonly ThemeId[] = ["dark", "light", "dusk", "ember"];
+export const SOUND_PACKS: readonly SoundPack[] = ["soft", "clicky", "typewriter", "bubble"];
 const ON_ERROR: readonly OnError[] = ["continue", "block", "stopAtWordEnd", "restartAfterN"];
 const BACKSPACE: readonly BackspaceMode[] = ["word", "full", "off"];
 const FONT_SIZES: readonly FontSize[] = ["sm", "md", "lg", "xl"];
@@ -60,6 +70,12 @@ function sanitiseTestMode(v: unknown): TestMode {
   const o = (v ?? {}) as { kind?: unknown; value?: unknown };
   if (o.kind === "words") return { kind: "words", value: oneOf(o.value, WORD_VALUES, 25) };
   return { kind: "time", value: oneOf(o.value, TIME_VALUES, 30) };
+}
+
+/** Whole number in 0..max; anything that is not a finite number falls back. */
+function clampedInt(v: unknown, max: number, fallback: number): number {
+  if (typeof v !== "number" || !Number.isFinite(v)) return fallback;
+  return Math.min(max, Math.max(0, Math.round(v)));
 }
 
 /** Accepts anything, returns a complete valid Settings. Unknown or invalid fields fall back. */
@@ -80,6 +96,9 @@ export function sanitiseSettings(input: unknown): Settings {
     highlightNext: bool(s.highlightNext, d.highlightNext),
     fingerHint: bool(s.fingerHint, d.fingerHint),
     sound: bool(s.sound, d.sound),
+    soundPack: oneOf(s.soundPack, SOUND_PACKS, d.soundPack),
+    soundVolume: clampedInt(s.soundVolume, 100, d.soundVolume),
+    soundErrors: bool(s.soundErrors, d.soundErrors),
     reduceMotion: bool(s.reduceMotion, d.reduceMotion),
     testMode: sanitiseTestMode(s.testMode),
   };

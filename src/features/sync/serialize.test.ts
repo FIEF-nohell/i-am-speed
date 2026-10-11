@@ -106,6 +106,46 @@ describe("profile docs", () => {
     expect(Object.keys(doc.settings as object).length).toBeLessThanOrEqual(40);
     expect(docToProfile(JSON.parse(JSON.stringify(doc)))).toEqual(p);
   });
+  it("round-trips the sound settings", () => {
+    const p = {
+      settings: {
+        ...DEFAULT_SETTINGS,
+        sound: true,
+        soundPack: "typewriter" as const,
+        soundVolume: 35,
+        soundErrors: false,
+      },
+      settingsUpdatedAt: 7,
+    };
+    const back = docToProfile(JSON.parse(JSON.stringify(profileToDoc(p, 8))));
+    expect(back).toEqual(p);
+    expect(back?.settings.soundPack).toBe("typewriter");
+    expect(back?.settings.soundVolume).toBe(35);
+    expect(back?.settings.soundErrors).toBe(false);
+  });
+  it("gives defaults for the sound fields when a profile comes from an old client", () => {
+    const old = { theme: "light", lang: "en", sound: true, reduceMotion: false };
+    const p = docToProfile({ settings: old, settingsUpdatedAt: 3 });
+    expect(p?.settings.theme).toBe("light");
+    expect(p?.settings.sound).toBe(true);
+    expect(p?.settings.soundPack).toBe(DEFAULT_SETTINGS.soundPack);
+    expect(p?.settings.soundVolume).toBe(DEFAULT_SETTINGS.soundVolume);
+    expect(p?.settings.soundErrors).toBe(DEFAULT_SETTINGS.soundErrors);
+  });
+  it("falls back for invalid sound values coming from the cloud", () => {
+    const p = docToProfile({
+      settings: { soundPack: "boom", soundVolume: 9000, soundErrors: "yes" },
+      settingsUpdatedAt: 1,
+    });
+    expect(p?.settings.soundPack).toBe("soft");
+    expect(p?.settings.soundVolume).toBe(100);
+    expect(p?.settings.soundErrors).toBe(true);
+  });
+  it("keeps the settings field count within the Firestore rule cap", () => {
+    const doc = profileToDoc({ settings: DEFAULT_SETTINGS, settingsUpdatedAt: 1 }, 2);
+    expect(Object.keys(doc.settings as object).length).toBeLessThanOrEqual(40);
+    expect(Object.keys(doc.settings as object)).toHaveLength(17);
+  });
   it("sanitises settings and rejects garbage", () => {
     const p = docToProfile({
       settings: { theme: "neon", restartAfter: 999 },

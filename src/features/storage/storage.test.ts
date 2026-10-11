@@ -45,6 +45,13 @@ describe("migrate and recovery", () => {
     expect(d.settings.lang).toBe("en");
     expect(d.totals.attempts).toBe(3);
   });
+  it("migrates stored settings without the sound fields to their defaults", () => {
+    const d = migrate({ settings: { theme: "light", sound: true } });
+    expect(d.settings.sound).toBe(true);
+    expect(d.settings.soundPack).toBe(DEFAULT_SETTINGS.soundPack);
+    expect(d.settings.soundVolume).toBe(DEFAULT_SETTINGS.soundVolume);
+    expect(d.settings.soundErrors).toBe(DEFAULT_SETTINGS.soundErrors);
+  });
   it("repairs invalid settings and drops bad rows", () => {
     const d = migrate({
       settings: {
@@ -272,6 +279,25 @@ describe("recordAttempt", () => {
     });
     expect(d.lessons).toEqual({});
     expect(d.attempts).toHaveLength(1);
+  });
+  it("records a zen attempt in totals, days, keys and fingers but never in lessons", () => {
+    const m = metricsFor("ab ab", "ab ab");
+    const d = recordAttempt(createEmptyData(testEnv()), {
+      source: "zen",
+      lang: "de",
+      text: "ab ab",
+      metrics: m,
+      at: new Date(2026, 9, 11, 12).getTime(),
+    });
+    expect(d.lessons).toEqual({});
+    expect(d.sync.contribs[d.sync.ownId].lessons).toEqual({});
+    expect(d.totals.attempts).toBe(1);
+    expect(d.totals.chars).toBe(m.typedChars);
+    expect(d.days["2026-10-11"].attempts).toBe(1);
+    expect(d.keys.a.attempts).toBe(2);
+    expect(Object.keys(d.fingers).length).toBeGreaterThan(0);
+    expect(d.attempts[0].source).toBe("zen");
+    expect(d.lastResult?.attempt.source).toBe("zen");
   });
   it("caps history but keeps aggregates", () => {
     let d = createEmptyData();

@@ -11,7 +11,7 @@ export const STORAGE_KEY = "i-am-speed:v1";
 export const SCHEMA_VERSION = 2;
 export const MAX_ATTEMPTS = 500;
 
-/** Where an attempt came from: a lesson id, or a free-test mode like "test:time-30". */
+/** Where an attempt came from: a lesson id, a free-test mode like "test:time-30", or "zen" (see source.ts). */
 export type AttemptSource = string;
 
 export interface Attempt {

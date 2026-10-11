@@ -4,6 +4,7 @@ import { PASS_ACCURACY } from "@/features/lessons/types";
 import { emptyAggregates, withViews } from "@/features/sync/combine";
 import type { Contribution } from "@/features/sync/types";
 import { MAX_ATTEMPTS, type Attempt, type DayTotals, type StoredData } from "./schema";
+import { sourceKind } from "./source";
 
 export interface AttemptInput {
   source: string;
@@ -71,7 +72,7 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
   const dk = dayKey(input.at);
   const day: DayTotals = own.days[dk] ?? { attempts: 0, wpmSum: 0, accuracySum: 0, timeMs: 0 };
 
-  const isLesson = !input.source.startsWith("test:");
+  const isLesson = sourceKind(input.source) === "lesson";
   const lessons = { ...own.lessons };
   if (isLesson) {
     const prev = lessons[input.source];
