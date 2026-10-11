@@ -3,8 +3,16 @@ import { completeLesson, lessonText, typeText } from "./helpers";
 
 test("open a lesson from the list, type it, reach results with charts", async ({ page }) => {
   const external: string[] = [];
+  const firebaseChunks: string[] = [];
   page.on("request", (r) => {
     if (!r.url().startsWith("http://localhost")) external.push(r.url());
+  });
+  page.on("response", async (r) => {
+    if (!r.url().endsWith(".js")) return;
+    const body = await r.text().catch(() => "");
+    if (body.includes("firestore.googleapis.com") || body.includes("identitytoolkit")) {
+      firebaseChunks.push(r.url());
+    }
   });
 
   await page.goto("/");
@@ -22,6 +30,7 @@ test("open a lesson from the list, type it, reach results with charts", async ({
   await page.goto("/");
   await expect(page.getByText("1 / 7")).toBeVisible();
   expect(external, "no runtime network requests").toEqual([]);
+  expect(firebaseChunks, "anonymous use never loads Firebase").toEqual([]);
 });
 
 test("shift and capitals: real Shift key events", async ({ page }) => {
@@ -43,7 +52,7 @@ test("settings persist after reload", async ({ page }) => {
   await expect(page.getByRole("radio", { name: "light" })).toHaveAttribute("aria-checked", "true");
 });
 
-test("a wrong key does not advance in block mode and dead keys do not crash", async ({ page }) => {
+test("a wrong key is marked and dead keys do not crash", async ({ page }) => {
   await page.goto("/lesson/home-01/");
   const text = await lessonText(page);
   const wrong = text[0] === "f" ? "j" : "f";
@@ -53,9 +62,13 @@ test("a wrong key does not advance in block mode and dead keys do not crash", as
       new KeyboardEvent("keydown", { key: "Dead", bubbles: true, cancelable: true }),
     ),
   );
-  await expect(page.locator('[aria-label="text to type"] [data-state="typed"]')).toHaveCount(0);
+  const chars = page.locator('[aria-label="text to type"]');
+  await expect(chars.locator('[data-state="typed"]')).toHaveCount(0);
+  await expect(chars.locator('[data-state="wrong"]').first()).toBeVisible();
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Backspace");
   await page.keyboard.press(text[0]);
-  await expect(page.locator('[aria-label="text to type"] [data-state="typed"]')).toHaveCount(1);
+  await expect(chars.locator('[data-state="typed"]')).toHaveCount(1);
 });
 
 test("free test runs to the results page", async ({ page }) => {
