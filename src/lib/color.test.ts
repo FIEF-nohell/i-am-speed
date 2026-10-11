@@ -19,6 +19,24 @@ describe("brand palette", () => {
       expect(contrastRatio(t.error, t.canvas)).toBeGreaterThanOrEqual(4.5);
       expect(contrastRatio(t.accentInk, t.accent)).toBeGreaterThanOrEqual(4.5);
     });
+    it(`${name}: text roles are readable on the panel`, () => {
+      expect(contrastRatio(t.text, t.panel)).toBeGreaterThanOrEqual(7);
+      expect(contrastRatio(t.muted, t.panel)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(t.accent, t.panel)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(t.error, t.panel)).toBeGreaterThanOrEqual(4.5);
+    });
+    it(`${name}: text and muted stay readable on the surface (dim and accent are canvas or panel only)`, () => {
+      expect(contrastRatio(t.text, t.surface)).toBeGreaterThanOrEqual(7);
+      expect(contrastRatio(t.muted, t.surface)).toBeGreaterThanOrEqual(4.5);
+    });
+    it(`${name}: control boundaries reach 3:1 against the canvas and the panel`, () => {
+      expect(contrastRatio(t.lineStrong, t.canvas)).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(t.lineStrong, t.panel)).toBeGreaterThanOrEqual(3);
+    });
+    it(`${name}: the panel is a distinct fill from the canvas, and the divider line stays quiet`, () => {
+      expect(t.panel).not.toBe(t.canvas);
+      expect(contrastRatio(t.line, t.canvas)).toBeLessThan(contrastRatio(t.lineStrong, t.canvas));
+    });
     it(`${name}: typed text stays clearly brighter than untyped text`, () => {
       expect(contrastRatio(t.text, t.canvas) / contrastRatio(t.dim, t.canvas)).toBeGreaterThan(1.5);
     });

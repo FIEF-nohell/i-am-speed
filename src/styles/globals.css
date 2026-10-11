@@ -17,13 +17,24 @@
   --text-lg: 1.25rem;
   --text-xl: 1.75rem;
   --text-display: 2.75rem;
+  /* Added for the redesigned pages. Do not reuse for the lesson list or typing screens. */
+  --text-2xs: 0.6875rem;
+  --text-section: 1.0625rem;
+  --text-title: 2rem;
 
   --radius-key: 6px;
   --radius-ui: 6px;
   --stroke: 1px;
+  --radius-control: 8px;
+  --radius-panel: 12px;
+
+  --control-sm: 2rem;
+  --control-md: 2.5rem;
 
   --column: 56rem;
   --column-narrow: 40rem;
+  --column-form: 24rem;
+  --header-h: 4.5rem;
   --gutter: clamp(1rem, 4vw, 2rem);
 
   --type-size: 1.5rem;
@@ -156,4 +167,53 @@ a:hover {
 }
 .skip:focus {
   top: var(--space-3);
+}
+
+/* Wide pages (stats, results, settings) use the full header column. */
+.page-wide {
+  max-width: var(--column);
+  margin: 0 auto;
+}
+
+/* Auth screens: one centred card. */
+.page-form {
+  max-width: var(--column-form);
+  margin: 0 auto;
+}
+
+/* Page frame: the footer always sits at the bottom, even on short pages. */
+.site {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.site-main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+/* Header and footer fade away in zen focus mode. Layout is unchanged so nothing jumps. */
+.site-chrome {
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    visibility 0s linear 0s;
+}
+html[data-focus="zen"] .site-chrome {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    visibility 0s linear var(--dur-slow);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-chrome,
+  html[data-focus="zen"] .site-chrome {
+    transition: none;
+  }
+}
+[data-motion="reduce"] .site-chrome,
+[data-motion="reduce"][data-focus="zen"] .site-chrome {
+  transition: none;
 }

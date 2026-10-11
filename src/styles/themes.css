@@ -5,7 +5,9 @@
   color-scheme: dark;
   --canvas: #16181a;
   --surface: #1d2023;
+  --panel: #1a1d1f;
   --line: #2b2f33;
+  --line-strong: #646c72;
   --text: #d9dde0;
   --dim: #7b838a;
   --muted: #8d949a;
@@ -29,7 +31,9 @@
   color-scheme: light;
   --canvas: #f5f3ef;
   --surface: #ebe8e2;
+  --panel: #fbfaf7;
   --line: #dad6ce;
+  --line-strong: #8f8a80;
   --text: #24272a;
   --dim: #696e73;
   --muted: #5a6065;
@@ -53,7 +57,9 @@
   color-scheme: dark;
   --canvas: #171a24;
   --surface: #1e2230;
+  --panel: #1b1e2a;
   --line: #2c3144;
+  --line-strong: #656d8c;
   --text: #d2d6e6;
   --dim: #7c839e;
   --muted: #8e95b0;
@@ -77,7 +83,9 @@
   color-scheme: dark;
   --canvas: #1b1816;
   --surface: #231f1c;
+  --panel: #1f1b19;
   --line: #332d28;
+  --line-strong: #756a60;
   --text: #e4dcd2;
   --dim: #8c8176;
   --muted: #9a8f83;

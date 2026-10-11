@@ -10,7 +10,9 @@ function themeBlock(selector: string, t: Theme): string {
   color-scheme: ${t.scheme};
   --canvas: ${t.canvas};
   --surface: ${t.surface};
+  --panel: ${t.panel};
   --line: ${t.line};
+  --line-strong: ${t.lineStrong};
   --text: ${t.text};
   --dim: ${t.dim};
   --muted: ${t.muted};
