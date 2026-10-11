@@ -16,6 +16,25 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // Firebase is lazy-loaded: only src/features/firebase/** may import it as a value.
+    ignores: ["src/features/firebase/**"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["firebase", "firebase/*", "@/features/firebase/*"],
+              message:
+                "Import Firebase only via dynamic import() from src/features/firebase/**. Type imports are allowed.",
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

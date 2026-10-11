@@ -442,13 +442,13 @@ Parallel mechanics: give each stream its own git worktree on its own branch cut 
 
 Outcome: dependencies, lazy-import guard and the shared contract files exist on one commit that every stream branches from.
 
-- [ ] 0.1 Ask the main agent/user to commit or confirm the uncommitted Header edits; record the outcome in the Log.
-- [ ] 0.2 `npm install firebase@^13.0.0` and `npm install -D @firebase/rules-unit-testing@^6.0.0`; add the `test:rules` script to `package.json`. Do not change `check`.
-- [ ] 0.3 Create `src/config/firebase.ts` exporting `FIREBASE_CONFIG` (apiKey `AIzaSyDa5a5cIMHmfpD2obQDfPgpMt6wsd3HTpQ`, authDomain `speed-pwa.firebaseapp.com`, projectId `speed-pwa`, storageBucket `speed-pwa.firebasestorage.app`, messagingSenderId `624830547053`, appId `1:624830547053:web:f46a934f3e1503905f6b64`) `as const`, with a one-line comment that the web config is public and access is enforced by `firestore.rules`. No Firebase imports in this file.
-- [ ] 0.4 Create `src/features/sync/types.ts` and `src/features/auth/types.ts` verbatim from "Shared interfaces" (resolve the `StoredData` import as described; `schema.ts` itself is changed in M2, so `MergeResult.data` may reference the v1 type until then without breaking typecheck).
-- [ ] 0.5 Create `src/features/sync/state.ts` (`useSyncState`, `getSyncState`, `setSyncState`, `registerSyncActions`, `getSyncActions`), server snapshot `{ kind: "local" }`.
-- [ ] 0.6 Add the ESLint `no-restricted-imports` guard (static value imports of `firebase`, `firebase/*`, `@/features/firebase/*` banned outside `src/features/firebase/**`; `allowTypeImports: true`). Add `.gitignore` entries.
-- [ ] 0.7 `npm run lint && npm run typecheck && npm run test` green; commit "Add Firebase dependencies and sync contracts" (no AI co-author trailer, per AGENTS.md). Cut worktree branches `firebase/a`, `firebase/b`, `firebase/c` from this commit.
+- [x] 0.1 Ask the main agent/user to commit or confirm the uncommitted Header edits; record the outcome in the Log.
+- [x] 0.2 `npm install firebase@^13.0.0` and `npm install -D @firebase/rules-unit-testing@^6.0.0`; add the `test:rules` script to `package.json`. Do not change `check`.
+- [x] 0.3 Create `src/config/firebase.ts` exporting `FIREBASE_CONFIG` (apiKey `AIzaSyDa5a5cIMHmfpD2obQDfPgpMt6wsd3HTpQ`, authDomain `speed-pwa.firebaseapp.com`, projectId `speed-pwa`, storageBucket `speed-pwa.firebasestorage.app`, messagingSenderId `624830547053`, appId `1:624830547053:web:f46a934f3e1503905f6b64`) `as const`, with a one-line comment that the web config is public and access is enforced by `firestore.rules`. No Firebase imports in this file.
+- [x] 0.4 Create `src/features/sync/types.ts` and `src/features/auth/types.ts` verbatim from "Shared interfaces" (resolve the `StoredData` import as described; `schema.ts` itself is changed in M2, so `MergeResult.data` may reference the v1 type until then without breaking typecheck).
+- [x] 0.5 Create `src/features/sync/state.ts` (`useSyncState`, `getSyncState`, `setSyncState`, `registerSyncActions`, `getSyncActions`), server snapshot `{ kind: "local" }`.
+- [x] 0.6 Add the ESLint `no-restricted-imports` guard (static value imports of `firebase`, `firebase/*`, `@/features/firebase/*` banned outside `src/features/firebase/**`; `allowTypeImports: true`). Add `.gitignore` entries.
+- [x] 0.7 `npm run lint && npm run typecheck && npm run test` green; commit "Add Firebase dependencies and sync contracts" (no AI co-author trailer, per AGENTS.md). Worktree branches are cut by the main agent.
 
 ### M1. Workstream A: Firebase client, auth and account UI (parallel)
 
@@ -530,3 +530,4 @@ Outcome: everything merged on `main`, all checks green, behaviour confirmed end 
 - [ ] 5.8 Write the task evidence record in `.docs/evidence/` (learning disposition `pending`), set this plan to `status: done`, append the final Log entry.
 
 ## Log
+- 2026-10-11 17:10 M0 done. 0.1: Header edits were committed by the user/main agent before M0 (HEAD 041130e). 0.2 to 0.6 implemented; `MergeResult.data` uses a normal `import type { StoredData }` (type-only cycle with schema.ts, typecheck green). ESLint guard verified to reject a static `firebase/app` import. lint, typecheck, test green (84 tests). Evidence record not created for M0 (no verification-evidence step defined; M5.8 writes it). Worktree branch cutting left to the main agent per instruction.

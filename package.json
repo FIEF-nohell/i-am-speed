@@ -16,9 +16,11 @@
     "validate:content": "tsx scripts/validate-content.ts",
     "brand": "tsx scripts/brand/build.ts",
     "check:brand": "tsx scripts/check-brand.ts",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run validate:content && npm run build && npm run check:brand"
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run validate:content && npm run build && npm run check:brand",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-i-am-speed \"vitest run -c vitest.rules.config.ts\""
   },
   "dependencies": {
+    "firebase": "^13.0.0",
     "lucide-react": "^1.53.0",
     "next": "16.4.0",
     "react": "19.3.0",
@@ -26,6 +28,7 @@
     "recharts": "^3.10.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@playwright/test": "^1.64.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^20",
