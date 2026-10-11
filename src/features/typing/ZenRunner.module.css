@@ -1,0 +1,74 @@
+.zen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-5);
+  min-height: 60dvh;
+}
+
+.line {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.hints {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-5);
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--dim);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.hints span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.tab {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* Once typing starts only a quiet esc hint remains. The layout never shifts. */
+.zen[data-running] .line,
+.zen[data-running] .tab {
+  opacity: 0;
+}
+.zen[data-running] .hints {
+  opacity: 0.5;
+}
+
+.finish {
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    visibility 0s linear var(--dur-base);
+}
+.finish[data-visible] {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .hints,
+  .tab,
+  .finish {
+    transition: none;
+  }
+}
+:global([data-motion="reduce"]) .line,
+:global([data-motion="reduce"]) .hints,
+:global([data-motion="reduce"]) .tab,
+:global([data-motion="reduce"]) .finish {
+  transition: none;
+}

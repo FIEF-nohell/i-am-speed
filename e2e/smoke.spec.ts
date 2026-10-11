@@ -73,6 +73,7 @@ test("a wrong key is marked and dead keys do not crash", async ({ page }) => {
 
 test("free test runs to the results page", async ({ page }) => {
   await page.goto("/test/");
+  await page.getByRole("radio", { name: "words", exact: true }).click();
   await page.getByRole("radio", { name: "10 words" }).click();
   const text = await lessonText(page);
   await typeText(page, text);

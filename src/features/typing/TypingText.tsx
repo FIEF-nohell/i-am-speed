@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { EngineState } from "@/features/engine/types";
 import type { CaretStyle } from "@/features/settings/settings";
 import styles from "./TypingText.module.css";
@@ -8,7 +8,14 @@ import styles from "./TypingText.module.css";
 interface Props {
   state: EngineState;
   caret: CaretStyle;
+  /** Endless text (Zen): render only a window around the caret and trim completed lines. */
+  windowed?: boolean;
 }
+
+/** Characters rendered after the caret in windowed mode. Several lines at any supported width. */
+const AHEAD = 240;
+/** Windowed mode trims completed lines once the caret reaches this line (0-based). */
+const TRIM_FROM_LINE = 3;
 
 interface Word {
   start: number;
@@ -46,13 +53,35 @@ function charState(state: EngineState, i: number): CharState {
   return "untyped";
 }
 
-function TypingTextImpl({ state, caret }: Props) {
+function TypingTextImpl({ state, caret, windowed = false }: Props) {
   const { target } = state;
-  const { words, spaces } = useMemo(() => splitWords(target), [target]);
+  const caretIndex = state.entries.length;
+  const [start, setStart] = useState(0);
+  // The trim frame must not animate: content and scroll move together.
+  const [snap, setSnap] = useState(false);
+  const end = windowed ? Math.min(target.length, caretIndex + AHEAD) : target.length;
+  const shown = windowed ? target.slice(start, end) : target;
+  const { words, spaces } = useMemo(() => splitWords(shown), [shown]);
   const charRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const frameRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: 0, y: 0, w: 0, h: 0, scroll: 0 });
-  const caretIndex = state.entries.length;
+
+  // A fresh text (Tab) starts the window over. Backspacing out of the window reopens it at a word start.
+  if (windowed && start > 0 && caretIndex < start) {
+    setStart(caretIndex === 0 ? 0 : target.lastIndexOf(" ", Math.max(0, caretIndex - 120)) + 1);
+  }
+
+  useEffect(() => {
+    if (!snap) return;
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setSnap(false));
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, [snap]);
 
   // Measure after paint-affecting DOM updates. Reads layout only: no animation work on the key path.
   useLayoutEffect(() => {
@@ -65,6 +94,17 @@ function TypingTextImpl({ state, caret }: Props) {
     const x = el.offsetLeft + (atEnd ? el.offsetWidth : 0);
     const y = el.offsetTop;
     const line = lineH > 0 ? Math.round(y / lineH) : 0;
+    if (windowed && line >= TRIM_FROM_LINE) {
+      // Drop the lines that scrolled out of view, at a measured line start so wrapping is unchanged.
+      const edge = (line - 1) * lineH - 1;
+      let first = start;
+      while (first < caretIndex && (charRefs.current[first]?.offsetTop ?? edge) < edge) first++;
+      if (first > start) {
+        setSnap(true);
+        setStart(first);
+        return;
+      }
+    }
     const scroll = Math.max(0, (line - 1) * lineH);
     setPos((p) =>
       p.x === x &&
@@ -75,11 +115,15 @@ function TypingTextImpl({ state, caret }: Props) {
         ? p
         : { x, y, w: el.offsetWidth, h: el.offsetHeight, scroll },
     );
-  }, [caretIndex, target, state.status]);
+  }, [caretIndex, target, state.status, windowed, start]);
 
   return (
     <div className={`${styles.frame} mono`} ref={frameRef} aria-label="text to type" role="img">
-      <div className={styles.inner} style={{ transform: `translateY(${-pos.scroll}px)` }}>
+      <div
+        className={styles.inner}
+        data-snap={snap || undefined}
+        style={{ transform: `translateY(${-pos.scroll}px)` }}
+      >
         <span
           className={styles.caret}
           data-style={caret}
@@ -91,29 +135,30 @@ function TypingTextImpl({ state, caret }: Props) {
           }}
           aria-hidden="true"
         />
-        {renderChars(target, words, spaces, state, charRefs)}
+        {renderChars(shown, start, words, spaces, state, charRefs)}
       </div>
     </div>
   );
 }
 
 function renderChars(
-  target: string,
+  text: string,
+  offset: number,
   words: Word[],
   spaces: Set<number>,
   state: EngineState,
   refs: React.RefObject<(HTMLSpanElement | null)[]>,
 ) {
   const out: React.ReactNode[] = [];
-  const chars = [...target];
+  const chars = [...text];
   const charEl = (i: number) => (
     <span
-      key={i}
+      key={offset + i}
       ref={(el) => {
-        refs.current[i] = el;
+        refs.current[offset + i] = el;
       }}
       className={styles.ch}
-      data-state={charState(state, i)}
+      data-state={charState(state, offset + i)}
       data-space={spaces.has(i) || undefined}
     >
       {chars[i]}
@@ -128,7 +173,7 @@ function renderChars(
     }
     const word = words[w++];
     out.push(
-      <span key={`w${word.start}`} className={styles.word}>
+      <span key={`w${offset + word.start}`} className={styles.word}>
         {word.chars.map((_, k) => charEl(word.start + k))}
       </span>,
     );

@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Segmented } from "@/components/ui/Segmented";
 import { LANG_LABEL, LANGS, type Corpus, type Lang } from "@/features/content/types";
 import { engineConfigOf, type TestMode } from "@/features/settings/settings";
+import { useKeySound } from "@/features/sound/useKeySound";
 import { updateSettings, useHydrated, useSettings } from "@/features/storage/store";
 import { createRng, pick, randomSeed, type Rng } from "@/lib/rng";
 import { NeedsKeyboard } from "./NeedsKeyboard";
@@ -11,13 +13,19 @@ import { TypingScreen } from "./TypingScreen";
 import { useCorpus } from "./useCorpus";
 import { useFinish } from "./useFinish";
 import { useHasPhysicalKeyboard } from "./usePhysicalKeyboard";
-import { useKeyTick } from "./useKeyTick";
 import { useTypingSession } from "./useTypingSession";
 import styles from "./Runner.module.css";
 
 const TIMES = [15, 30, 60] as const;
 const WORDS = [10, 25, 50] as const;
 const WORDS_PER_SECOND = 3.4;
+
+type ModeKind = TestMode["kind"] | "zen";
+const MODE_OPTIONS: readonly { value: ModeKind; label: string }[] = [
+  { value: "time", label: "time" },
+  { value: "words", label: "words" },
+  { value: "zen", label: "zen" },
+];
 
 export function testSource(mode: TestMode): string {
   return `test:${mode.kind}-${mode.value}`;
@@ -35,7 +43,11 @@ export function testText(corpus: Corpus, mode: TestMode, rng: Rng): string {
   return out.join(" ");
 }
 
+const DEFAULT_TIME: TestMode = { kind: "time", value: 30 };
+const DEFAULT_WORDS: TestMode = { kind: "words", value: 25 };
+
 export function TestRunner() {
+  const router = useRouter();
   const settings = useSettings();
   const hydrated = useHydrated();
   const hasKeyboard = useHasPhysicalKeyboard();
@@ -51,7 +63,12 @@ export function TestRunner() {
     [corpus, hydrated, kind, value, seed],
   );
   const restart = useCallback(() => setSeed(randomSeed()), []);
-  const onKey = useKeyTick(settings.sound);
+  const chooseMode = (kind: ModeKind): void => {
+    if (kind === "zen") router.push("/zen/");
+    else if (kind !== mode.kind)
+      updateSettings({ testMode: kind === "time" ? DEFAULT_TIME : DEFAULT_WORDS });
+  };
+  const onKey = useKeySound(settings);
   const { session, state, pressed } = useTypingSession({
     text,
     config: engineConfigOf(settings),
@@ -90,22 +107,37 @@ export function TestRunner() {
 
   return (
     <div>
-      <div className={styles.modes}>
-        <Segmented<number>
-          label="time limit"
-          value={mode.kind === "time" ? mode.value : -1}
-          options={TIMES.map((t) => ({ value: t, label: `${t}s` }))}
-          onChange={(value) =>
-            updateSettings({ testMode: { kind: "time", value: value as (typeof TIMES)[number] } })
-          }
+      <div className={styles.modes} data-running={state.status === "running" || undefined}>
+        <Segmented<ModeKind>
+          variant="pill"
+          label="test mode"
+          value={mode.kind}
+          options={MODE_OPTIONS}
+          onChange={chooseMode}
         />
-        <Segmented<number>
-          label="word count"
-          value={mode.kind === "words" ? mode.value : -1}
-          options={WORDS.map((w) => ({ value: w, label: `${w} words` }))}
-          onChange={(value) =>
-            updateSettings({ testMode: { kind: "words", value: value as (typeof WORDS)[number] } })
-          }
+        {mode.kind === "time" ? (
+          <Segmented<number>
+            variant="pill"
+            label="time limit"
+            value={mode.value}
+            options={TIMES.map((t) => ({ value: t, label: `${t}s` }))}
+            onChange={(value) => updateSettings({ testMode: { kind: "time", value } as TestMode })}
+          />
+        ) : (
+          <Segmented<number>
+            variant="pill"
+            label="word count"
+            value={mode.value}
+            options={WORDS.map((w) => ({ value: w, label: `${w} words` }))}
+            onChange={(value) => updateSettings({ testMode: { kind: "words", value } as TestMode })}
+          />
+        )}
+        <Segmented<Lang>
+          variant="pill"
+          label="text language"
+          value={settings.lang}
+          options={LANGS.map((l) => ({ value: l, label: LANG_LABEL[l] }))}
+          onChange={(lang) => updateSettings({ lang })}
         />
       </div>
       {remaining !== null && (
@@ -125,14 +157,6 @@ export function TestRunner() {
         showKeyboard={settings.keyboard === "always"}
         title="free test"
         status={text ? status : "loading"}
-        footer={
-          <Segmented<Lang>
-            label="text language"
-            value={settings.lang}
-            options={LANGS.map((l) => ({ value: l, label: LANG_LABEL[l] }))}
-            onChange={(lang) => updateSettings({ lang })}
-          />
-        }
       />
     </div>
   );

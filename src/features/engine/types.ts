@@ -50,6 +50,8 @@ export interface EngineState {
   startedAt: number | null;
   /** Milliseconds from the first keystroke to the end. */
   elapsed: number;
+  /** Open-ended run (Zen): never finishes at the end of the target, only through an "end" input. */
+  open: boolean;
 }
 
 /** What the caller feeds in. Time is injected so the engine stays pure. */
