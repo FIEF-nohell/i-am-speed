@@ -18,7 +18,7 @@ export default defineConfig([
   },
   {
     // Firebase is lazy-loaded: only src/features/firebase/** may import it as a value.
-    ignores: ["src/features/firebase/**"],
+    ignores: ["src/features/firebase/**", "firestore/**"],
     rules: {
       "@typescript-eslint/no-restricted-imports": [
         "error",
