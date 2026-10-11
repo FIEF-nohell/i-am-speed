@@ -9,6 +9,7 @@ import { LANG_LABEL, LANGS, type Lang } from "@/features/content/types";
 import { LESSON_BY_ID, PHASES } from "@/features/lessons/curriculum";
 import { generateLessonText } from "@/features/lessons/generate";
 import { engineConfigOf, keyboardVisible } from "@/features/settings/settings";
+import { useKeySound } from "@/features/sound/useKeySound";
 import { updateSettings, useHydrated, useSettings } from "@/features/storage/store";
 import { createRng, randomSeed } from "@/lib/rng";
 import { NeedsKeyboard } from "./NeedsKeyboard";
@@ -16,7 +17,6 @@ import { TypingScreen } from "./TypingScreen";
 import { useCorpus } from "./useCorpus";
 import { useFinish } from "./useFinish";
 import { useHasPhysicalKeyboard } from "./usePhysicalKeyboard";
-import { useKeyTick } from "./useKeyTick";
 import { useTypingSession } from "./useTypingSession";
 import styles from "./Runner.module.css";
 
@@ -47,7 +47,7 @@ export function LessonRunner({ lessonId }: { lessonId: string }) {
     setRunId((r) => r + 1);
   }, [settings.restartAfter]);
 
-  const onKey = useKeyTick(settings.sound);
+  const onKey = useKeySound(settings);
   const { state, pressed } = useTypingSession({
     text,
     config: engineConfigOf(settings),

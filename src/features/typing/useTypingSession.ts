@@ -4,16 +4,23 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { TypingSession } from "@/features/engine/session";
 import { keyLikeFromEvent } from "@/features/engine/input";
 import type { EngineConfig, EngineState } from "@/features/engine/types";
+import type { KeySoundHandler, KeySoundKind } from "@/features/sound/types";
 
 interface Options {
   text: string | null;
   config: EngineConfig;
   /** Called on Tab or Escape. */
   onRestart: () => void;
-  /** Called on every consumed keystroke, outside the engine (sound). */
-  onKey?: () => void;
+  /** Called on Escape instead of onRestart (Tab still restarts). */
+  onEscape?: () => void;
+  /** Called after every consumed key press, outside the engine (sound). */
+  onKey?: KeySoundHandler;
   /** Time limit in ms for timed tests. */
   limitMs?: number | null;
+  /** Open-ended run (Zen): the text can be extended and never finishes by itself. */
+  open?: boolean;
+  /** Idle gaps longer than this are removed from the run's clock. */
+  pauseAfterMs?: number | null;
   /** Called when "restart after N" fails the attempt. */
   onFail?: () => void;
   /** Bumped by the caller to start a fresh session with the same text. */
@@ -29,6 +36,7 @@ const EMPTY_STATE: EngineState = {
   backspaces: 0,
   startedAt: null,
   elapsed: 0,
+  open: false,
 };
 
 function isFormTarget(t: EventTarget | null): boolean {
@@ -36,25 +44,40 @@ function isFormTarget(t: EventTarget | null): boolean {
   return t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName);
 }
 
+/** What a consumed key did, from the state before and after. O(1). Null when nothing was recorded. */
+function soundKind(before: EngineState, after: EngineState): KeySoundKind | null {
+  if (after.backspaces > before.backspaces) return "backspace";
+  if (after.keystrokes.length === before.keystrokes.length) return null;
+  const last = after.keystrokes[after.keystrokes.length - 1];
+  if (!last.correct) return "error";
+  return last.expected === " " ? "space" : "key";
+}
+
 /** Owns a TypingSession, wires the global key listener, and tracks physically held keys. */
 export function useTypingSession({
   text,
   config,
   onRestart,
+  onEscape,
   onKey,
   onFail,
   runId,
   limitMs = null,
+  open = false,
+  pauseAfterMs = null,
 }: Options) {
   const { onError, restartAfter, backspace } = config;
   const session = useMemo(
     () =>
       text
-        ? new TypingSession(text, { onError, restartAfter, backspace }, undefined, limitMs)
+        ? new TypingSession(text, { onError, restartAfter, backspace }, undefined, limitMs, {
+            open,
+            pauseAfterMs,
+          })
         : null,
     // runId deliberately restarts the session with identical text.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [text, onError, restartAfter, backspace, runId, limitMs],
+    [text, onError, restartAfter, backspace, runId, limitMs, open, pauseAfterMs],
   );
   const [pressed, setPressed] = useState<ReadonlySet<string>>(new Set());
 
@@ -78,7 +101,8 @@ export function useTypingSession({
       setPressed((p) => (p.has(e.code) ? p : new Set(p).add(e.code)));
       if (e.key === "Tab" || e.key === "Escape") {
         e.preventDefault();
-        onRestart();
+        if (e.key === "Escape" && onEscape) onEscape();
+        else onRestart();
         return;
       }
       // Held keys: only backspace auto-repeats. A held letter would otherwise count as a burst of mistakes.
@@ -86,9 +110,11 @@ export function useTypingSession({
         e.preventDefault();
         return;
       }
+      const before = session.getState();
       if (session.press(keyLikeFromEvent(e))) {
         e.preventDefault();
-        onKey?.();
+        const kind = onKey ? soundKind(before, session.getState()) : null;
+        if (kind) onKey?.(kind);
       }
     };
     const up = (e: KeyboardEvent): void =>
@@ -107,7 +133,7 @@ export function useTypingSession({
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", clear);
     };
-  }, [session, onRestart, onKey]);
+  }, [session, onRestart, onEscape, onKey]);
 
   return { session, state, pressed };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createState, reduce, wordStart } from "./engine";
+import { createState, extendTarget, reduce, restart, wordStart } from "./engine";
 import { computeMetrics, consistencyOf, slowestKeys, wpmOf } from "./metrics";
 import { resolveKey, type KeyLike } from "./input";
 import {
@@ -230,5 +230,48 @@ describe("end", () => {
     expect(ended.elapsed).toBe(5000);
     const idle = createState("abc", cfg());
     expect(reduce(idle, { kind: "end", t: 10 })).toBe(idle);
+  });
+});
+
+describe("open-ended runs", () => {
+  const open = (target: string, keys: string): EngineState => {
+    let s = createState(target, cfg(), { open: true });
+    let t = 1000;
+    for (const ch of keys) {
+      t += 100;
+      s = reduce(s, { kind: "char", char: ch, t, modifier: "none" });
+    }
+    return s;
+  };
+
+  it("does not finish at the end of the target", () => {
+    const s = open("abc", "abc");
+    expect(s.status).toBe("running");
+    expect(s.entries).toHaveLength(3);
+    const more = reduce(s, { kind: "char", char: "d", t: 2000, modifier: "none" });
+    expect(more.entries).toHaveLength(3);
+  });
+
+  it("extendTarget keeps entries, keystrokes and status", () => {
+    const s = open("ab", "ab");
+    const e = extendTarget(s, " cd");
+    expect(e.target).toBe("ab cd");
+    expect(e.entries).toBe(s.entries);
+    expect(e.keystrokes).toBe(s.keystrokes);
+    expect(e.status).toBe("running");
+    const next = reduce(e, { kind: "char", char: " ", t: 5000, modifier: "none" });
+    expect(next.entries).toHaveLength(3);
+    expect(extendTarget(s, "")).toBe(s);
+  });
+
+  it("finishes on an end input with the elapsed time", () => {
+    const done = reduce(open("abc def", "abc"), { kind: "end", t: 1100 + 2500 });
+    expect(done.status).toBe("finished");
+    expect(done.elapsed).toBe(2500);
+  });
+
+  it("restart keeps the run open", () => {
+    expect(restart(open("ab", "a")).open).toBe(true);
+    expect(createState("ab", cfg()).open).toBe(false);
   });
 });
