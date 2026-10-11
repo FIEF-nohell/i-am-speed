@@ -1,15 +1,16 @@
 "use client";
 
+import { BarChart3, BookOpen, Settings, Timer } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mark } from "@/components/icons/Mark";
 import styles from "./Header.module.css";
 
 const NAV = [
-  { href: "/", label: "lessons" },
-  { href: "/test/", label: "test" },
-  { href: "/stats/", label: "stats" },
-  { href: "/settings/", label: "settings" },
+  { href: "/", label: "lessons", Icon: BookOpen },
+  { href: "/test/", label: "test", Icon: Timer },
+  { href: "/stats/", label: "stats", Icon: BarChart3 },
+  { href: "/settings/", label: "settings", Icon: Settings },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
@@ -33,7 +34,8 @@ export function Header() {
                 href={item.href}
                 aria-current={isActive(pathname, item.href) ? "page" : undefined}
               >
-                {item.label}
+                <item.Icon aria-hidden="true" />
+                <span>{item.label}</span>
               </Link>
             </li>
           ))}
