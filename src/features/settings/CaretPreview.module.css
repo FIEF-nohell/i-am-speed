@@ -1,0 +1,33 @@
+.preview {
+  display: flex;
+  align-items: center;
+  min-height: 4.5rem;
+  padding: 0 var(--space-4);
+  overflow: hidden;
+  background: var(--canvas);
+  border: var(--stroke) solid var(--line);
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--type-size);
+  line-height: calc(var(--type-size) * var(--type-leading));
+  white-space: pre;
+}
+.typed {
+  color: var(--text);
+}
+.current,
+.rest {
+  color: var(--dim);
+}
+
+/* The same three shapes as the typing caret, drawn on the next character. */
+.current[data-style="line"] {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.current[data-style="block"] {
+  background: var(--accent-soft);
+  border-radius: 3px;
+}
+.current[data-style="underline"] {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
