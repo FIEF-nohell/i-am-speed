@@ -7,6 +7,8 @@ export default defineConfig({
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,
+  // Only the PRESERVE pixel guard (e2e/preserve.spec.ts) uses snapshots; they are git-ignored.
+  snapshotPathTemplate: "screenshots/preserve/{arg}{ext}",
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [

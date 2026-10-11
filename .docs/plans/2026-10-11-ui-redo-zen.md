@@ -232,8 +232,8 @@ Default behaviour note: the `Button` default changes from quiet to `secondary`. 
 ### M0. Baseline guards (WS0, sequential)
 Outcome: the liked screens have a pixel baseline before anything changes.
 
-- [ ] Add `e2e/preserve.spec.ts` (skipped unless `PRESERVE=1`): for each theme, capture lesson list (`/` after completing `home-01`), `/lesson/top-01/` after typing the first 20 characters, and `/test/` typing area (locator `[aria-label="text to type"]` plus its info bar) with `animations: "disabled"`; compare with `toHaveScreenshot` against `screenshots/preserve/` (git-ignored, generated with `--update-snapshots` at base).
-- [ ] Generate the baselines at base sha `0f487e5` (`npm run build` then `PRESERVE=1 npx playwright test e2e/preserve.spec.ts --update-snapshots`) and record the command in the Log.
+- [x] Add `e2e/preserve.spec.ts` (skipped unless `PRESERVE=1`): for each theme, capture lesson list (`/` after completing `home-01`), `/lesson/top-01/` after typing the first 20 characters, and `/test/` typing area (locator `[aria-label="text to type"]` plus its info bar) with `animations: "disabled"`; compare with `toHaveScreenshot` against `screenshots/preserve/` (git-ignored, generated with `--update-snapshots` at base).
+- [x] Generate the baselines at base sha `0f487e5` (`npm run build` then `PRESERVE=1 npx playwright test e2e/preserve.spec.ts --update-snapshots`) and record the command in the Log.
 
 ### M1. Foundations: tokens, contracts, primitives (WS0, sequential, must be committed before M2 to M8 start)
 Outcome: every parallel workstream codes against frozen tokens, settings schema and primitive APIs.
@@ -363,3 +363,4 @@ Outcome: decisions and docs describe the current state.
 ## Log
 
 - 2026-10-11 19:10 Plan written by planner at base `0f487e5`. Screenshots of the current state (dark and light, 1440 and 390, every page) were captured into the session scratchpad and critiqued in Inputs. Contrast of text roles on `--surface` measured (dim fails AA on surface in all themes). Retrieval helper broken (`PyYAML` missing), rules selected manually. Defaults chosen for open questions: Zen in the main nav, Zen text from sentences, Zen counts toward totals but not lessons, synthesised sounds (no samples), sound pack default `soft`, volume 60, error sound on, settings not searchable.
+- 2026-10-11 20:00 M0 done. `e2e/preserve.spec.ts` added. Deviations: (1) `Math.random` is seeded via `addInitScript` because lesson and test text is random per load; (2) list and lesson are compared via the `main` element (not full page) and the test area via a clip of info bar plus text, so intentional header, footer and toolbar redesigns do not trip the guard; (3) `playwright.config.ts` gained `snapshotPathTemplate: "screenshots/preserve/{arg}{ext}"` (only this spec uses snapshots; dir is git-ignored). Baselines recorded on code identical to base `0f487e5` (HEAD `ff1d773` only adds the plan): `npm run build && PRESERVE=1 npx playwright test e2e/preserve.spec.ts --update-snapshots`; a second compare run passed (stable, 12 images: list, lesson, test x 4 themes).
