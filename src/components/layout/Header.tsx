@@ -1,9 +1,10 @@
 "use client";
 
-import { BarChart3, BookOpen, Settings, Timer } from "lucide-react";
+import { BarChart3, BookOpen, Settings, Timer, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mark } from "@/components/icons/Mark";
+import { SyncBadge } from "@/features/auth/SyncBadge";
 import styles from "./Header.module.css";
 
 const NAV = [
@@ -11,6 +12,7 @@ const NAV = [
   { href: "/test/", label: "test", Icon: Timer },
   { href: "/stats/", label: "stats", Icon: BarChart3 },
   { href: "/settings/", label: "settings", Icon: Settings },
+  { href: "/account/", label: "account", Icon: User },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
@@ -36,6 +38,7 @@ export function Header() {
               >
                 <item.Icon aria-hidden="true" />
                 <span>{item.label}</span>
+                {item.href === "/account/" && <SyncBadge className={styles.badge} />}
               </Link>
             </li>
           ))}

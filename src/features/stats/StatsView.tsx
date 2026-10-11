@@ -38,8 +38,7 @@ export function StatsView() {
       <div className="page-narrow">
         <h1 className="page-title">stats</h1>
         <p className="page-lede">
-          Nothing to show yet. Finish a lesson or a test and your progress will collect here, in
-          this browser only.
+          Nothing to show yet. Finish a lesson or a test and your progress will collect here.
         </p>
       </div>
     );
@@ -48,7 +47,9 @@ export function StatsView() {
   return (
     <div>
       <h1 className="page-title">stats</h1>
-      <p className="page-lede">Everything below is calculated from data stored in this browser.</p>
+      <p className="page-lede">
+        Everything below is calculated from your saved attempts and progress.
+      </p>
 
       <dl className={styles.totals}>
         <Stat label="time typed" value={formatDuration(data.totals.timeMs)} />
