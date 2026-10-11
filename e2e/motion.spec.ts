@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { completeLesson, lessonText, typeText } from "./helpers";
 
 test("typing stays free of long tasks and slow key handling", async ({ page }) => {
@@ -84,4 +84,56 @@ test("typing helpers still work after motion changes", async ({ page }) => {
   await page.goto("/lesson/home-01/");
   await typeText(page, await lessonText(page));
   await page.waitForURL("**/results/");
+});
+
+const BUDGET = { p95: 8, max: 40 };
+
+function expectBudget(timings: number[], label: string): void {
+  const sorted = [...timings].sort((a, b) => a - b);
+  const p95 = sorted[Math.floor(sorted.length * 0.95)];
+  expect(p95, `${label}: p95 key handler ${p95.toFixed(2)}ms`).toBeLessThan(BUDGET.p95);
+  expect(sorted.at(-1)!, `${label}: slowest key handler`).toBeLessThan(BUDGET.max);
+}
+
+/** Times `count` synchronous key handlers on whatever text is currently ahead (works for Zen). */
+async function timeKeys(page: Page, count: number): Promise<number[]> {
+  return page.evaluate((total) => {
+    const sel = '[aria-label="text to type"] [data-state]';
+    const out: number[] = [];
+    while (out.length < total) {
+      const ahead = [
+        ...document.querySelectorAll(`${sel}[data-state="current"], ${sel}[data-state="untyped"]`),
+      ]
+        .map((e) => e.textContent ?? "")
+        .join("");
+      for (const key of ahead.slice(0, Math.min(100, total - out.length))) {
+        const t0 = performance.now();
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+        );
+        out.push(performance.now() - t0);
+      }
+    }
+    return out;
+  }, count);
+}
+
+test("typing with key sounds on stays within the key handler budget", async ({ page }) => {
+  await page.goto("/settings/");
+  await page.getByRole("switch", { name: "key sounds" }).click();
+  await page.goto("/lesson/paragraphs-03/");
+  await lessonText(page);
+  // The first gesture unlocks audio; after that every key plays a sound.
+  await page.mouse.click(5, 5);
+  await page.waitForTimeout(300);
+  expectBudget(await timeKeys(page, 120), "sound on");
+});
+
+test("zen after 3000 characters stays within the key handler budget", async ({ page }) => {
+  await page.goto("/zen/");
+  await page.locator('[aria-label="text to type"] [data-state]').first().waitFor();
+  const timings = await timeKeys(page, 3000);
+  expectBudget(timings.slice(-300), "zen, last 300 of 3000");
+  expectBudget(timings, "zen, all 3000");
+  await expect(page.locator("html")).toHaveAttribute("data-focus", "zen");
 });

@@ -51,7 +51,15 @@ interface DotProps {
   index?: number;
 }
 
-export function ProgressCharts({ days, now }: { days: DayPoint[]; now: number }) {
+export function ProgressCharts({
+  days,
+  now,
+  index,
+}: {
+  days: DayPoint[];
+  now: number;
+  index?: number;
+}) {
   const [metric, setMetric] = useState<Metric>("wpm");
   const [range, setRange] = useState<DayRange>("30d");
   const today = dayKey(now);
@@ -70,7 +78,7 @@ export function ProgressCharts({ days, now }: { days: DayPoint[]; now: number })
     : `Latest ${data[lastIndex].value} ${unit} over ${data.length} days.`;
 
   return (
-    <Panel as="div">
+    <Panel as="div" index={index}>
       <ChartFrame
         title={title}
         height={220}

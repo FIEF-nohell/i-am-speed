@@ -27,9 +27,17 @@ import styles from "./StatsView.module.css";
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-function Tile({ children, progress }: { children: ReactNode; progress?: number }) {
+function Tile({
+  children,
+  progress,
+  index,
+}: {
+  children: ReactNode;
+  progress?: number;
+  index: number;
+}) {
   return (
-    <Panel as="div" className={styles.tile}>
+    <Panel as="div" index={index} className={styles.tile}>
       <dl>{children}</dl>
       {progress !== undefined && (
         <span className={styles.tileLine} aria-hidden="true">
@@ -92,30 +100,32 @@ export function StatsView() {
       />
 
       <div className={styles.tiles}>
-        <Tile>
+        <Tile index={1}>
           <Stat size="tile" label="time typed" value={formatDuration(data.totals.timeMs)} />
         </Tile>
-        <Tile>
+        <Tile index={2}>
           <Stat size="tile" label="characters" value={data.totals.chars.toLocaleString("en")} />
         </Tile>
-        <Tile>
+        <Tile index={3}>
           <Stat size="tile" label="attempts" value={`${data.totals.attempts}`} />
         </Tile>
-        <Tile progress={passed / LESSONS.length}>
+        <Tile index={4} progress={passed / LESSONS.length}>
           <Stat size="tile" label="lessons passed" value={`${passed} / ${LESSONS.length}`} />
         </Tile>
       </div>
 
-      <ProgressCharts days={days} now={now} />
+      <ProgressCharts days={days} now={now} index={5} />
 
       <div className={styles.pair}>
-        <FingersPanel fingers={fingers} />
-        <PhasesPanel phases={phases} />
+        <FingersPanel fingers={fingers} index={6} />
+        <PhasesPanel phases={phases} index={7} />
       </div>
 
-      <KeysPanel weak={weak} heat={heat} />
-      <RecentAttempts attempts={recent} now={now} />
-      {attempted.length > 0 && <LessonsPanel lessons={attempted} progress={data.lessons} />}
+      <KeysPanel weak={weak} heat={heat} index={8} />
+      <RecentAttempts attempts={recent} now={now} index={9} />
+      {attempted.length > 0 && (
+        <LessonsPanel lessons={attempted} progress={data.lessons} index={10} />
+      )}
     </div>
   );
 }

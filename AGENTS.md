@@ -170,7 +170,7 @@ This rule applies to any agent that edits `.claude/agents/` (including the learn
 ### Key paths
 | Path | Purpose |
 |------|---------|
-| `src/features/` | Feature modules (keyboard, engine, lessons, content, storage, typing, results, stats, settings) |
+| `src/features/` | Feature modules (keyboard, engine, lessons, content, storage, typing, sound, results, stats, settings) |
 | `src/components/ui/` | Shared UI primitives |
 | `src/content/` | Static word, sentence and passage JSON (generated) |
 | `brand/` | SVG sources and palette; `npm run brand` renders derived assets |

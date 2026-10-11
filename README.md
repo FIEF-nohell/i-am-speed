@@ -7,6 +7,7 @@ Live: https://speed.nohelll.com
 - Next.js (App Router), React, TypeScript strict, static export (`output: 'export'`).
 - 67 lessons in 11 phases, all open from the start. Passing is 95% accuracy and is only a mark, never a gate.
 - Free test: 15/30/60 seconds or 10/25/50 words.
+- Zen mode: endless text with no timer, saved on Esc (see below).
 - Four themes (dark, light, dusk, ember), one accent each. Data export and import as JSON.
 
 ## Run
@@ -87,6 +88,24 @@ One system, defined once: `src/lib/motion.ts` (durations, easings, stagger, `twe
 
 Add an animation: use the `.enter` class (optionally `style={staggerStyle(i)}`) for entrances, `--dur-*` and `--ease-*` variables for CSS transitions, `tween()` for number counting. Add a new duration or easing in `motion.ts` and `motion.css` together, never inline. Review aids: `MOTION=1 npx playwright test e2e/motion-capture.spec.ts` writes a video and frame sequences to `screenshots/`.
 
+## Zen mode
+
+`/zen/` (linked from the nav and the test toolbar) is an endless typing screen. Before the first key it shows a quiet hint; once you type, the header and footer fade out and only a small `esc` hint remains. `Esc` finishes and opens the results page, `Tab` gives new text. A session is saved only if you typed at least one word (otherwise `Esc` goes back to the test), counts toward totals, days, keys and fingers, and never toward lessons. Pauses over 5 s do not count as time. The text is a window over a stream of sentences, so long sessions stay as cheap as short ones. Details: DECISIONS.md D17.
+
+## Sound
+
+Key sounds are off by default (settings, "sound"). They are synthesised in the browser, with four packs (`soft`, `clicky`, `typewriter`, `bubble`), a volume and an optional error sound; nothing is downloaded and no samples are used. The audio context is created on your first click or key press after you switch sounds on. Code: `src/features/sound/` (`synth.ts` renders, `packs.ts` holds the recipes, `player.ts` plays). Details: DECISIONS.md D18.
+
+## Design system
+
+Tokens live in `brand/palette.json` (colours per theme, run `npm run brand`), `src/styles/globals.css` (space, type, radius, control sizes, page widths) and `src/styles/motion.css`. Primitives are in `src/components/ui/`: `Panel`, `PageHeader`, `Button` and `ButtonLink` (`primary`, `secondary`, `ghost`, `danger`), `Field` with `TextInput`, `Select`, `Segmented` (`text` or `pill`), `Toggle`, `Slider`, `Row`, `Notice`, `EmptyState`, `Stat`, `ChartFrame`, `Kbd`, `KeyCap`.
+
+- Panel rule: one level of flat panels on non-typing pages; never on the lesson list or typing screens; a panel never contains a panel (use `Row` dividers).
+- Text-role rule: on `--panel` and `--surface` use `--text` and `--muted`; `--dim` is for the canvas only; control borders use `--line-strong`. `src/lib/color.test.ts` enforces the contrast ratios.
+- Add a page: create `src/app/<route>/page.tsx` with a `PageHeader`, put content in `Panel`s (pass `index` for the staggered entrance), pick the width with `page-narrow`, `page-wide` or `page-form`, add it to `e2e/a11y.spec.ts` and `e2e/screenshots.spec.ts`.
+- Guards: `PRESERVE=1 npx playwright test e2e/preserve.spec.ts` compares the lesson list, lesson screen and test typing area with baselines (record with `--update-snapshots`; the baselines are git-ignored). `SHOTS=1 THEMES=dark,light,dusk,ember npx playwright test e2e/screenshots.spec.ts` captures every page at 1440 and 390 for review and asserts no horizontal scroll. `e2e/a11y.spec.ts` runs axe on every page. Playwright refuses to reuse a server already on port 4173; set `PW_REUSE_SERVER=1` only when you serve `out/` yourself.
+- Design rationale: DECISIONS.md D16.
+
 ## Deploy (Vercel)
 
 No special configuration. Standard settings:
@@ -111,8 +130,9 @@ src/features/storage      versioned localStorage schema, migration, store
 src/features/auth         sign-in state and account screens
 src/features/sync         merge model, serialisation, sync engine (pure, tested)
 src/features/firebase     lazy Firebase client, auth and Firestore adapters (only place that imports firebase)
-src/features/{typing,results,stats,settings}   screens
-src/components/ui         Button, Toggle, Select, Slider, Section, Row, KeyCap, Stat, ChartFrame ...
+src/features/sound        synthesised key sounds (synth, packs, player, hook)
+src/features/{typing,results,stats,settings}   screens (typing includes Zen)
+src/components/ui         Panel, Button, Field, Segmented, Toggle, Select, Slider, Row, Notice, EmptyState, Stat, ChartFrame ...
 src/lib                   rng, colour maths, motion
 scripts/                  content, brand and check scripts
 brand/                    SVG sources and palette

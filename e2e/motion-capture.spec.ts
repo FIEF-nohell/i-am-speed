@@ -44,5 +44,20 @@ test("capture key interactions", async ({ browser }) => {
   await page.getByRole("radio", { name: "dark", exact: true }).click();
   await page.getByRole("link", { name: "lessons" }).click();
   await frames("route", [0, 100, 200, 400]);
+  // Zen: idle, first key (chrome fades), a long run (the window trims lines), finish.
+  await page.goto("/zen/");
+  await page.locator('[aria-label="text to type"] [data-state]').first().waitFor();
+  await frames("zen-idle", [0, 200]);
+  await page.keyboard.press(
+    (await page.locator('[aria-label="text to type"] [data-state]').first().textContent()) ?? "a",
+  );
+  await frames("zen-fade", [0, 80, 160, 320, 520]);
+  for (let i = 0; i < 8; i++) {
+    const ahead = await page
+      .locator('[aria-label="text to type"] [data-state="untyped"]')
+      .allTextContents();
+    await typeText(page, ahead.join("").slice(0, 40));
+    await frames(`zen-run${i}`, [0, 60]);
+  }
   await ctx.close();
 });

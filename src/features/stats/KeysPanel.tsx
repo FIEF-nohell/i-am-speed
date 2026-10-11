@@ -9,11 +9,13 @@ import styles from "./StatsView.module.css";
 interface Props {
   weak: WeakKey[];
   heat: Readonly<Record<string, number>>;
+  index?: number;
 }
 
-export function KeysPanel({ weak, heat }: Props) {
+export function KeysPanel({ weak, heat, index }: Props) {
   return (
     <Panel
+      index={index}
       title="keys"
       description={weak.length ? "Highest error rate over all attempts." : undefined}
     >

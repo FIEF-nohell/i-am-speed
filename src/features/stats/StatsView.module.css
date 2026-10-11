@@ -191,7 +191,7 @@
     grid-row: 1;
   }
   .bars li {
-    grid-template-columns: minmax(0, 6rem) 1fr 3.2rem;
+    grid-template-columns: minmax(0, 8rem) 1fr 3.2rem;
     gap: var(--space-2);
   }
 }

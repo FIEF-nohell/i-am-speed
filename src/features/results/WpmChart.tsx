@@ -42,7 +42,7 @@ export function WpmChart({ series }: { series: WpmPoint[] }) {
   return (
     <ChartFrame
       title="speed over time"
-      summary={`Peak ${peak} words per minute across ${series.length} seconds.`}
+      summary={`Peak ${peak} words per minute across ${series.length} ${series.length === 1 ? "second" : "seconds"}.`}
       empty={series.length < 2}
       legend={LEGEND_ITEMS}
     >

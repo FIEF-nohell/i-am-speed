@@ -89,6 +89,7 @@ Clean, modular, reusable code is a hard requirement, not a nice-to-have.
 - Typography: one monospace for typing, one clean sans for UI, via `next/font`.
 - Lesson list: phases as quiet sections, lessons as plain rows with a small completion mark and best WPM. No cards-in-cards.
 - Charts must follow the design system: muted, thin lines, no chart junk, no heavy gridlines.
+- Amended 2026-10-11: pages outside the lesson list and typing screens may use one level of flat panels, bordered controls and a grouped header. See DECISIONS.md D16.
 
 ## 9. Keyboard model (Austrian QWERTZ, ISO)
 
@@ -119,7 +120,7 @@ Phases, each roughly 5 to 10 lessons, each lesson roughly 1 to 2 minutes:
 
 For phases 1 to 4, generate drills Keybr-style: pick real words from the frequency list that use only the unlocked key set, weighted towards the newest keys, and fall back to pseudo-words only when too few real words exist. The allowed character set per lesson is explicit data, and generation must never leave it. Each lesson has a stable id, title, short description, target character set, length target, and completion rule (accuracy >= 95%).
 
-Also provide a free test mode (Monkeytype-like: time 15/30/60 or word count 10/25/50) in the selected text language.
+Also provide a free test mode (Monkeytype-like: time 15/30/60 or word count 10/25/50) in the selected text language, and an endless Zen mode (`/zen/`, no timer, saved on Esc). See DECISIONS.md D17.
 
 ## 11. Content (German and English)
 
@@ -155,7 +156,7 @@ Also provide a free test mode (Monkeytype-like: time 15/30/60 or word count 10/2
 
 ## 15. Settings (one global page plus quick access)
 
-Text language (DE/EN), on-error behaviour, backspace behaviour, theme, font size, caret style, keyboard guide toggles, sound off by default (optional subtle key sounds), export/import data as JSON, reset all data (with confirmation).
+Text language (DE/EN), on-error behaviour, backspace behaviour, theme, font size, caret style, keyboard guide toggles, sound off by default (optional synthesised key sounds in four packs with volume and an error sound, see DECISIONS.md D18), export/import data as JSON, reset all data (with confirmation).
 
 ## 16. Storage
 

@@ -81,3 +81,16 @@ test("zen: esc before typing returns to the test without saving", async ({ page 
   await page.goto("/stats/");
   await expect(page.getByText("attempts", { exact: true })).toHaveCount(0);
 });
+
+test("zen: anonymous use makes no network requests", async ({ page }) => {
+  const external: string[] = [];
+  page.on("request", (r) => {
+    if (!r.url().startsWith("http://localhost:4173")) external.push(r.url());
+  });
+  await page.goto("/zen/");
+  await page.locator(CHARS).first().waitFor();
+  await typeAhead(page, 40);
+  await page.keyboard.press("Escape");
+  await page.waitForURL("**/results/");
+  expect(external).toEqual([]);
+});

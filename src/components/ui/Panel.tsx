@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { staggerStyle } from "@/lib/motion";
 import styles from "./Panel.module.css";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   id?: string;
   as?: "section" | "div";
   className?: string;
+  /** Position in the page: the panel fades in with a capped stagger (the shared `.enter`). */
+  index?: number;
   children: ReactNode;
 }
 
@@ -23,13 +26,15 @@ export function Panel({
   id,
   as: Tag = "section",
   className,
+  index,
   children,
 }: Props) {
   const headingId = title ? `${id ?? title.replace(/\s+/g, "-")}-h` : undefined;
   return (
     <Tag
       id={id}
-      className={`${styles.panel} ${className ?? ""}`}
+      className={`${styles.panel} ${index === undefined ? "" : "enter"} ${className ?? ""}`}
+      style={index === undefined ? undefined : staggerStyle(index)}
       aria-labelledby={Tag === "section" ? headingId : undefined}
     >
       {(title || aside) && (

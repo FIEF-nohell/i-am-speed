@@ -83,11 +83,12 @@ export function ResultsView() {
     <div className={styles.page}>
       <ResultsHero result={result} />
 
-      <Panel as="div">
+      <Panel as="div" index={1}>
         <WpmChart series={result.series} />
       </Panel>
 
       <Panel
+        index={2}
         title="where it went wrong"
         description={
           hasErrors
@@ -102,6 +103,7 @@ export function ResultsView() {
 
       {slow.length > 0 && (
         <Panel
+          index={3}
           title="slowest keys"
           description="Average time between the previous key and this one."
         >

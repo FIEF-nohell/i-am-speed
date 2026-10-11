@@ -7,12 +7,13 @@ import styles from "./StatsView.module.css";
 interface Props {
   attempts: readonly Attempt[];
   now: number;
+  index?: number;
 }
 
 /** Newest attempts first. Zen, tests and lessons are labelled by `sourceLabel`. */
-export function RecentAttempts({ attempts, now }: Props) {
+export function RecentAttempts({ attempts, now, index }: Props) {
   return (
-    <Panel title="recent attempts" description="Your latest finished runs.">
+    <Panel index={index} title="recent attempts" description="Your latest finished runs.">
       {attempts.length === 0 ? (
         <p className={styles.note}>No saved attempts on this device yet.</p>
       ) : (

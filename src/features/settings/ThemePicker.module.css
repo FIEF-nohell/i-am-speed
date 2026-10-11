@@ -16,10 +16,14 @@
   font-size: var(--text-sm);
   transition:
     color var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out);
+    border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .option:hover {
   color: var(--text);
+}
+.option:active {
+  transform: scale(0.97);
 }
 .option[aria-checked="true"] {
   color: var(--text);
