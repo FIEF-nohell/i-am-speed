@@ -1,9 +1,11 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useId, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
 import { Notice } from "@/components/ui/Notice";
+import { TextInput } from "@/components/ui/TextInput";
 import { getSyncActions } from "@/features/sync/state";
 import styles from "./AccountView.module.css";
 import { getAuthAdapter, signOut } from "./session";
@@ -24,7 +26,6 @@ export function DeleteAccount({
   /** Called after sign-out, when this component is about to unmount. */
   onDone: (message: DeleteMessage) => void;
 }) {
-  const id = useId();
   const [step, setStep] = useState<Step>("idle");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<Message | null>(null);
@@ -74,7 +75,11 @@ export function DeleteAccount({
   if (step === "idle") {
     return (
       <>
-        <Button icon={<Trash2 />} onClick={() => setStep("confirm")}>
+        <Button
+          variant="danger"
+          icon={<Trash2 aria-hidden="true" />}
+          onClick={() => setStep("confirm")}
+        >
           delete account and cloud data
         </Button>
         {message && <Notice tone={message.error ? "error" : "neutral"}>{message.text}</Notice>}
@@ -90,23 +95,32 @@ export function DeleteAccount({
         stays; you can reset it separately in settings. Confirm your identity to continue.
       </p>
       {usesPassword && (
-        <div className={styles.field}>
-          <label htmlFor={`${id}-pw`}>password</label>
-          <input
-            id={`${id}-pw`}
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        <Field label="password">
+          {(id, describedBy) => (
+            <TextInput
+              id={id}
+              aria-describedby={describedBy}
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          )}
+        </Field>
       )}
       <div className={styles.actions}>
-        <Button variant="primary" type="submit" icon={<Trash2 />} disabled={working}>
+        <Button
+          variant="danger"
+          solid
+          type="submit"
+          icon={<Trash2 aria-hidden="true" />}
+          disabled={working}
+        >
           {usesPassword ? "delete everything" : "confirm with Google and delete"}
         </Button>
         <Button
+          variant="secondary"
           disabled={working}
           onClick={() => {
             setStep("idle");

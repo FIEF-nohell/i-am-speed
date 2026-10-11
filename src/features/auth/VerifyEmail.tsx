@@ -3,6 +3,7 @@
 import { MailCheck } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Notice } from "@/components/ui/Notice";
 import { callAdapter } from "./authKit";
 import styles from "./AccountView.module.css";
 import type { AuthUser } from "./types";
@@ -26,21 +27,24 @@ export function VerifyEmail({ user }: { user: AuthUser }) {
   };
 
   return (
-    <div className={styles.verify}>
-      <p className={styles.dialogText} role="status">
-        {state === "sent"
-          ? `Verification email sent to ${user.email}. Check your inbox and spam folder.`
-          : state === "failed"
-            ? error
-            : `Verify your email: we sent a link to ${user.email}. Syncing works without it.`}
-      </p>
-      <Button
-        icon={<MailCheck aria-hidden="true" />}
-        disabled={state === "sending" || state === "sent"}
-        onClick={() => void resend()}
-      >
-        {state === "sending" ? "sending" : state === "sent" ? "sent" : "resend email"}
-      </Button>
-    </div>
+    <Notice tone={state === "failed" ? "error" : "info"} icon>
+      <div className={styles.notice}>
+        <p className={styles.noticeText}>
+          {state === "sent"
+            ? `Verification email sent to ${user.email}. Check your inbox and spam folder.`
+            : state === "failed"
+              ? error
+              : `Verify your email: we sent a link to ${user.email}. Syncing works without it.`}
+        </p>
+        <Button
+          variant="secondary"
+          icon={<MailCheck aria-hidden="true" />}
+          disabled={state === "sending" || state === "sent"}
+          onClick={() => void resend()}
+        >
+          {state === "sending" ? "sending" : state === "sent" ? "sent" : "resend email"}
+        </Button>
+      </div>
+    </Notice>
   );
 }

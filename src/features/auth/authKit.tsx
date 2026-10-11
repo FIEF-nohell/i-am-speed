@@ -1,10 +1,11 @@
 "use client";
 
-import { Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+import { Mark } from "@/components/icons/Mark";
 import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
+import { Panel } from "@/components/ui/Panel";
 import styles from "./AuthScreens.module.css";
 import { messageFor } from "./errors";
 import { bootAuth, getAuthAdapter, useAuth } from "./session";
@@ -61,6 +62,7 @@ export function useFormFocus(formRef: RefObject<HTMLFormElement | null>, errorKe
   }, [formRef, errorKey]);
 }
 
+/** The centred card every auth screen sits in, with footer links below it. */
 export function AuthShell({
   title,
   lede,
@@ -74,26 +76,31 @@ export function AuthShell({
 }) {
   return (
     <div className={styles.shell}>
-      <h1 className="page-title">{title}</h1>
-      <p className="page-lede">{lede}</p>
-      {children}
+      <Panel as="div" className={styles.card}>
+        <header className={styles.cardHead}>
+          <Mark size={32} />
+          <h1 className={`page-title ${styles.title}`}>{title}</h1>
+          <p className={styles.lede}>{lede}</p>
+        </header>
+        {children}
+      </Panel>
       {footer && <div className={styles.alt}>{footer}</div>}
     </div>
   );
 }
 
+/** Reserves the card's height while the sign-in state loads, so nothing jumps. */
 export function ScreenPlaceholder() {
-  return <div className={styles.placeholder} aria-hidden="true" />;
+  return (
+    <div className={styles.shell} aria-hidden="true">
+      <div className={styles.placeholder} />
+    </div>
+  );
 }
 
 export function GoogleButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
   return (
-    <Button
-      icon={<Globe aria-hidden="true" />}
-      disabled={disabled}
-      onClick={onClick}
-      className={styles.submit}
-    >
+    <Button variant="secondary" disabled={disabled} onClick={onClick} className={styles.submit}>
       continue with Google
     </Button>
   );

@@ -26,29 +26,26 @@ export function LinkDialog() {
   };
 
   return (
-    <div
-      className={styles.dialog}
-      role="alertdialog"
-      aria-labelledby="link-h"
-      aria-describedby="link-d"
-    >
-      <h2 id="link-h" className={styles.dialogTitle}>
-        this device has other progress
-      </h2>
-      <p id="link-d" className={styles.dialogText}>
-        The lessons and stats saved on this device belong to a different account
-        {sync.email ? ` than ${sync.email}` : ""}. You can merge them into this account, or cancel
-        and stay signed out. Nothing is deleted either way.
-      </p>
-      <div className={styles.actions}>
-        <Button variant="primary" disabled={pending} onClick={() => void choose("merge")}>
-          merge into this account
-        </Button>
-        <Button disabled={pending} onClick={() => void choose("cancel")}>
-          cancel
-        </Button>
-      </div>
-      {failed && <Notice tone="error">That did not work. Please try again.</Notice>}
+    <div role="alertdialog" aria-labelledby="link-h" aria-describedby="link-d">
+      <Notice tone="info" icon>
+        <h2 id="link-h" className={styles.dialogTitle}>
+          this device has other progress
+        </h2>
+        <p id="link-d" className={styles.dialogText}>
+          The lessons and stats saved on this device belong to a different account
+          {sync.email ? ` than ${sync.email}` : ""}. You can merge them into this account, or cancel
+          and stay signed out. Nothing is deleted either way.
+        </p>
+        <div className={`${styles.actions} ${styles.noticeActions}`}>
+          <Button variant="primary" disabled={pending} onClick={() => void choose("merge")}>
+            merge into this account
+          </Button>
+          <Button variant="secondary" disabled={pending} onClick={() => void choose("cancel")}>
+            cancel
+          </Button>
+        </div>
+        {failed && <p className={styles.dialogText}>That did not work. Please try again.</p>}
+      </Notice>
     </div>
   );
 }
