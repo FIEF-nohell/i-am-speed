@@ -26,3 +26,12 @@ export function clearStored(): void {
     /* nothing to clear */
   }
 }
+
+/** True when a stored value exists and storage is readable. */
+export function hasStored(): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}

@@ -7,6 +7,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { ThemeScript } from "@/components/ThemeScript";
 import { ThemeSync } from "@/components/ThemeSync";
 import { SITE, absoluteUrl } from "@/config/site";
+import { SyncProvider } from "@/features/sync/SyncProvider";
 import "@/styles/globals.css";
 
 const sans = localFont({
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           skip to content
         </a>
         <ThemeSync />
+        <SyncProvider />
         <Header />
         <main id="main" className="page">
           <PageTransition>{children}</PageTransition>
