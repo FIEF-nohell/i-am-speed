@@ -29,25 +29,32 @@ describe("curriculum", () => {
   });
 });
 
+/** Generates every lesson for six seeds with per-character expects: about 2 s alone, slower under load. */
+const SWEEP_TIMEOUT_MS = 30_000;
+
 describe("lesson generation", () => {
   for (const lang of LANGS) {
     const corpus = readCorpus(lang);
-    it(`never leaves the allowed set and fills the target (${lang})`, () => {
-      for (const lesson of LESSONS) {
-        const allowed = new Set(lesson.chars);
-        for (let seed = 1; seed <= 6; seed++) {
-          const text = generateLessonText(lesson, corpus, createRng(seed * 7919));
-          expect(text.length, `${lesson.id} empty`).toBeGreaterThan(0);
-          expect(text.length, `${lesson.id} too short`).toBeGreaterThanOrEqual(
-            Math.min(lesson.lengthTarget * 0.6, 40),
-          );
-          expect(text, `${lesson.id} double space`).not.toMatch(/ {2}/);
-          expect(text).toBe(text.trim());
-          for (const ch of text)
-            expect(allowed.has(ch), `${lesson.id} (${lang}) has "${ch}"`).toBe(true);
+    it(
+      `never leaves the allowed set and fills the target (${lang})`,
+      () => {
+        for (const lesson of LESSONS) {
+          const allowed = new Set(lesson.chars);
+          for (let seed = 1; seed <= 6; seed++) {
+            const text = generateLessonText(lesson, corpus, createRng(seed * 7919));
+            expect(text.length, `${lesson.id} empty`).toBeGreaterThan(0);
+            expect(text.length, `${lesson.id} too short`).toBeGreaterThanOrEqual(
+              Math.min(lesson.lengthTarget * 0.6, 40),
+            );
+            expect(text, `${lesson.id} double space`).not.toMatch(/ {2}/);
+            expect(text).toBe(text.trim());
+            for (const ch of text)
+              expect(allowed.has(ch), `${lesson.id} (${lang}) has "${ch}"`).toBe(true);
+          }
         }
-      }
-    });
+      },
+      SWEEP_TIMEOUT_MS,
+    );
   }
 
   it("is deterministic for a seed and varies across seeds", () => {

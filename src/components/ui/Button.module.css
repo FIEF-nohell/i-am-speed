@@ -1,4 +1,4 @@
-/* Default (no variant, no size) is the original quiet text button: do not change it. */
+/* Base look is the quiet text button (the ghost variant); other variants layer on top. */
 .button {
   display: inline-flex;
   align-items: center;
@@ -59,9 +59,6 @@
 .button.icon[data-size="md"] {
   width: var(--control-md);
   padding: 0;
-}
-.button.icon[data-size="legacy"] {
-  padding: var(--space-2);
 }
 
 .primary {

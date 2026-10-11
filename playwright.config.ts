@@ -21,6 +21,8 @@ export default defineConfig({
     // Serves the static export. Run `npm run build` first (npm run check does).
     command: `npx serve out -l ${PORT} -n`,
     port: PORT,
-    reuseExistingServer: true,
+    // Never silently test another build: a stale server on this port fails the run. Set
+    // PW_REUSE_SERVER=1 only when you deliberately serve `out/` yourself.
+    reuseExistingServer: Boolean(process.env.PW_REUSE_SERVER),
   },
 });

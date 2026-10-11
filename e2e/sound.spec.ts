@@ -72,8 +72,9 @@ test("sound off: no audio context is ever created", async ({ page }) => {
 
 test("the settings preview button creates a context and plays", async ({ page }) => {
   await instrumentAudio(page);
-  await page.goto("/settings/");
-  await page.getByRole("button", { name: /preview/ }).click();
+  // The controls under the toggle are inert while key sounds are off.
+  await enableSound(page);
+  await page.getByRole("button", { name: "preview sound" }).click();
   await page.waitForTimeout(1200);
   const { contexts, starts } = await counts(page);
   expect(contexts).toBe(1);

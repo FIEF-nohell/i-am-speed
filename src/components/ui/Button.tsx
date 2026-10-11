@@ -2,11 +2,8 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "reac
 import Link from "next/link";
 import styles from "./Button.module.css";
 
-/**
- * "quiet" is an alias of "ghost". Omitting the variant keeps today's quiet look (and size) until
- * every call site passes an explicit variant.
- */
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "quiet";
+/** `secondary` is the default action look; `ghost` is the quiet text button for tertiary actions. */
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md";
 
 interface Base {
@@ -34,14 +31,12 @@ interface IconOnly {
 type Content = WithLabel | IconOnly;
 
 function classes({ variant, size, solid, className, iconOnly }: Base & { iconOnly?: boolean }) {
-  const kind = variant === "quiet" || variant === undefined ? "ghost" : variant;
-  // Without a variant or size the button keeps its original compact padding.
-  const legacy = size === undefined && variant === undefined;
+  const kind = variant ?? "secondary";
   return {
     className: [styles.button, styles[kind], iconOnly ? styles.icon : "", className ?? ""]
       .filter(Boolean)
       .join(" "),
-    size: legacy ? "legacy" : (size ?? "md"),
+    size: size ?? "md",
     solid: (kind === "danger" && solid) || undefined,
   };
 }
