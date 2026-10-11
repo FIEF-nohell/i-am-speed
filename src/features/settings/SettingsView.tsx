@@ -1,8 +1,8 @@
 "use client";
 
-import { Download, Trash2, Upload } from "lucide-react";
+import { Download, Trash2, Upload, User } from "lucide-react";
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { Row } from "@/components/ui/Row";
 import { Section } from "@/components/ui/Section";
@@ -10,6 +10,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { Select } from "@/components/ui/Select";
 import { Slider } from "@/components/ui/Slider";
 import { Toggle } from "@/components/ui/Toggle";
+import { useAuth, signOut } from "@/features/auth/session";
 import { LANG_LABEL, LANGS, type Lang } from "@/features/content/types";
 import type { BackspaceMode, OnError } from "@/features/engine/types";
 import {
@@ -44,6 +45,7 @@ const ON_ERROR_HINT: Record<OnError, string> = {
 export function SettingsView() {
   const s = useSettings();
   const hydrated = useHydrated();
+  const signedIn = useAuth().status === "signed-in";
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -62,14 +64,29 @@ export function SettingsView() {
   const onFile = async (file: File | undefined): Promise<void> => {
     if (!file) return;
     const err = importJson(await file.text());
-    setMessage(err ? { text: err, error: true } : { text: "Imported. Your data was replaced." });
+    setMessage(
+      err
+        ? { text: err, error: true }
+        : {
+            text: signedIn
+              ? "Imported. Your data was replaced and is merged into your account."
+              : "Imported. Your data was replaced.",
+          },
+    );
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const reset = async (): Promise<void> => {
+    setConfirming(false);
+    if (signedIn) await signOut();
+    resetAll();
+    setMessage({ text: "All data deleted." });
   };
 
   return (
     <div className="page-narrow">
       <h1 className="page-title">settings</h1>
-      <p className="page-lede">Saved in this browser as you change them.</p>
+      <p className="page-lede">Saved on this device as you change them.</p>
 
       <Section title="typing">
         <Row label="text language" hint="Language of the words and sentences you type.">
@@ -201,14 +218,33 @@ export function SettingsView() {
 
       <Section
         title="your data"
-        description="Nothing leaves your browser. Export it to move to another device."
+        description={
+          signedIn
+            ? "Synced to your account."
+            : "Stored in this browser. Sign in on the account page to sync across devices."
+        }
       >
+        <Row
+          label="account"
+          hint={signedIn ? "Signed in. Manage sync and sign out here." : undefined}
+        >
+          <ButtonLink icon={<User />} href="/account/">
+            {signedIn ? "manage account" : "sign in"}
+          </ButtonLink>
+        </Row>
         <Row label="export">
           <Button icon={<Download />} onClick={download}>
             download json
           </Button>
         </Row>
-        <Row label="import" hint="Replaces everything currently stored.">
+        <Row
+          label="import"
+          hint={
+            signedIn
+              ? "Replaces what is stored here. Merged into your account."
+              : "Replaces everything currently stored."
+          }
+        >
           <Button icon={<Upload />} onClick={() => fileRef.current?.click()}>
             choose file
           </Button>
@@ -221,18 +257,17 @@ export function SettingsView() {
             onChange={(e) => void onFile(e.target.files?.[0])}
           />
         </Row>
-        <Row label="reset" hint="Deletes lessons progress, stats and settings.">
+        <Row
+          label="reset"
+          hint={
+            signedIn
+              ? "Signs you out and clears this device only. Your account keeps its data."
+              : "Deletes lessons progress, stats and settings."
+          }
+        >
           {confirming ? (
             <span style={{ display: "inline-flex", gap: "var(--space-2)" }}>
-              <Button
-                variant="primary"
-                icon={<Trash2 />}
-                onClick={() => {
-                  resetAll();
-                  setConfirming(false);
-                  setMessage({ text: "All data deleted." });
-                }}
-              >
+              <Button variant="primary" icon={<Trash2 />} onClick={() => void reset()}>
                 yes, delete everything
               </Button>
               <Button onClick={() => setConfirming(false)}>cancel</Button>
