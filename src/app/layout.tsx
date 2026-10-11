@@ -76,14 +76,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <ThemeScript />
       </head>
-      <body>
+      <body className="site">
         <a href="#main" className="skip">
           skip to content
         </a>
         <ThemeSync />
         <SyncProvider />
         <Header />
-        <main id="main" className="page">
+        <main id="main" className="site-main page">
           <PageTransition>{children}</PageTransition>
         </main>
         <Footer />

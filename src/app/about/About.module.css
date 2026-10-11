@@ -1,0 +1,71 @@
+.block {
+  margin-top: var(--space-7);
+  scroll-margin-top: var(--space-5);
+}
+.block:first-of-type {
+  margin-top: 0;
+}
+
+.small,
+.books {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.books {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.shortcuts {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.shortcut {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+.shortcut dt {
+  display: flex;
+  gap: var(--space-1);
+}
+.shortcut dd,
+.source dd {
+  margin: 0;
+}
+.shortcut dd {
+  color: var(--muted);
+}
+
+.sources {
+  display: grid;
+}
+
+.source {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-top: var(--stroke) solid var(--line);
+}
+.source:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.source:last-child {
+  padding-bottom: 0;
+}
+.source dd {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 36rem) {
+  .shortcut {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}
