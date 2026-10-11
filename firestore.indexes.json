@@ -1,0 +1,9 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    { "collectionGroup": "contribs", "fieldPath": "keys", "indexes": [] },
+    { "collectionGroup": "contribs", "fieldPath": "days", "indexes": [] },
+    { "collectionGroup": "contribs", "fieldPath": "lessons", "indexes": [] },
+    { "collectionGroup": "contribs", "fieldPath": "fingers", "indexes": [] }
+  ]
+}

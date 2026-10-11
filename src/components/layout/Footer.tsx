@@ -9,7 +9,7 @@ export function Footer() {
       <a href={SITE.repository} rel="noreferrer">
         source
       </a>
-      <span>everything stays in your browser</span>
+      <span>stays in your browser unless you sign in</span>
     </footer>
   );
 }
