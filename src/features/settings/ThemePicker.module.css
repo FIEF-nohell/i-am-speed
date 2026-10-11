@@ -1,0 +1,67 @@
+.group {
+  display: grid;
+  grid-template-columns: repeat(4, 5rem);
+  gap: var(--space-3);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border: var(--stroke) solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  transition:
+    color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+.option:hover {
+  color: var(--text);
+}
+.option[aria-checked="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* The swatch carries its own data-theme, so these tokens are that theme's, not the page's. */
+.swatch {
+  position: relative;
+  display: block;
+  height: 2.75rem;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: calc(var(--radius-control) - 2px);
+  background: var(--canvas);
+  overflow: hidden;
+}
+.card {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  height: 40%;
+  border: var(--stroke) solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+}
+.caret {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  width: 2px;
+  height: 0.75rem;
+  border-radius: 1px;
+  background: var(--accent);
+}
+.name {
+  text-align: center;
+}
+
+@media (max-width: 36rem) {
+  .group {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+  }
+}

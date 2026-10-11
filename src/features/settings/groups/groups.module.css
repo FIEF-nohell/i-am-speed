@@ -1,0 +1,46 @@
+.panel {
+  scroll-margin-top: var(--space-5);
+}
+
+.sub {
+  margin-top: var(--space-4);
+}
+
+/* Controls that depend on a master switch stay visible but dimmed and inert. */
+.dep[data-off="true"] {
+  opacity: 0.45;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.dep {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.notice {
+  margin-bottom: var(--space-4);
+}
+
+/* Reset lives apart from export and import, with an error-tinted boundary. */
+.danger {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--stroke) solid var(--error-soft);
+}
+.dangerTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--error);
+}
