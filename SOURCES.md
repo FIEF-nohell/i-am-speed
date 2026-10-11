@@ -38,6 +38,10 @@ Content is fetched at prepare time by `scripts/fetch-content.ts` (`npm run fetch
 
 - Geist and Geist Mono, SIL Open Font License 1.1 (`src/fonts/OFL.txt`), (c) The Geist Project Authors, https://github.com/vercel/geist-font. Self-hosted, loaded with `next/font/local`.
 
+## Key sounds
+
+The optional key sounds are synthesised in code at runtime (`src/features/sound/`): damped sine partials, filtered noise and pitch glides rendered to audio buffers in the browser. No third-party samples, recordings or network requests are involved, so there is nothing to attribute or license beyond the project's MIT licence.
+
 ## Hand-written fallback content
 
 `scripts/content/fallback.ts` holds a tiny hand-written set of words, sentences and passages that is used only when a download fails. It is original text by the project author, covered by the project's MIT licence. The committed `src/content/` was built from the full sources above.
