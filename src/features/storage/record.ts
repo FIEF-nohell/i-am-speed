@@ -1,6 +1,8 @@
 import type { Metrics } from "@/features/engine/metrics";
 import type { Lang } from "@/features/content/types";
 import { PASS_ACCURACY } from "@/features/lessons/types";
+import { emptyAggregates, withViews } from "@/features/sync/combine";
+import type { Contribution } from "@/features/sync/types";
 import { MAX_ATTEMPTS, type Attempt, type DayTotals, type StoredData } from "./schema";
 
 export interface AttemptInput {
@@ -17,12 +19,23 @@ export function dayKey(at: number): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-/** Pure: returns new data with the attempt folded into history and every aggregate. */
+/**
+ * Pure: returns new data with the attempt folded into history and into this device's own
+ * contribution (rev + 1). The displayed views are recomputed from all contributions.
+ */
 export function recordAttempt(data: StoredData, input: AttemptInput): StoredData {
   const { metrics: m } = input;
   const passed = m.accuracy >= PASS_ACCURACY;
+  const { ownId } = data.sync;
+  const own: Contribution = data.sync.contribs[ownId] ?? {
+    id: ownId,
+    rev: 0,
+    updatedAt: 0,
+    ...emptyAggregates(),
+  };
+  const rev = own.rev + 1;
   const attempt: Attempt = {
-    id: `${input.at}-${data.totals.attempts}`,
+    id: `${ownId}-${rev}`,
     at: input.at,
     source: input.source,
     lang: input.lang,
@@ -36,7 +49,7 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
     passed,
   };
 
-  const keys = { ...data.keys };
+  const keys = { ...own.keys };
   for (const [k, s] of Object.entries(m.perKey)) {
     const prev = keys[k] ?? { attempts: 0, errors: 0, totalMs: 0, timedHits: 0 };
     keys[k] = {
@@ -46,7 +59,7 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
       timedHits: prev.timedHits + s.timedHits,
     };
   }
-  const fingers = { ...data.fingers };
+  const fingers = { ...own.fingers };
   for (const [f, s] of Object.entries(m.perFinger) as [
     keyof typeof fingers,
     { attempts: number; errors: number },
@@ -56,10 +69,10 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
   }
 
   const dk = dayKey(input.at);
-  const day: DayTotals = data.days[dk] ?? { attempts: 0, wpmSum: 0, accuracySum: 0, timeMs: 0 };
+  const day: DayTotals = own.days[dk] ?? { attempts: 0, wpmSum: 0, accuracySum: 0, timeMs: 0 };
 
   const isLesson = !input.source.startsWith("test:");
-  const lessons = { ...data.lessons };
+  const lessons = { ...own.lessons };
   if (isLesson) {
     const prev = lessons[input.source];
     lessons[input.source] = {
@@ -73,14 +86,14 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
     };
   }
 
-  return {
-    ...data,
-    attempts: [...data.attempts, attempt].slice(-MAX_ATTEMPTS),
-    lessons,
+  const nextOwn: Contribution = {
+    id: ownId,
+    rev,
+    updatedAt: input.at,
     keys,
     fingers,
     days: {
-      ...data.days,
+      ...own.days,
       [dk]: {
         attempts: day.attempts + 1,
         wpmSum: day.wpmSum + m.netWpm,
@@ -88,11 +101,19 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
         timeMs: day.timeMs + m.durationMs,
       },
     },
+    lessons,
     totals: {
-      attempts: data.totals.attempts + 1,
-      timeMs: data.totals.timeMs + m.durationMs,
-      chars: data.totals.chars + m.typedChars,
+      attempts: own.totals.attempts + 1,
+      timeMs: own.totals.timeMs + m.durationMs,
+      chars: own.totals.chars + m.typedChars,
     },
+  };
+
+  const attempts = [...data.attempts, attempt].slice(-MAX_ATTEMPTS);
+  const kept = new Set(attempts.map((a) => a.id));
+  return withViews({
+    ...data,
+    attempts,
     lastResult: {
       attempt,
       series: m.series,
@@ -100,5 +121,12 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
       perFinger: m.perFinger,
       text: input.text,
     },
-  };
+    sync: {
+      ...data.sync,
+      contribs: { ...data.sync.contribs, [ownId]: nextOwn },
+      unsyncedAttemptIds: [...data.sync.unsyncedAttemptIds, attempt.id].filter((id) =>
+        kept.has(id),
+      ),
+    },
+  });
 }

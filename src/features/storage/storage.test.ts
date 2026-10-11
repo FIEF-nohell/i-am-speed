@@ -5,7 +5,15 @@ import { DEFAULT_ENGINE_CONFIG } from "@/features/engine/types";
 import { DEFAULT_SETTINGS } from "@/features/settings/settings";
 import { migrate, parseStored } from "./migrate";
 import { dayKey, recordAttempt } from "./record";
-import { MAX_ATTEMPTS, SCHEMA_VERSION, createEmptyData } from "./schema";
+import { combine } from "@/features/sync/combine";
+import { legacyContribId } from "@/features/sync/hash";
+import { MAX_ATTEMPTS, SCHEMA_VERSION, createEmptyData, type DataEnv } from "./schema";
+
+/** Deterministic env: ids "own-000001", "own-000002", ... and a fixed clock. */
+function testEnv(now = 1_700_000_000_000): DataEnv {
+  let n = 0;
+  return { newId: () => `own-${String(++n).padStart(6, "0")}`, now };
+}
 
 function metricsFor(target: string, typed: string) {
   let s = createState(target, DEFAULT_ENGINE_CONFIG);
@@ -19,8 +27,14 @@ function metricsFor(target: string, typed: string) {
 
 describe("migrate and recovery", () => {
   it("returns defaults for null, garbage and wrong types", () => {
-    expect(parseStored(null)).toEqual({ data: createEmptyData(), recovered: false });
-    expect(parseStored("{not json")).toEqual({ data: createEmptyData(), recovered: true });
+    expect(parseStored(null, testEnv())).toEqual({
+      data: createEmptyData(testEnv()),
+      recovered: false,
+    });
+    expect(parseStored("{not json", testEnv())).toEqual({
+      data: createEmptyData(testEnv()),
+      recovered: true,
+    });
     expect(migrate(42).settings).toEqual(DEFAULT_SETTINGS);
     expect(migrate([]).attempts).toEqual([]);
   });
@@ -61,9 +75,170 @@ describe("migrate and recovery", () => {
     });
     expect(migrate(JSON.parse(JSON.stringify(d)))).toEqual(d);
   });
+  it("is deterministic with an injected env", () => {
+    const raw = {
+      settings: { theme: "light" },
+      totals: { attempts: 2 },
+      keys: { a: { attempts: 2 } },
+    };
+    expect(migrate(raw, testEnv())).toEqual(migrate(raw, testEnv()));
+    expect(createEmptyData(testEnv()).sync.ownId).toBe("own-000001");
+  });
+});
+
+describe("v1 to v2 migration", () => {
+  const v1 = {
+    version: 1,
+    settings: { theme: "light" },
+    attempts: [
+      {
+        id: "100-0",
+        at: 100,
+        source: "home-01",
+        lang: "de",
+        netWpm: 30,
+        accuracy: 97,
+        passed: true,
+      },
+      { id: "200-1", at: 200, source: "test:time-30", lang: "en", netWpm: 40, accuracy: 90 },
+    ],
+    lessons: {
+      "home-01": {
+        completed: true,
+        bestWpm: 30,
+        bestAccuracy: 97,
+        lastWpm: 30,
+        lastAccuracy: 97,
+        attempts: 1,
+        lastAt: 100,
+      },
+    },
+    keys: { a: { attempts: 5, errors: 1, totalMs: 900, timedHits: 4 } },
+    fingers: { leftPinky: { attempts: 5, errors: 1 } },
+    days: { "2026-10-01": { attempts: 2, wpmSum: 70, accuracySum: 187, timeMs: 5000 } },
+    totals: { attempts: 2, timeMs: 5000, chars: 80 },
+    lastResult: null,
+  };
+  it("keeps every stats view deep-equal", () => {
+    const d = migrate(v1, testEnv());
+    expect(d.version).toBe(2);
+    expect(d.keys).toEqual(v1.keys);
+    expect(d.fingers).toEqual(v1.fingers);
+    expect(d.days).toEqual(v1.days);
+    expect(d.lessons).toEqual(v1.lessons);
+    expect(d.totals).toEqual(v1.totals);
+    expect(d.attempts).toHaveLength(2);
+  });
+  it("creates a frozen legacy contribution and a fresh empty own one", () => {
+    const d = migrate(v1, testEnv());
+    const ids = Object.keys(d.sync.contribs);
+    expect(ids).toHaveLength(2);
+    const legacy = ids.find((i) => i.startsWith("legacy-"));
+    expect(legacy).toBeDefined();
+    expect(d.sync.contribs[legacy as string].rev).toBe(0);
+    expect(d.sync.contribs[d.sync.ownId].totals.attempts).toBe(0);
+    expect(d.sync.ownId).toBe("own-000001");
+    expect(d.settingsUpdatedAt).toBe(0);
+    expect(d.sync.linkedUid).toBeNull();
+    expect(d.sync.pushedSettingsAt).toBe(-1);
+    expect(d.sync.unsyncedAttemptIds).toEqual(d.attempts.map((a) => a.id));
+  });
+  it("gives the same legacy id on every device for the same data", () => {
+    const a = migrate(v1, testEnv());
+    const b = migrate(JSON.parse(JSON.stringify(v1)), { ...testEnv(), now: 5 });
+    const la = Object.keys(a.sync.contribs).find((i) => i.startsWith("legacy-"));
+    const lb = Object.keys(b.sync.contribs).find((i) => i.startsWith("legacy-"));
+    expect(la).toBe(lb);
+    expect(a.sync.contribs[la as string]).toEqual(b.sync.contribs[lb as string]);
+    expect(la).toBe(legacyContribId(combine(a.sync.contribs)));
+  });
+  it("creates no legacy contribution for empty v1 data and keeps working afterwards", () => {
+    const d = migrate({ version: 1 }, testEnv());
+    expect(Object.keys(d.sync.contribs)).toEqual([d.sync.ownId]);
+    const next = recordAttempt(migrate(v1, testEnv()), {
+      source: "home-01",
+      lang: "de",
+      text: "ab",
+      metrics: metricsFor("ab", "ab"),
+      at: 300,
+    });
+    expect(next.totals.attempts).toBe(3);
+    expect(next.lessons["home-01"].attempts).toBe(2);
+  });
+});
+
+describe("v2 sanitising", () => {
+  it("repairs bad sync metadata and recomputes views from contributions", () => {
+    const base = recordAttempt(createEmptyData(testEnv()), {
+      source: "home-01",
+      lang: "de",
+      text: "ab",
+      metrics: metricsFor("ab", "ab"),
+      at: 10,
+    });
+    const broken = JSON.parse(JSON.stringify(base));
+    broken.totals = { attempts: 999, timeMs: 0, chars: 0 };
+    broken.keys = {};
+    broken.sync.unsyncedAttemptIds = [broken.attempts[0].id, "ghost", 5];
+    broken.sync.pushedRevs = { good_id_01: 3, "bad id": 2, other_id_1: "x" };
+    broken.sync.contribs["bad id"] = { rev: 1 };
+    broken.sync.contribs.notanobject1 = 7;
+    broken.sync.linkedUid = 12;
+    const d = migrate(broken, testEnv());
+    expect(d.totals.attempts).toBe(1);
+    expect(d.keys.a.attempts).toBe(1);
+    expect(d.sync.unsyncedAttemptIds).toEqual([base.attempts[0].id]);
+    expect(d.sync.pushedRevs).toEqual({ good_id_01: 3 });
+    expect(Object.keys(d.sync.contribs)).toEqual([base.sync.ownId]);
+    expect(d.sync.linkedUid).toBeNull();
+  });
+  it("repairs a missing own contribution and a bad own id", () => {
+    const base = createEmptyData(testEnv());
+    const a = JSON.parse(JSON.stringify(base));
+    a.sync.contribs = {};
+    const fixed = migrate(a, testEnv());
+    expect(fixed.sync.contribs[fixed.sync.ownId]).toBeDefined();
+    const b = JSON.parse(JSON.stringify(base));
+    b.sync.ownId = "legacy-0123456789abcdef";
+    const fixedB = migrate(b, testEnv());
+    expect(fixedB.sync.ownId.startsWith("legacy-")).toBe(false);
+    expect(fixedB.sync.contribs[fixedB.sync.ownId]).toBeDefined();
+  });
 });
 
 describe("recordAttempt", () => {
+  it("folds into the own contribution, bumps rev and tracks unsynced ids", () => {
+    let d = createEmptyData(testEnv());
+    const own = d.sync.ownId;
+    d = recordAttempt(d, {
+      source: "home-01",
+      lang: "de",
+      text: "ab",
+      metrics: metricsFor("ab", "ab"),
+      at: 50,
+    });
+    d = recordAttempt(d, {
+      source: "home-01",
+      lang: "de",
+      text: "ab",
+      metrics: metricsFor("ab", "ab"),
+      at: 60,
+    });
+    expect(d.sync.contribs[own].rev).toBe(2);
+    expect(d.sync.contribs[own].updatedAt).toBe(60);
+    expect(d.attempts.map((a) => a.id)).toEqual([`${own}-1`, `${own}-2`]);
+    expect(d.sync.unsyncedAttemptIds).toEqual([`${own}-1`, `${own}-2`]);
+    expect(d.totals).toEqual(combine(d.sync.contribs).totals);
+    expect(d.keys).toEqual(combine(d.sync.contribs).keys);
+  });
+  it("trims unsynced ids with the attempt cap", () => {
+    let d = createEmptyData(testEnv());
+    const m = metricsFor("a", "a");
+    for (let i = 0; i < MAX_ATTEMPTS + 5; i++)
+      d = recordAttempt(d, { source: "home-01", lang: "de", text: "a", metrics: m, at: i + 1 });
+    expect(d.sync.unsyncedAttemptIds).toHaveLength(MAX_ATTEMPTS);
+    expect(d.sync.contribs[d.sync.ownId].rev).toBe(MAX_ATTEMPTS + 5);
+  });
   it("marks a lesson complete at 95% accuracy and tracks bests", () => {
     let d = createEmptyData();
     d = recordAttempt(d, {
