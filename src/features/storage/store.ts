@@ -2,14 +2,19 @@
 
 import { useSyncExternalStore } from "react";
 import type { Settings } from "@/features/settings/settings";
-import { migrate } from "./migrate";
-import { clearStored, readStored, writeStored } from "./persist";
+import { applySettingsPatch, importData, resetData } from "@/features/sync/dataOps";
+import { hasStored, readStored, writeStored } from "./persist";
 import { recordAttempt, type AttemptInput } from "./record";
-import { STORAGE_KEY, createEmptyData, type StoredData } from "./schema";
+import { STORAGE_KEY, createEmptyData, defaultEnv, type StoredData } from "./schema";
+
+/** Why the stored data changed. "remote" is sync work (merge result, push confirmation). */
+export type CommitCause = "local" | "remote" | "import" | "reset";
+type CommitListener = (next: StoredData, cause: CommitCause) => void;
 
 const SERVER_SNAPSHOT: StoredData = createEmptyData();
 let current: StoredData | null = null;
 const listeners = new Set<() => void>();
+const commitListeners = new Set<CommitListener>();
 
 function emit(): void {
   listeners.forEach((l) => l());
@@ -20,10 +25,35 @@ function snapshot(): StoredData {
   return current;
 }
 
-function commit(next: StoredData): void {
+function commit(next: StoredData, cause: CommitCause): void {
   current = next;
   writeStored(next);
   emit();
+  commitListeners.forEach((l) => l(next, cause));
+}
+
+/**
+ * Latest persisted state, so a write never overwrites what another tab saved meanwhile.
+ * When nothing is persisted (blocked storage, private window) the in-memory copy is the truth.
+ */
+function fresh(): StoredData {
+  if (typeof window === "undefined" || !hasStored()) return snapshot();
+  const data = readStored().data;
+  current = data;
+  return data;
+}
+
+/** Sync hook: called after every commit, with the reason. Not called for cross-tab storage events. */
+export function subscribeCommits(cb: CommitListener): () => void {
+  commitListeners.add(cb);
+  return () => {
+    commitListeners.delete(cb);
+  };
+}
+
+/** Applies a pure function to the latest stored data and commits it with cause "remote". */
+export function applyRemote(fn: (current: StoredData) => StoredData): void {
+  commit(fn(fresh()), "remote");
 }
 
 function subscribe(listener: () => void): () => void {
@@ -65,12 +95,11 @@ export function getData(): StoredData {
 }
 
 export function updateSettings(patch: Partial<Settings>): void {
-  const d = snapshot();
-  commit({ ...d, settings: { ...d.settings, ...patch } });
+  commit(applySettingsPatch(fresh(), patch, Date.now()), "local");
 }
 
 export function commitAttempt(input: AttemptInput): void {
-  commit(recordAttempt(snapshot(), input));
+  commit(recordAttempt(fresh(), input), "local");
 }
 
 export function exportJson(): string {
@@ -89,7 +118,7 @@ export function importJson(text: string): string | null {
       typeof o.settings === "object" &&
       o.settings !== null;
     if (!looksRight) return "That file is not an i am speed export. Nothing was changed.";
-    commit(migrate(parsed));
+    commit(importData(fresh(), parsed, defaultEnv()), "import");
     return null;
   } catch {
     return "That file is not valid JSON.";
@@ -97,7 +126,5 @@ export function importJson(text: string): string | null {
 }
 
 export function resetAll(): void {
-  clearStored();
-  current = createEmptyData();
-  emit();
+  commit(resetData(defaultEnv()), "reset");
 }
