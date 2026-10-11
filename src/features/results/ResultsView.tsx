@@ -1,19 +1,20 @@
 "use client";
 
-import { ArrowRight, ChevronLeft, RotateCcw } from "lucide-react";
+import { ListChecks, Timer } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { ButtonLink } from "@/components/ui/Button";
-import { Section } from "@/components/ui/Section";
-import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { KeyCap } from "@/components/ui/KeyCap";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
 import { slowestKeys } from "@/features/engine/metrics";
 import { KeyboardGuide } from "@/features/keyboard/KeyboardGuide";
-import { LESSON_BY_ID, nextLesson } from "@/features/lessons/curriculum";
-import { PASS_ACCURACY } from "@/features/lessons/types";
-import { formatDuration } from "@/features/stats/aggregate";
+import { nextLesson } from "@/features/lessons/curriculum";
+import { retryHref, sourceKind } from "@/features/storage/source";
 import { useData, useHydrated } from "@/features/storage/store";
 import { heatByCode } from "./heat";
-import { AnimatedStat } from "./AnimatedStat";
+import { ResultsHero } from "./ResultsHero";
 import { WpmChart } from "./WpmChart";
 import styles from "./ResultsView.module.css";
 
@@ -24,10 +25,11 @@ export function ResultsView() {
   const heat = useMemo(() => (result ? heatByCode(result.perKey) : {}), [result]);
 
   const sourceId = result?.attempt.source;
-  const nextId = sourceId ? nextLesson(sourceId)?.id : undefined;
-  const retryTo = sourceId && LESSON_BY_ID.has(sourceId) ? `/lesson/${sourceId}/` : "/test/";
+  const nextId =
+    sourceId && sourceKind(sourceId) === "lesson" ? nextLesson(sourceId)?.id : undefined;
+  const retryTo = sourceId ? retryHref(sourceId) : "/test/";
 
-  // Enter continues (next lesson, or the test again); Tab or Escape retries.
+  // Enter continues (next lesson, or the same thing again); Tab or Escape retries.
   useEffect(() => {
     if (!sourceId) return;
     const onKey = (e: KeyboardEvent): void => {
@@ -47,85 +49,45 @@ export function ResultsView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [sourceId, nextId, retryTo, router]);
 
-  if (!hydrated) return <div style={{ minHeight: "30rem" }} />;
+  if (!hydrated) return <div className={styles.placeholder} />;
   if (!result) {
     return (
-      <div className="page-narrow">
-        <h1 className="page-title">no result yet</h1>
-        <p className="page-lede">Finish a lesson or a test and the details will show up here.</p>
-        <ButtonLink href="/" variant="primary">
-          pick a lesson
-        </ButtonLink>
+      <div className={styles.page}>
+        <PageHeader title="no result yet" />
+        <Panel as="div">
+          <EmptyState
+            icon={<Timer />}
+            title="nothing to show yet"
+            actions={
+              <>
+                <ButtonLink href="/" variant="primary" icon={<ListChecks />}>
+                  pick a lesson
+                </ButtonLink>
+                <ButtonLink href="/test/" variant="secondary" icon={<Timer />}>
+                  take a test
+                </ButtonLink>
+              </>
+            }
+          >
+            Finish a lesson or a test and the details will show up here.
+          </EmptyState>
+        </Panel>
       </div>
     );
   }
 
-  const { attempt } = result;
-  const lesson = LESSON_BY_ID.get(attempt.source);
-  const next = lesson ? nextLesson(lesson.id) : undefined;
-  const retryHref = lesson ? `/lesson/${lesson.id}/` : "/test/";
   const slow = slowestKeys(result.perKey, 5);
   const hasErrors = Object.keys(heat).length > 0;
 
   return (
-    <div>
-      <p className={styles.kicker}>{lesson ? lesson.title : "free test"}</p>
-      <h1 className={styles.verdict} data-pass={lesson ? attempt.passed : undefined}>
-        {lesson
-          ? attempt.passed
-            ? "passed"
-            : `not yet, ${PASS_ACCURACY}% accuracy needed`
-          : "done"}
-      </h1>
+    <div className={styles.page}>
+      <ResultsHero result={result} />
 
-      <dl className={styles.stats}>
-        <AnimatedStat size="lead" accent label="speed" target={attempt.netWpm} unit="wpm" />
-        <AnimatedStat
-          size="lead"
-          label="accuracy"
-          target={attempt.accuracy}
-          unit="%"
-          delayMs={120}
-        />
-        <AnimatedStat label="raw" target={attempt.rawWpm} unit="wpm" delayMs={240} />
-        <AnimatedStat
-          label="consistency"
-          target={Math.round(attempt.consistency)}
-          decimals={0}
-          unit="%"
-          delayMs={360}
-        />
-        <Stat label="time" value={formatDuration(attempt.durationMs)} />
-        <Stat label="errors" value={`${attempt.errors}`} />
-      </dl>
-
-      <div className={styles.actions}>
-        <ButtonLink
-          href={retryHref}
-          variant={attempt.passed || !lesson ? "quiet" : "primary"}
-          icon={<RotateCcw />}
-        >
-          retry
-        </ButtonLink>
-        {next && (
-          <ButtonLink
-            href={`/lesson/${next.id}/`}
-            variant={attempt.passed ? "primary" : "quiet"}
-            icon={<ArrowRight />}
-          >
-            next lesson
-          </ButtonLink>
-        )}
-        <ButtonLink href="/" icon={<ChevronLeft />}>
-          back to list
-        </ButtonLink>
-      </div>
-
-      <Section title="over time">
+      <Panel as="div">
         <WpmChart series={result.series} />
-      </Section>
+      </Panel>
 
-      <Section
+      <Panel
         title="where it went wrong"
         description={
           hasErrors
@@ -136,19 +98,22 @@ export function ResultsView() {
         {hasErrors && (
           <KeyboardGuide colorByFinger={false} heat={heat} label="keyboard error heatmap" />
         )}
-      </Section>
+      </Panel>
 
       {slow.length > 0 && (
-        <Section title="slowest keys">
+        <Panel
+          title="slowest keys"
+          description="Average time between the previous key and this one."
+        >
           <ul className={styles.slow}>
             {slow.map((s) => (
               <li key={s.key}>
-                <kbd className="mono">{s.key}</kbd>
+                <KeyCap>{s.key}</KeyCap>
                 <span className="mono">{Math.round(s.ms)} ms</span>
               </li>
             ))}
           </ul>
-        </Section>
+        </Panel>
       )}
     </div>
   );

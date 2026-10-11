@@ -13,7 +13,9 @@ import {
   AXIS_LINE,
   AXIS_TICK,
   ERROR_COLOR,
+  GRID_OPACITY,
   GRID_STROKE,
+  LEGEND,
   LINE_PRIMARY,
   LINE_SECONDARY,
   STROKE_WIDTH,
@@ -23,11 +25,14 @@ import { DURATION } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { ChartFrame } from "@/components/ui/ChartFrame";
 import type { WpmPoint } from "@/features/engine/metrics";
+import { downsample } from "./downsample";
+
+const LEGEND_ITEMS = [LEGEND.net, LEGEND.raw, LEGEND.errors];
 
 export function WpmChart({ series }: { series: WpmPoint[] }) {
   const reduced = useReducedMotion();
   const animate = !reduced;
-  const data = series.map((p) => ({
+  const data = downsample(series).map((p) => ({
     ...p,
     wpm: Math.round(p.wpm * 10) / 10,
     raw: Math.round(p.raw * 10) / 10,
@@ -39,10 +44,11 @@ export function WpmChart({ series }: { series: WpmPoint[] }) {
       title="speed over time"
       summary={`Peak ${peak} words per minute across ${series.length} seconds.`}
       empty={series.length < 2}
+      legend={LEGEND_ITEMS}
     >
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeOpacity={0.5} />
+          <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeOpacity={GRID_OPACITY} />
           <XAxis dataKey="second" tick={AXIS_TICK} axisLine={AXIS_LINE} tickLine={false} unit="s" />
           <YAxis yAxisId="wpm" tick={AXIS_TICK} axisLine={false} tickLine={false} width={44} />
           <YAxis
