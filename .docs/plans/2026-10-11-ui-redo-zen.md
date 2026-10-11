@@ -1,0 +1,365 @@
+---
+status: in-progress
+created: 2026-10-11
+updated: 2026-10-11
+base: 0f487e592d94e0e6f3d577b7a7080342f99db084
+goal: Redesign every screen outside the lesson list and typing screens into a warmer, structured, polished UI on an evolved token and primitive set, and add an endless Zen typing mode plus a low-latency, synced key-sound system, without regressing the lesson list or typing screens.
+---
+
+# UI redo, Zen mode and key sounds
+
+## Goal
+
+Redesign every screen outside the lesson list and typing screens into a warmer, structured, polished UI on an evolved token and primitive set, and add an endless Zen typing mode plus a low-latency, synced key-sound system, without regressing the lesson list or typing screens.
+
+## Inputs
+
+### Rules, learnings, decisions consulted
+
+- `.docs/rules/plan-execution.md` (plan format, tick protocol), `.docs/rules/verification.md` (`npm run check`, `npm run test:e2e`), `.docs/rules/docs-current-state-only.md` (AGENTS.md Key paths stays lean), `.docs/rules/agent-docs-sync.md` (not triggered: no agent files change).
+- Learnings: none exist yet (`.docs/learnings/` holds only the README). Decisions folder `.docs/decisions/`: empty. Style guide: no sections.
+- Retrieval helper `.claude/hooks/retrieve.py` is broken on this machine (`ModuleNotFoundError: No module named 'yaml'`). Rules were selected manually (all four active universal rules). Surface this to the user; not fixed by this plan.
+- Specs: `PROJECT.md` sections 6 to 8, 13, 15, 17, 17b; `DECISIONS.md` D1 to D15 (D6 palette and contrast, D12 motion, D13 to D15 sync); `brand/brief.md` (signature: the caret), `brand/palette.json`.
+- Code read in full: `src/styles/*`, `src/components/ui/*`, `src/components/layout/*`, `src/components/{PageTransition,ThemeScript,ThemeSync}.tsx`, `src/components/charts/chartTheme.ts`, every `src/app/**/page.tsx` and `layout.tsx`, `src/features/{settings,stats,results,auth,lessons(LessonList)}` views, `src/features/typing/*`, `src/features/engine/{types,engine,session,input}.ts`, `src/features/storage/{schema,migrate,sanitise,record,store}.ts`, `src/features/sync/{serialize,dataOps}.ts`, `firestore.rules`, `e2e/*`, `scripts/brand/{build,themes}.ts`, `src/lib/{sound,motion,color.test}.ts`.
+
+### Facts that shape the plan (verified)
+
+1. **Contrast on raised surfaces fails today.** Computed with `src/lib/color.ts`: `dim` on `surface` is 4.21 to 4.30 in all four themes, and light `accent` on `surface` is 4.30. Any panel/card design must not put `--dim` or (light) `--accent` text on `--surface`. `--line` vs canvas is about 1.3:1, so inputs and toggles currently miss WCAG 1.4.11 (3:1 for control boundaries).
+2. **Settings sync needs no rules change.** `firestore.rules` `validProfile()` only checks `settings is map && settings.size() <= 40`; `serialize.ts` mirrors `MAX_SETTINGS_FIELDS = 40`. Settings today have 14 fields; this plan adds 3 (17 total). New fields flow through `sanitiseSettings` (local migrate, import, and `docToProfile`) and `applySettingsPatch` stamps `settingsUpdatedAt`. **No deploy of `firestore.rules` is required.**
+3. **`record.ts` treats every source not starting with `test:` as a lesson** (`isLesson = !input.source.startsWith("test:")`). A Zen source would silently create a fake lesson entry in every contribution. Must be fixed before Zen records attempts.
+4. **The engine target is a fixed string** and `isDone` finishes at the end of it. `TypingText` re-renders every character of the target on every keystroke (`renderChars` over `[...target]`). Endless text needs an open-ended engine state and a bounded render window, or the `e2e/motion.spec.ts` key-handler budget (p95 < 8 ms) will fail on long Zen sessions.
+5. **Shared primitives are used by the liked screens.** `Section` is the lesson list's phase wrapper; `Segmented` and `Toggle` render in the lesson/test runner footers. Their default rendering must stay visually identical. New looks are opt-in variants or new primitives.
+6. **E2E selectors that the redesign must keep:** radio names `dark|light|dusk|ember` (exact), `10 words`; switch `reduce motion`; headings `sign in`, `create account`, `reset password`, `passed`; button `continue with Google`, `show password`/`hide password`; links `forgot password?`, `create an account`, `/f and j/`; labels `email`, `password`, `confirm password`; text `free test`, `speed over time`, `1 / 7`; class `.page-enter`; attribute `[data-stat-value]` (first one is the lead speed figure); `[aria-label="text to type"] [data-state]`.
+7. `npm run brand` rewrites `src/styles/themes.css` and re-renders PNG assets. Only `themes.css` should change when palette keys are added.
+8. No em dashes exist in `src`, `e2e`, README, DECISIONS, SOURCES, PROJECT today. Keep it that way.
+
+### Current state critique (screenshots taken at base, 1440 and 390, dark and light)
+
+Captured with a scratch Playwright spec into the session scratchpad (not committed). Honest read:
+
+- **Frame.** Three unrelated column widths (header 56rem, content 40rem `page-narrow`, auth 26rem) with different left edges; on settings/account/stats-empty the header looks detached from the page. No sticky footer: on short pages (account, login, stats empty, test) the footer floats in the middle of the viewport with a large dead area under it.
+- **Header.** Five separate bordered boxes of equal weight read as a toolbar of unrelated buttons; no grouping of "practise" vs "utility"; on 390 it is five identical icon squares and the wordmark disappears. The active state (accent border plus tint) is the loudest element on every page.
+- **Buttons are inconsistent.** Nav uses bordered pills, page actions (`retry`, `back to list`, `download json`, `sign in` on settings, `continue with Google`) are borderless text that does not read as a button, the only filled button is primary. Three button languages on one screen.
+- **Settings.** A long flat list; group titles are the same weight as row labels; options as bare coloured words (Segmented) next to native selects with OS chevrons next to toggles: three control languages. "key sounds" lives under "keyboard guide". On 390 every control (even toggles) drops under its label, doubling the page height. The destructive reset sits in the same visual weight as export.
+- **Stats.** Big empty chart placeholders (two stacked "practise on two different days" blocks) dominate the top; nine near-identical thin finger bars and eleven phase bars with lots of empty track; no recent attempts; the totals row has no hierarchy. Empty state is one sentence and no action.
+- **Results.** Section title "over time" plus chart caption "speed over time" duplicates; chart has no legend (raw vs net vs errors are unexplained); action buttons look like plain links; lead numbers collide on 390 (`3360.5 wpm` touching `100.0 %`); no keyboard hints for Enter/Tab although they work. Empty result state is plain.
+- **Auth and account.** Forms float on the canvas with no container; inputs have near-invisible borders; Google button is a quiet text link under a strong primary; account signed-out page is a heading, a paragraph and two unequal buttons; lede and section description repeat the same sentence.
+- **About.** Inline styles, a wall of paragraphs, sources as unstyled lists; no shortcuts reference.
+- **Free test setup.** Mode options as bare words with no grouping between time and words; nothing visually says "these are settings"; language toggle is far below.
+- **Liked and preserved:** lesson list (quiet phase sections, plain rows, caret bar on hover), lesson runner and test runner typing area (mono text, dim/bright states, caret glide, keyboard guide, hand diagram).
+
+### Design direction (decided)
+
+Evolve PROJECT.md section 8, do not replace it. Still: dark-first, one accent per theme, no gradients, no drop shadows, no illustrations, no emoji, lowercase UI copy, mono for typing and figures, the caret as signature. Change: allow **one level of quiet, flat panels** for grouping on non-typing pages, real **bordered buttons and controls**, stronger **type hierarchy**, and a **grouped header**. Logged as DECISIONS.md D16 plus a one-line amendment note in PROJECT.md section 8 (same pattern as D13).
+
+1. **Tokens (additive only, existing values frozen).** Existing `--space-*`, `--text-*`, `--type-*`, `--radius-key`, `--radius-ui`, `--column`, `--column-narrow`, `--canvas`, `--surface`, `--line`, `--text`, `--dim`, `--muted`, `--accent*`, `--error*` keep their current values because the lesson list and typing screens consume them. New:
+   - Palette keys per theme in `brand/palette.json`, emitted by `scripts/brand/themes.ts`: `panel` (card fill: a hair lighter than canvas in dark themes, lighter than canvas in light) and `lineStrong` (control boundary, at least 3:1 against canvas and panel). Starting values to tune against tests: dark `panel #1a1d1f`, `lineStrong #5b6268`; light `panel #fbfaf7`, `lineStrong #8f8a80`; dusk `panel #1b1e2a`, `lineStrong #5c6382`; ember `panel #1f1b19`, `lineStrong #6b6158`. CSS names `--panel`, `--line-strong`.
+   - In `globals.css`: `--text-2xs: 0.6875rem`, `--text-title: 2rem` (page titles), `--text-section: 1.0625rem` (panel titles), `--radius-control: 8px`, `--radius-panel: 12px`, `--control-sm: 2rem`, `--control-md: 2.5rem`, `--column-form: 24rem`, `--header-h: 4.5rem`.
+   - Text-role rule (enforced by tests where possible, documented in D16): on `--panel` and `--surface` use `--text` and `--muted` only; `--dim` is canvas-only (untyped text, captions on canvas); accent text sits on canvas or panel, never on surface. Selected states inside controls use `--text` on `--surface` plus an accent indicator.
+2. **Page frame.** `body` becomes a flex column with `min-height: 100dvh`; `main` grows; footer always sits at the bottom. Header and content share one wide column (`--column`, 56rem). Page body widths: lesson list and about and account at `--column-narrow` (unchanged); settings uses the full column split into a sticky section index (left, 11rem) and a 40rem panel column; stats and results use the full column; auth screens a centred `--column-form` card. Vertical rhythm: header, then `PageHeader` with `--space-6` below, panels separated by `--space-5`, page sections by `--space-7`.
+3. **Header.** Wordmark left (mark plus "i am speed", wordmark hidden below 30rem as today). Right side: one **nav rail** (a single `--panel` container, 1px `--line` border, `--radius-control` + 2px, 4px inner padding) holding `lessons`, `test`, `zen`, `stats`; then a second small rail with `settings` and `account` (account keeps the sync dot). Items are 2.25rem tall with icon plus label; active item gets `--surface` fill, `--text` label and an accent icon (no accent border); hover lifts label to `--text`. Below 48rem labels hide and items become 2.25rem squares with `aria-label`; at 390 all six fit (6 x 2.25rem plus gaps). Header and footer carry class `site-chrome` so Zen can fade them.
+4. **Typography.** Page title `--text-title`, weight 600, letter-spacing -0.025em. Optional eyebrow above titles (`--text-xs`, `--muted`, lowercase) for context such as "free test" or the phase name. Panel titles `--text-section` weight 600. Body `--text-base`; hints `--text-sm` in `--muted`. Figures always mono with tabular numbers. Lede max 34rem, `--muted`, and never repeated by the first section description.
+5. **Surfaces.** New `Panel` primitive: `--panel` fill, 1px `--line` border, `--radius-panel`, padding `--space-5` (`--space-4` below 36rem), no shadow. Optional header (title, description, aside slot). **One level only**: a panel never contains a panel; inside a panel use `Row`s separated by 1px `--line` dividers. Panels are used on stats, results, settings, account, auth, about (sources), empty states. Never on the lesson list or typing screens.
+6. **Buttons.** `Button`/`ButtonLink` variants: `primary` (accent fill, accent-ink text), `secondary` (new default for actions: `--panel` fill, 1px `--line-strong` border, `--text` label; hover `--surface`), `ghost` (today's quiet text button, for tertiary actions and inline links), `danger` (error text and error-tinted border; filled error only on the final confirm). Sizes `sm` (2rem) and `md` (2.5rem, default). `iconOnly` requires `aria-label`. `ButtonLink` gains `className` and `aria-current` passthrough. Press scale and transitions stay on the motion tokens.
+7. **Forms and inputs.** New `Field` (label, hint, error, `aria-describedby` wiring) and `TextInput` primitives in `src/components/ui/`, replacing the duplicated `.field` styles in `AuthScreens.module.css` and `AccountView.module.css`. Inputs: `--control-md` tall, `--canvas` fill (recessed inside panels), 1px `--line-strong` border, `--radius-control`; hover border `--muted`; focus border `--accent` plus the global focus outline; invalid border `--error` with message below. `Select` becomes a styled native select (`appearance: none`, lucide `ChevronDown` positioned in a wrapper) with the same box. `Segmented` gains `variant="pill"` (track: `--canvas`, 1px `--line-strong`, `--radius-control`; options 2rem tall; selected: `--surface` fill, `--text`, 2px accent underline bar as the caret signature) and roving-tabindex arrow-key navigation for both variants; `variant="text"` stays the default and pixel-identical. `Toggle` keeps size and motion; off-state border moves to `--line-strong` (only visible change). `Slider` gets a custom track (`--line-strong` track, accent fill element, 1rem thumb) built from a native `input[type=range]` over a styled track span, so it is still a native control.
+8. **Charts.** `ChartFrame` gets a header row (title, optional legend items as dot plus label, optional `aside` slot for a Segmented), keeps fixed height in empty state (no collapse to 72px: the empty state renders a faint baseline and the summary centred at the chart's height) and lives inside a Panel. `chartTheme.ts`: gridlines `--line` at 0.35 opacity, horizontal only; tooltip uses `--panel`, `--line`, `--radius-control`; last point marked with a small accent dot; no fills except an optional flat 8% accent area on the speed line (no gradient).
+9. **Stats layout.** PageHeader with a one-line summary ("X attempts over Y days"). Row of four stat tiles (Panel-backed: time typed, characters, attempts, lessons passed with a thin accent progress line). One "progress" chart panel with a pill Segmented switching `speed` / `accuracy` and a range switch `7 days` / `30 days` / `all` (single chart, not two stacked empties). Two-column grid at 1440 (one column below 52rem): "fingers" panel (bars as today but 6px tall, rounded, values right-aligned, weakest finger called out in the panel aside) and "phases" panel (bars plus `x/y`). "keys" panel: weakest keys as `KeyCap` chips with error rate, then the heatmap keyboard. "recent attempts" panel: last 10 attempts (source label, wpm, accuracy, relative date) using `sourceLabel`. "lessons" table panel (as today, inside a panel, sticky header not needed).
+10. **Settings layout.** Grouped, not searchable (about 20 controls; a search field is more chrome than value; revisit if the count passes 35). Desktop: sticky section index on the left (anchor links `typing`, `sound`, `appearance`, `keyboard guide`, `data`; current section highlighted with the accent caret bar via IntersectionObserver), panels on the right. Top of page: compact account status card ("local only. sign in to sync" or "synced as name@x" plus sync dot and a `manage` secondary button). Groups: **typing** (language pill segmented, on error select plus hint, restart-after slider when relevant, backspace select); **sound** (key sounds toggle, pack pill segmented plus a `preview` icon button, volume slider, error sound toggle; dependent controls `aria-disabled` and dimmed when sound is off); **appearance** (theme picker as four swatch radios showing canvas, panel and an accent caret bar, accessible names exactly `dark|light|dusk|ember`; font size and caret pill segmented; a live one-line static preview of mono text with the chosen caret and size; reduce motion toggle); **keyboard guide** (show keyboard select and three toggles); **data** (export, import, then a separated "danger zone" row with the `danger` reset button and inline confirm). Row: label left, control right at all widths for compact controls (toggle, small select); wide controls (pill segmented, slider, theme picker) wrap under the label below 36rem via a `Row` prop `stack="narrow"`.
+11. **Results page.** Hero panel: eyebrow (lesson phase and title, "free test, 30s" or "zen") plus verdict with the existing accent draw bar; lead pair (speed accent, accuracy) at `--text-display`, then a four-up strip (raw, consistency, time, errors) separated by 1px dividers; actions row with real buttons (primary is next lesson when passed, retry when failed; secondary retry; ghost "lessons") followed by `Kbd` hints `enter next`, `tab retry`. Below 36rem: lead pair stacks, strip becomes 2 x 2. Chart panel titled "speed over time" with legend (net wpm, raw wpm, errors); no duplicate section heading. Heatmap panel; slowest keys as KeyCap chips with ms. Zen results: eyebrow "zen", verdict "session saved", extra stat "words". Count-up, chart draw and heatmap reveal stay exactly as D12.
+12. **Auth screens.** Centred card (Panel, `--column-form` wide) with the Mark (no animation) above the title, title, one-line lede, form with `Field`/`TextInput`, full-width primary submit, "or" divider, full-width secondary "continue with Google" (text only, no third-party logo, no lucide Globe), footer links below the card. Placeholder heights match the final card to avoid layout shift. **Account:** signed out: an empty-state panel (icon, "sync is optional", three bullet benefits, primary `sign in`, secondary `create account`). Signed in: "profile" panel (email, method), "sync" panel (status pill with dot and text, `sync now`), "password" panel, "danger zone" panel (error-tinted border, `danger` button). `LinkDialog` and `VerifyEmail` become `Notice` callouts at the top.
+13. **Notice.** Callout with `--panel` fill, 1px `--line` border, a 2px left bar (accent for info, error for error: the caret signature again), optional lucide icon (`Info`, `AlertCircle`), `role="status"` or `role="alert"` for errors.
+14. **Empty states.** New `EmptyState` primitive: lucide icon in a 2.5rem rounded `--surface` square, title (`--text-section`), one sentence in `--muted`, up to two actions. Used for: stats with no attempts (actions: "start lesson 1" primary, "take a test" secondary), results without a result, account signed out, weakest keys "no weak keys yet", recent attempts empty. Chart empty states stay inside ChartFrame (see 8).
+15. **Footer.** Full-width top divider inside the column; left: small mark plus "stays in your browser unless you sign in"; right: `about`, `privacy` (about anchor), `source`. `--text-xs`, `--muted`, links hover accent. Sticky at the page bottom via the frame.
+16. **About.** PageHeader, then sections: "how it counts", "keyboard shortcuts" (new: `tab` or `esc` restart, `enter` next, zen `esc` finish and `tab` new text, as `Kbd` rows), "privacy and accounts", "text sources" (a Panel with a definition list: name link, licence, attribution), "books", "fonts", "sounds" (synthesised in code, no samples), "source code". All inline styles move to `src/app/about/About.module.css`.
+17. **Free test setup.** One centred toolbar row above the typing area: pill Segmented `time | words | zen` (zen navigates to `/zen/`), then a pill Segmented of values (`15s 30s 60s` or `10 words 25 words 50 words`, accessible names unchanged), then language pill Segmented. The toolbar fades to opacity 0 (pointer-events none, no layout change) while a test is running and returns when idle or finished. The `TypingScreen` and countdown stay untouched.
+18. **Zen mode (feature).** Route `/zen/`, linked from the nav rail and the test toolbar. Before the first key: the typing frame, plus a quiet centred line "zen. no timer, no word count." and `Kbd` hints `esc finish`, `tab new text`. Once typing starts: `html[data-focus="zen"]` fades header and footer to opacity 0 (visibility hidden after the fade, layout unchanged), no keyboard guide, no info bar, no stats. A single `esc` hint stays at the bottom at low opacity; moving the mouse reveals a ghost icon button "finish" (lucide `X`) top right for 2 s. Text: shuffled sentences from the selected language's corpus (fallback: common words), seeded, continuously extended so at least 400 untyped characters are always ahead. `Esc` finishes and saves (only if at least one correct word was typed; otherwise returns to `/test/` without saving), `Tab` restarts with fresh text. Pauses longer than 5 s do not count toward time. Uses the user's caret, font size, on-error (except `restartAfterN`, mapped to `continue`) and backspace settings. Source id `zen`. Counts toward totals, days, keys and fingers; never toward lessons.
+19. **Key sounds (feature).** Synthesised in code (no samples, no network, no licence risk; SOURCES.md says so). Four packs: `soft` (default: damped low body around 150 to 220 Hz plus a short bandpassed noise transient), `clicky` (bright two-stage click plus short body), `typewriter` (noise strike through a bandpass plus inharmonic metallic partials and a low thud), `bubble` (sine with fast upward pitch glide, soft envelope). Each pack has `key`, `space` (deeper, longer) and `backspace` (softer) recipes; one shared `error` recipe family (muted, low-passed, downward pitch, no bright transient) tuned per pack. Eight pre-rendered variants per recipe from a seeded RNG (frequency plus or minus 4%, decay plus or minus 10%, fresh noise). Per press: random variant never equal to the last, playbackRate 1 plus or minus 0.03, gain jitter plus or minus 12%, slightly softer (0.85x) when the inter-key gap is under 90 ms. Volume 0 to 100 mapped perceptually (`(v/100)^2 x maxGain`). Off by default; works in lesson, test and zen.
+
+### Page inventory: problems and target
+
+| Page | Current problems | Target |
+|------|------------------|--------|
+| Frame (all) | 3 misaligned widths, floating footer, no rhythm | Shared column, sticky footer, PageHeader, panel rhythm (direction 2, 15) |
+| Header | 5 equal boxes, loud active state, no grouping, weak at 390 | Two rails (practise, utility), quiet active state, zen entry (direction 3) |
+| `/` lesson list | Liked. Title block style differs from other pages | Only swap the title block to `PageHeader` with identical text; `LessonList.*` untouched |
+| `/lesson/[id]` | Liked | Untouched except the sound hook swap |
+| `/test/` | Bare words as mode options, no grouping | Toolbar of pill segmented controls that fades while running (direction 17) |
+| `/zen/` | Does not exist | New focus screen (direction 18) |
+| `/results/` | Duplicate headings, no legend, link-like buttons, 390 collision, plain empty state | Hero panel, legend, real buttons, Kbd hints, EmptyState (direction 11) |
+| `/stats/` | Empty chart blocks dominate, flat bars, no recent attempts, one-sentence empty state | Tiles, one switchable chart, two-column panels, recent attempts, EmptyState (direction 9) |
+| `/settings/` | Flat list, 3 control languages, sound misplaced, 390 doubles height, reset not separated | Section index, grouped panels, unified controls, sound group, live preview, danger zone (direction 10) |
+| `/account/` | Heading plus paragraph, repeated copy, unequal buttons | EmptyState signed out; profile, sync, password, danger panels signed in (direction 12) |
+| `/login/`, `/signup/`, `/forgot-password/` | Floating form, invisible input borders, weak Google button | Centred card, Field/TextInput, full-width secondary Google (direction 12) |
+| `/about/` | Inline styles, wall of text | Structured sections, shortcuts, sources panel, CSS module (direction 16) |
+| Footer | Floats mid-page, cramped | Divider, two groups, sticky (direction 15) |
+| NeedsKeyboard | Fine | Reuse `EmptyState` look only if it stays identical in copy; optional |
+
+### Workstreams, file ownership and shared interfaces
+
+**Order.** WS0 (foundations) lands first, sequentially, by one agent, and is committed before anything else starts. Then WS-A to WS-G run in parallel with strict file ownership (no agent edits a file owned by another workstream; if it needs a change there, it writes the request in the Log and the owner or the integrator applies it). Then WS-H (integration), WS-I (polish, motion, 390), WS-J (a11y, contrast), WS-K (e2e, screenshots, docs) run sequentially.
+
+| WS | Scope | Owns (only these files) |
+|----|-------|-------------------------|
+| WS0 | Tokens, primitives, schema, shared contracts, guards | `brand/palette.json`, `scripts/brand/themes.ts`, `src/styles/themes.css` (generated), `src/styles/globals.css`, `src/lib/color.test.ts`, `src/lib/focusMode.ts`, `src/components/ui/*` (all existing plus new `Panel`, `PageHeader`, `Field`, `TextInput`, `EmptyState`, `Kbd`), `src/components/charts/chartTheme.ts`, `src/features/settings/settings.ts`, `src/features/settings/settings.test.ts` (new), `src/features/sync/serialize.test.ts`, `src/features/storage/source.ts` (+ test), `src/features/storage/record.ts`, `src/features/storage/storage.test.ts`, `src/features/sound/types.ts`, `src/features/sound/useKeySound.ts` (stub), `src/features/sound/preview.ts` (stub), `e2e/preserve.spec.ts` |
+| WS-A | Frame, header, footer, home title, about | `src/app/layout.tsx`, `src/components/layout/*`, `src/app/page.tsx`, `src/app/about/page.tsx`, `src/app/about/About.module.css` (new) |
+| WS-B | Stats | `src/features/stats/StatsView.tsx`, `StatsView.module.css`, `ProgressCharts.tsx`, `RecentAttempts.tsx` (new), `aggregate.ts`, `aggregate.test.ts` |
+| WS-C | Settings | `src/features/settings/SettingsView.tsx`, `SettingsView.module.css` (new), `src/features/settings/groups/*` (new), `ThemePicker.tsx` (+css, new), `CaretPreview.tsx` (+css, new), `SettingsNav.tsx` (+css, new) |
+| WS-D | Results | `src/features/results/ResultsView.tsx`, `ResultsView.module.css`, `ResultsHero.tsx` (new), `WpmChart.tsx`, `downsample.ts` (+ test, new), `AnimatedStat.tsx` |
+| WS-E | Auth and account | `src/features/auth/*.tsx`, `src/features/auth/*.module.css` (logic files `session.ts`, `errors.ts`, `validation.ts`, `syncStatus.ts`, `types.ts` unchanged) |
+| WS-F | Typing core and Zen | `src/features/engine/{types,engine,session}.ts`, `engine.test.ts`, `session.test.ts` (new), `src/features/typing/{useTypingSession,useFinish,TypingText}.ts(x)`, `TypingText.module.css`, `LessonRunner.tsx`, `TestRunner.tsx`, `Runner.module.css`, `ZenRunner.tsx` + `ZenRunner.module.css` (new), `zenText.ts` + test (new), `src/app/zen/page.tsx` (new), `src/app/sitemap.ts`, `e2e/zen.spec.ts` (new) |
+| WS-G | Sound system | `src/features/sound/*` except `types.ts` (implements the stubs behind the frozen signatures), deletes `src/lib/sound.ts` and `src/features/typing/useKeyTick.ts` during WS-H, `e2e/sound.spec.ts` (new), `SOURCES.md` |
+| WS-H..K | Integration, polish, QA, docs | Everything, sequentially, one agent at a time; also `e2e/screenshots.spec.ts`, `e2e/a11y.spec.ts` (new), `e2e/motion.spec.ts`, `e2e/smoke.spec.ts`, `package.json`, `DECISIONS.md`, `README.md`, `PROJECT.md`, `AGENTS.md` |
+
+**Shared interfaces (frozen after WS0; signatures, not implementations).**
+
+```ts
+// src/features/settings/settings.ts (WS0)
+export type SoundPack = "soft" | "clicky" | "typewriter" | "bubble";
+export const SOUND_PACKS: readonly SoundPack[];
+interface Settings { /* existing 14 fields unchanged */ sound: boolean; soundPack: SoundPack; soundVolume: number; soundErrors: boolean; }
+// defaults: sound false (unchanged), soundPack "soft", soundVolume 60 (integer 0..100, clamped, rounded), soundErrors true
+
+// src/features/storage/source.ts (WS0)
+export const ZEN_SOURCE = "zen";
+export type SourceKind = "lesson" | "test" | "zen";
+export function sourceKind(source: string): SourceKind;      // "zen" -> zen, "test:" prefix -> test, else lesson
+export function sourceLabel(source: string): string;         // lesson title, "free test, 30s", "free test, 25 words", "zen"
+export function retryHref(source: string): string;           // /lesson/<id>/, /test/, /zen/
+
+// src/lib/focusMode.ts (WS0)
+export function setFocusMode(mode: "zen" | null): void;      // sets/removes document.documentElement.dataset.focus
+// globals.css (WS0): html[data-focus="zen"] .site-chrome { opacity: 0; visibility: hidden; pointer-events: none } with an opacity transition on --dur-slow; reduced motion makes it instant.
+
+// src/features/sound/types.ts (WS0)
+export type KeySoundKind = "key" | "space" | "backspace" | "error";
+export type KeySoundHandler = (kind: KeySoundKind) => void;
+// src/features/sound/useKeySound.ts (WS0 stub returns undefined; WS-G implements)
+export function useKeySound(settings: Pick<Settings, "sound" | "soundPack" | "soundVolume" | "soundErrors">): KeySoundHandler | undefined;
+// src/features/sound/preview.ts (WS0 stub no-op; WS-G implements). Must be called from a user gesture.
+export function playPreview(pack: SoundPack, volume: number, withError?: boolean): void;
+
+// src/features/typing/useTypingSession.ts (WS-F)
+interface Options { /* existing */ onKey?: KeySoundHandler; onEscape?: () => void; open?: boolean; pauseAfterMs?: number | null; }
+// onKey kind: "backspace" when a backspace was consumed, "error" when the appended keystroke is incorrect,
+// "space" when a correct space, otherwise "key". Derived by comparing keystrokes.length before/after press. O(1).
+// onEscape: when provided, Escape calls it instead of onRestart (Tab still restarts).
+
+// src/features/engine (WS-F)
+interface EngineState { /* existing */ open: boolean }      // open-ended: never auto-finishes; finishes via { kind: "end" }
+export function createState(target: string, config: EngineConfig, opts?: { open?: boolean }): EngineState;
+export function extendTarget(state: EngineState, more: string): EngineState; // pure; entries/keystrokes untouched
+class TypingSession { constructor(target, config, now?, limitMs?, opts?: { open?: boolean; pauseAfterMs?: number | null }); extend(more: string): void; finish(): void; }
+
+// UI primitives (WS0), new or extended props
+Button/ButtonLink: variant "primary" | "secondary" | "ghost" | "danger" (omitted variant keeps today's quiet look during the parallel phase; WS-H flips the default to "secondary"; "quiet" is an alias of "ghost" until WS-H removes it), size "sm" | "md", iconOnly + aria-label, className, aria-current
+Panel: { title?, description?, aside?, id?, as?: "section" | "div", children, className? }
+PageHeader: { eyebrow?, title, lede?, actions? }   // renders h1 with the existing .page-title text so e2e headings still match
+Field: { label, hint?, error?, children(id, describedBy) } ; TextInput: input props + invalid
+Segmented: + variant "text" (default, unchanged) | "pill"; arrow-key roving focus
+Row: + stack?: "never" | "narrow"
+Stat: + size "tile"
+ChartFrame: + legend?: { label: string; color: string; kind: "line" | "dot" }[]; aside?: ReactNode
+EmptyState: { icon, title, children, actions? }
+Kbd: { children }   // small key chip, mono, --line-strong border
+Notice: + tone "info" | "error" | "neutral", icon?: boolean, role auto (alert for error)
+```
+
+Default behaviour note: the `Button` default changes from quiet to `secondary`. WS0 must keep any existing call site that relies on the quiet look rendering as `ghost` by updating no call sites itself but by mapping: `variant` omitted keeps today's look until WS-H flips the default after every owner has set explicit variants. (Practical rule: during the parallel phase every new or touched call site passes an explicit `variant`.)
+
+## Affected files
+
+- `brand/palette.json`: add `panel` and `lineStrong` per theme.
+- `scripts/brand/themes.ts`: emit `--panel`, `--line-strong`.
+- `src/styles/themes.css`: regenerated by `npm run brand`.
+- `src/styles/globals.css`: new tokens, frame classes (`.site`, `.site-main`, `.site-chrome` focus fade), page width helpers.
+- `src/lib/color.test.ts`: contrast assertions for panel and line-strong.
+- `src/lib/focusMode.ts` (new): focus attribute helper.
+- `src/components/ui/{Button,Select,Segmented,Toggle,Slider,Notice,Row,Stat,ChartFrame}.tsx/.module.css`: variants per direction 6 to 8, 13.
+- `src/components/ui/{Panel,PageHeader,Field,TextInput,EmptyState,Kbd}.tsx/.module.css` (new): primitives.
+- `src/components/ui/Section.*`, `KeyCap.*`: unchanged (lesson list dependency).
+- `src/components/charts/chartTheme.ts`: lighter grid, panel tooltip.
+- `src/features/settings/settings.ts` (+ new `settings.test.ts`): sound pack, volume, error sound fields and sanitising.
+- `src/features/sync/serialize.test.ts`: profile round trip with new fields, unknown and invalid values fall back.
+- `src/features/storage/source.ts` (+ test, new): source kind, label, retry route.
+- `src/features/storage/record.ts`: lesson detection via `sourceKind`.
+- `src/features/storage/storage.test.ts`: migration of settings without the new fields; zen attempt never creates a lesson entry.
+- `src/features/sound/{types,useKeySound,preview}.ts`: contracts (WS0 stubs), then `audio.ts`, `synth.ts`, `packs.ts`, `player.ts` and tests (WS-G).
+- `src/lib/sound.ts`, `src/features/typing/useKeyTick.ts`: deleted.
+- `src/app/layout.tsx`, `src/components/layout/{Header,Footer}.*`: frame, rails, sticky footer, `site-chrome`.
+- `src/app/page.tsx`: PageHeader with identical copy.
+- `src/app/about/page.tsx`, `About.module.css` (new): restructured about.
+- `src/features/stats/*`: redesigned stats, recent attempts, range filter helper.
+- `src/features/settings/SettingsView.tsx` plus `groups/*`, `ThemePicker`, `CaretPreview`, `SettingsNav` (new): grouped settings.
+- `src/features/results/*`: hero, legend, downsampled chart, zen variant.
+- `src/features/auth/*.tsx`, `*.module.css`: card layout, Field primitives, account panels.
+- `src/features/engine/{types,engine,session}.ts`, tests: open-ended state, extend, finish, pause offset.
+- `src/features/typing/{useTypingSession,useFinish,TypingText,LessonRunner,TestRunner}.ts(x)`, `TypingText.module.css`, `Runner.module.css`: onKey kinds, onEscape, windowed rendering, test toolbar, sound hook.
+- `src/features/typing/{ZenRunner.tsx,ZenRunner.module.css,zenText.ts,zenText.test.ts}` (new), `src/app/zen/page.tsx` (new), `src/app/sitemap.ts`: Zen mode.
+- `e2e/{preserve,zen,sound,a11y}.spec.ts` (new), `e2e/{screenshots,smoke,motion}.spec.ts`: guards and coverage.
+- `package.json`: `@axe-core/playwright` dev dependency.
+- `DECISIONS.md` (D16 design evolution, D17 zen, D18 key sounds), `PROJECT.md` (one-line amendment under section 8 and section 15), `README.md` (zen, sound, design system sections, structure), `SOURCES.md` (sounds), `AGENTS.md` (Key paths feature list gains `sound`; one line).
+- `firestore.rules`: **no change** (verified, see Inputs fact 2).
+
+## Risks / Unknowns
+
+1. **Lesson list and typing screens regress through shared tokens or primitives.** Mitigation: existing token values frozen; `Section`, `KeyCap` untouched; `Segmented` and `Toggle` defaults pixel-identical; `e2e/preserve.spec.ts` compares lesson list, lesson screen (mid-typing) and test typing area against baselines captured at base, in all four themes at 1440 (`PRESERVE=1`, baselines git-ignored under `screenshots/preserve/`, threshold `maxDiffPixelRatio 0.002`, animations disabled). Any diff must be explained in the Log or fixed.
+2. **Keystroke latency.** Sound playback runs synchronously after `session.press` (it must, to be immediate) but is bounded: no allocation beyond one `AudioBufferSourceNode` plus one `GainNode`, no rendering, try/catch. Buffers are synthesised off the key path (idle callback) and only wrapped into `AudioBuffer`s at unlock. `e2e/motion.spec.ts` gains a variant with sound on (p95 < 8 ms, max < 40 ms) and a Zen variant after 3000 characters. Engine `keystrokes` array copy is O(n) per key; at 10k keystrokes this is about 80 KB per key: measure in the Zen perf test, and if p95 exceeds budget switch the session to an append-only internal array with a state snapshot (logged deviation).
+3. **AudioContext gesture rules.** Creating a context before a gesture logs a console warning in Chrome and stays suspended. Plan: synthesise Float32Arrays without a context; create and resume the context in a one-time capture-phase `pointerdown`/`keydown` listener installed only when sound is on. The first keystroke may be silent while `resume()` resolves; accepted. Safari: plain `AudioContext` (no `webkitAudioContext` fallback needed for supported browsers). Tab hidden: suspend; resume on next gesture.
+4. **Sound quality is subjective.** Synthesis can sound cheap if done naively. Mitigation: per-pack recipes with transient plus body, pre-rendered variants, jitter, a light `DynamicsCompressorNode` limiter, and a listening review task in WS-G with the user asked for feedback after shipping (not blocking). Bundled CC0 samples stay a possible follow-up (would need SOURCES.md entries); not in scope by default.
+5. **Old cached clients wipe new settings.** An old tab's `sanitiseSettings` drops unknown fields; if that tab changes a setting it pushes a profile without the sound fields, and other devices fall back to defaults (sound off). Low impact, rare (Vercel deploys are instant, tabs reload). Accepted and noted in D18; no rules change.
+6. **Zen render window.** Trimming completed lines must not shift wrapping of the remaining lines (greedy wrap from a line start is stable, so trim only at measured line starts) and must not jump visually (trim and reset scroll in the same layout effect with the transition suppressed for that frame). Unknown: exact feel; verify with the motion capture spec.
+7. **Zen idle time.** Pause handling (gaps over 5 s excluded) lives in `TypingSession`, not the pure reducer, so engine tests stay deterministic; covered by `session.test.ts` with an injected clock.
+8. **Panels versus section 8.** The user asked for a warmer, structured look; section 8 says "almost no borders or boxes". Resolved by one panel level on non-typing pages only, flat fills, no shadows; recorded in D16. If the result reads busy in screenshot review, reduce borders before adding anything.
+9. **Contrast regressions in tuned palette values.** Starting hex values are estimates; `color.test.ts` decides. If `lineStrong` at 3:1 looks too loud for dividers, it is only used for control boundaries; dividers stay `--line`.
+10. **Parallel merge conflicts.** Ownership table is strict; `Button` default flip and alias removal happen only in WS-H. `globals.css` is WS0-only; page CSS lives in modules.
+11. **Retrieval helper broken** (`PyYAML` missing). Does not block implementation; flagged to the user.
+12. **New dev dependency** `@axe-core/playwright` needs network at install time; if unavailable, fall back to a hand-written role/label audit in `e2e/a11y.spec.ts` and log it.
+
+## Done criteria
+
+- `npm run check` green (lint, prettier, typecheck, unit tests including `src/lib/color.test.ts` with the new panel and line-strong assertions, content validation, build, brand check).
+- `npm run test:e2e` green, including new `zen.spec.ts`, `sound.spec.ts`, `a11y.spec.ts` and the updated motion latency tests.
+- `PRESERVE=1 npx playwright test e2e/preserve.spec.ts` shows no unexplained diff for the lesson list, lesson screen and test typing area in all four themes.
+- Screenshots captured with `SHOTS=1 THEMES=dark,light,dusk,ember` for every page (list, lesson, test, zen idle, zen typing, results, zen results, results empty, stats, stats empty, settings, about, account signed out, login, signup, forgot password) at 1440 and 390, reviewed, critique and fixes recorded in the Log.
+- Anonymous use still makes zero runtime network requests and loads no Firebase code (existing smoke assertion), with sound on and in Zen.
+- New settings sync through the existing flow with no `firestore.rules` change; serialize and settings tests prove round trip and fallback.
+- DECISIONS.md D16, D17, D18 written; PROJECT.md amendment notes; README (Zen, Sound, Design system, Structure) and SOURCES.md (sounds) updated; AGENTS.md Key paths line updated.
+- `grep -rnP "\x{2014}" src e2e README.md DECISIONS.md SOURCES.md PROJECT.md` returns nothing; no emoji in UI strings.
+- Plan status set to `done` with a final Log entry.
+
+## Milestones
+
+### M0. Baseline guards (WS0, sequential)
+Outcome: the liked screens have a pixel baseline before anything changes.
+
+- [ ] Add `e2e/preserve.spec.ts` (skipped unless `PRESERVE=1`): for each theme, capture lesson list (`/` after completing `home-01`), `/lesson/top-01/` after typing the first 20 characters, and `/test/` typing area (locator `[aria-label="text to type"]` plus its info bar) with `animations: "disabled"`; compare with `toHaveScreenshot` against `screenshots/preserve/` (git-ignored, generated with `--update-snapshots` at base).
+- [ ] Generate the baselines at base sha `0f487e5` (`npm run build` then `PRESERVE=1 npx playwright test e2e/preserve.spec.ts --update-snapshots`) and record the command in the Log.
+
+### M1. Foundations: tokens, contracts, primitives (WS0, sequential, must be committed before M2 to M8 start)
+Outcome: every parallel workstream codes against frozen tokens, settings schema and primitive APIs.
+
+- [ ] `brand/palette.json` and `scripts/brand/themes.ts`: add `panel`, `lineStrong` per theme and emit `--panel`, `--line-strong`; run `npm run brand`; confirm `git status` shows only `src/styles/themes.css` changed among generated files (revert byte-only PNG churn).
+- [ ] `src/lib/color.test.ts`: per theme assert on `panel`: text >= 7, muted >= 4.5, accent >= 4.5, error >= 4.5, accentInk on accent unchanged; on `surface`: text >= 7, muted >= 4.5; `lineStrong` vs canvas and vs panel >= 3; keep all existing assertions. Tune palette values until green.
+- [ ] `src/styles/globals.css`: add the new tokens (direction 1), `.site` (flex column, `min-height: 100dvh`), `.site-main` (flex 1), `.site-chrome` fade rule for `html[data-focus="zen"]` incl. reduced-motion variants, `.page-wide` and `.page-form` helpers. Do not change any existing token value or the `.page`, `.page-narrow`, `.page-title`, `.page-lede` rules.
+- [ ] `src/features/settings/settings.ts`: `SoundPack`, `SOUND_PACKS`, fields `soundPack` (default `soft`), `soundVolume` (default 60, integer clamp 0..100), `soundErrors` (default true); sanitise each. New `settings.test.ts`: defaults, invalid values fall back, volume clamping and rounding, unknown pack falls back, existing 14 fields unchanged.
+- [ ] `src/features/sync/serialize.test.ts`: `profileToDoc` then `docToProfile` round trip keeps the new fields; a profile from an old client (no sound fields) yields defaults; field count stays <= `MAX_SETTINGS_FIELDS`.
+- [ ] `src/features/storage/source.ts` + `source.test.ts` per the interface; `record.ts` uses `sourceKind(source) === "lesson"`; `storage.test.ts`: recording a `zen` attempt updates totals, days, keys, fingers and never `lessons`; old stored data without sound fields migrates to defaults.
+- [ ] `src/lib/focusMode.ts` per the interface (SSR safe, no-op on server).
+- [ ] `src/features/sound/types.ts`, stub `useKeySound.ts` (returns `undefined`), stub `preview.ts` (no-op) with the frozen signatures.
+- [ ] Primitives, new: `Panel`, `PageHeader` (h1 uses `.page-title` class plus the new title size via a modifier class so existing e2e heading queries keep working), `Field`, `TextInput`, `EmptyState`, `Kbd`, each with a CSS module using tokens only.
+- [ ] Primitives, extended: `Button`/`ButtonLink` (variants, sizes, `iconOnly`, `className`, `aria-current`; omitted `variant` keeps today's quiet look until WS-H), `Select` (styled box plus chevron, same API), `Segmented` (`variant="pill"`, roving tabindex with arrow keys for both variants, `text` variant pixel-identical), `Toggle` (off border `--line-strong` only), `Slider` (custom track and fill, native input kept, `aria-valuetext` support), `Notice` (tones, left bar, icon, role), `Row` (`stack` prop), `Stat` (`size="tile"`), `ChartFrame` (legend, aside, fixed-height empty state).
+- [ ] `src/components/charts/chartTheme.ts`: grid opacity, tooltip on panel, exported `LEGEND` helpers.
+- [ ] `npm run check` green and `PRESERVE=1` spec green (proves tokens and default variants did not move the liked screens). Commit "Foundations for UI redo".
+
+### M2. Frame, header, footer, home, about (WS-A, parallel)
+Outcome: every page sits in one aligned frame with a grouped header and a footer pinned to the bottom.
+
+- [ ] `src/app/layout.tsx`: body gets `.site`, main gets `.site-main page`, header and footer receive `site-chrome`; `PageTransition` and `.page-enter` unchanged.
+- [ ] `Header.tsx/.module.css`: practise rail (`lessons`, `test`, `zen`, `stats`) and utility rail (`settings`, `account` with `SyncBadge`), active state per direction 3, labels hidden below 48rem with `aria-label` on links, `isActive` handles `/zen`. Link accessible names stay the lowercase labels.
+- [ ] `Footer.tsx/.module.css`: divider, mark plus local-first note, links `about`, `privacy` (`/about/#privacy`), `source`.
+- [ ] `src/app/page.tsx`: replace the title block with `PageHeader` using the identical title and lede text; verify `PRESERVE=1` still matches (header changes are expected outside the compared region; capture region excludes the header if needed and note it).
+- [ ] `src/app/about/page.tsx` + `About.module.css`: structure per direction 16 including the `privacy` anchor id, keyboard shortcuts with `Kbd`, sources panel, sounds note; no inline styles.
+
+### M3. Stats (WS-B, parallel)
+Outcome: stats reads as an overview with hierarchy and no dominant empty blocks.
+
+- [ ] `aggregate.ts` + tests: `filterDays(series, range: "7d" | "30d" | "all", today)` and `recentAttempts(attempts, n)` (newest first), pure.
+- [ ] `ProgressCharts.tsx`: one chart in a `ChartFrame` with pill Segmented `speed`/`accuracy` and range `7 days`/`30 days`/`all` in the aside; fixed height; empty summary kept ("Practise on two different days to see a trend.").
+- [ ] `RecentAttempts.tsx`: list of last 10 using `sourceLabel`, mono figures, relative date; EmptyState-lite text when none.
+- [ ] `StatsView.tsx/.module.css`: PageHeader with summary line, four tiles, chart panel, two-column fingers and phases panels (one column below 52rem), keys panel (KeyCap chips plus heatmap, "no weak keys yet" empty), recent attempts panel, lessons table panel; empty state via `EmptyState` with actions to `/lesson/home-01/` and `/test/`. File stays under about 250 lines (split sub-components if needed).
+
+### M4. Settings (WS-C, parallel)
+Outcome: settings are grouped panels with one control language, a sound group and a clear danger zone.
+
+- [ ] `SettingsNav.tsx` (+css): sticky index at >= 64rem, anchor links, IntersectionObserver highlight with the accent caret bar; hidden below 64rem.
+- [ ] `groups/TypingGroup.tsx`, `groups/AppearanceGroup.tsx`, `groups/GuideGroup.tsx`, `groups/DataGroup.tsx`, `groups/SoundGroup.tsx`, `groups/AccountCard.tsx`: each a `Panel` with `Row`s per direction 10; Sound group uses `playPreview` from `@/features/sound/preview` for the preview button and on volume change end (pointerup or keyup), dependent controls `aria-disabled` when sound is off.
+- [ ] `ThemePicker.tsx` (+css): radiogroup of four swatches, each `role="radio"` with accessible name exactly the theme id, arrow-key navigation, swatch drawn with that theme's tokens via a scoped `data-theme` attribute on the swatch element.
+- [ ] `CaretPreview.tsx` (+css): static mono line ("i am speed" style sample) rendering the selected caret style and font size using `--type-size` scoped by `data-size`; no engine import; `aria-hidden`.
+- [ ] `SettingsView.tsx`: shell (PageHeader, AccountCard, nav plus groups, notice for import/reset); keep switch name `reduce motion` and radios `light` etc.; reset uses `danger` variant and inline confirm.
+
+### M5. Results (WS-D, parallel)
+Outcome: the results page has a clear hero, real actions, a legible chart and good 390 behaviour.
+
+- [ ] `downsample.ts` + test: bucket-average `WpmPoint[]` to at most 240 points, preserving error sums and first/last points.
+- [ ] `WpmChart.tsx`: uses downsample, `ChartFrame` legend (net wpm accent line, raw wpm dim line, errors error dot), title "speed over time" (e2e text), animations unchanged.
+- [ ] `ResultsHero.tsx` + `ResultsView.tsx/.module.css`: hero panel per direction 11 using `sourceLabel` and `retryHref`; the first `[data-stat-value]` remains the speed figure; Enter/Tab/Esc handler unchanged except routes from `retryHref`; zen variant (eyebrow "zen", verdict "session saved", words stat computed from `lastResult.text`); `Kbd` hints; 390 layout per direction 11; empty state via `EmptyState` (actions: pick a lesson, take a test).
+
+### M6. Auth and account (WS-E, parallel)
+Outcome: auth screens are centred cards with proper fields; account is structured panels.
+
+- [ ] `fields.tsx`: `TextField` and `PasswordField` reimplemented on `Field` plus `TextInput` (same props, same labels, same `show password` button names).
+- [ ] `authKit.tsx`: `AuthShell` renders the card (Mark, `PageHeader`-styled title, lede, children) with footer links below; `GoogleButton` becomes full-width `secondary` without the Globe icon; `ScreenPlaceholder` height matches the card.
+- [ ] `LoginView`, `SignupView`, `ForgotPasswordView`, `ChangePassword`: adopt the card and primitives; password rule list restyled; no copy changes that break e2e strings.
+- [ ] `AccountView.tsx/.module.css`: signed-out `EmptyState`; signed-in panels (profile, sync with status pill, password, danger zone); `LinkDialog` and `VerifyEmail` as `Notice` callouts; `DeleteAccount` uses `danger` variant and `Field`; `SyncBadge` keeps the dot API used by the header.
+- [ ] `AuthScreens.module.css` and `AccountView.module.css`: remove duplicated field styles now owned by `Field`/`TextInput`.
+
+### M7. Typing core and Zen mode (WS-F, parallel)
+Outcome: an endless, distraction-free Zen screen that saves a normal attempt on Esc, without slowing the key path.
+
+- [ ] Engine: `open` flag in `EngineState`, `createState(..., { open })`, `restart` keeps `open`, `isDone` returns false when open, `extendTarget` pure; `engine.test.ts`: open state never finishes at the end of the target, `extendTarget` keeps entries, keystrokes and status, `{ kind: "end" }` finishes an open run with correct elapsed; all existing tests unchanged and green.
+- [ ] `TypingSession`: options `{ open, pauseAfterMs }`, `extend(more)`, `finish()` (ends at the active-time clock), pause offset (gaps beyond `pauseAfterMs` are subtracted from the time fed to the reducer); `session.test.ts` with an injected clock covers pause exclusion, extend, finish.
+- [ ] `useTypingSession.ts`: `onKey` receives `KeySoundKind` (derived per the interface), `onEscape`, `open`, `pauseAfterMs` passthrough; Tab and Escape behaviour unchanged when `onEscape` is absent.
+- [ ] `useFinish.ts`: optional `text` override so Zen stores only the typed portion.
+- [ ] `TypingText.tsx/.module.css`: optional `windowed` prop; default path byte-for-byte equivalent in output; windowed path renders only from the current window start and does O(window) work per keystroke (split words for the window slice only), trims whole measured lines once the caret reaches the third line, suppresses the transform transition for the trim frame.
+- [ ] `zenText.ts` + test: `createZenStream(corpus, rng)` returning `next(minChars): string` built from shuffled sentences (fallback common words), every character typeable on the layout (assert with `targetFor`), no dead-key characters, deterministic per seed, never returns empty.
+- [ ] `ZenRunner.tsx` + `ZenRunner.module.css`: per direction 18 (idle line, Kbd hints, focus mode on while running and off on unmount or finish, mouse-reveal finish button, keeps 400 chars ahead via an effect off the key path, `pauseAfterMs: 5000`, `restartAfterN` mapped to `continue`, Esc rules, uses `useKeySound(settings)`); `NeedsKeyboard` on touch devices.
+- [ ] `src/app/zen/page.tsx` (metadata title "zen", canonical `/zen/`), `sitemap.ts` adds `/zen/`.
+- [ ] `TestRunner.tsx` + `Runner.module.css` `.modes`: toolbar per direction 17 (mode pill `time | words | zen`, values pill with unchanged names like `10 words`, language pill moved into the toolbar, fades while running); sound via `useKeySound(settings)`. `TypingScreen` untouched; the language Segmented in the TypingScreen footer may stay for lessons only.
+- [ ] `LessonRunner.tsx`: replace `useKeyTick(settings.sound)` with `useKeySound(settings)`; nothing else.
+- [ ] `e2e/zen.spec.ts`: navigate from nav to `/zen/`; idle hint visible; after typing, `html` has `data-focus="zen"` and header has opacity 0; type 600 characters and assert `[aria-label="text to type"] [data-state]` count stays under 700 and the text keeps extending; Tab gives new text; Esc lands on `/results/` with eyebrow "zen"; `/stats/` shows the attempt and `/` lesson counts are unchanged; Esc before typing returns to `/test/` without saving.
+
+### M8. Sound system (WS-G, parallel)
+Outcome: four satisfying, never-repetitive packs with an error sound and volume, zero added key latency, synced settings.
+
+- [ ] `synth.ts` (pure): render a recipe to `Float32Array` at 48 kHz from a seeded RNG (damped sine partials, filtered noise transients via simple biquad implemented in TS, pitch glide, envelopes). Tests: finite samples, peak <= 0.9 after normalisation, length 20 to 180 ms, deterministic per seed, variants differ, error recipe spectrally darker than key (zero-crossing rate lower).
+- [ ] `packs.ts`: recipes for `soft`, `clicky`, `typewriter`, `bubble` (`key`, `space`, `backspace`, `error`) per direction 19. Test: every pack defines every kind; parameters within sane ranges.
+- [ ] `player.ts`: holds rendered variants per active pack, lazily synthesised in `requestIdleCallback` (fallback `setTimeout`), unlock on first capture-phase `pointerdown`/`keydown` (create `AudioContext({ latencyHint: "interactive" })`, wrap arrays with `createBuffer` at 48 kHz, `resume()`), master gain plus light compressor, voice cap 16 (stop oldest), variant pick never repeats, rate and gain jitter, fast-burst softening, perceptual volume curve, suspend on `visibilitychange` hidden, every call wrapped in try/catch, silent when `AudioContext` is missing. Tests with a fake AudioContext: voice cap honoured, no throw without AudioContext, volume 0 creates no voices, jitter within bounds, error kind skipped when `soundErrors` is false.
+- [ ] `useKeySound.ts`: real implementation behind the frozen signature (prepares the pack when `sound` is on, returns a stable handler, returns `undefined` when off).
+- [ ] `preview.ts`: plays a short realistic phrase (five keys with human timing, a space, optionally one error) through the same player; works as the first gesture.
+- [ ] Listening review: render each pack's variants to WAV files in the scratchpad (a tiny script, not committed), listen or inspect waveforms/spectra, tune recipes; record parameter changes in the Log.
+- [ ] `SOURCES.md`: "Key sounds" section stating sounds are synthesised in code, no third-party samples.
+- [ ] `e2e/sound.spec.ts`: init script wraps `AudioContext` to count `start()` calls; with sound on, typing 20 characters produces about 20 starts and a wrong key produces a start; with sound off, zero contexts are created; no network requests; settings page preview button creates a context.
+
+### M9. Integration (WS-H, sequential)
+Outcome: all workstreams merged, defaults flipped, dead code removed, everything green.
+
+- [ ] Merge workstreams in order WS-A, WS-B, WS-C, WS-D, WS-E, WS-F, WS-G; resolve any Log-recorded cross-ownership requests.
+- [ ] Delete `src/lib/sound.ts` and `src/features/typing/useKeyTick.ts`; `grep -rn "useKeyTick\|playTick" src` returns nothing.
+- [ ] Flip the `Button` default to `secondary`, remove the `quiet` alias, and fix every call site to an explicit, intended variant.
+- [ ] Update `e2e/smoke.spec.ts` and `e2e/auth-screens.spec.ts` only where selectors legitimately changed (record each change and why in the Log; never weaken assertions).
+- [ ] `npm run check` and `npm run test:e2e` green; `PRESERVE=1` green.
+
+### M10. Motion, polish and 390 pass (WS-I, sequential)
+Outcome: new surfaces animate within the D12 system and every page is clean at 390.
+
+- [ ] Panels and tiles enter with `.enter` plus `staggerStyle` (cap per `STAGGER`), no new durations; Zen chrome fade uses `--dur-slow`; test toolbar fade uses `--dur-base`; all transform/opacity only; reduced motion makes them instant.
+- [ ] Theme picker, pill segmented and sound preview get press feedback from existing tokens; no animation in any key handler.
+- [ ] 390 pass on every page: header fits, no horizontal scroll (`document.documentElement.scrollWidth <= 390` asserted in screenshots spec), settings rows compact, results stacks, stats single column, auth card full width with `--space-4` padding.
+- [ ] Extend `e2e/motion-capture.spec.ts` with a Zen session (start, chrome fade, line trim) and review frames; record findings in the Log.
+
+### M11. Accessibility and contrast (WS-J, sequential)
+Outcome: every page passes automated checks and the colour rules are enforced.
+
+- [ ] Add `@axe-core/playwright` (dev) and `e2e/a11y.spec.ts`: zero serious or critical violations on every page in dark and light (fallback per Risk 12).
+- [ ] Keyboard-only walkthrough recorded in the Log: nav rails, settings index, segmented arrows, theme picker, slider, dialogs, results shortcuts, Zen Esc/Tab, visible focus everywhere.
+- [ ] `grep -rn "var(--dim)" src/components/ui src/features/{stats,settings,results,auth}` reviewed: any `--dim` text inside a panel or on `--surface` switched to `--muted` (rule from direction 1); `src/lib/color.test.ts` green.
+
+### M12. E2E, screenshots and review (WS-K, sequential)
+Outcome: the redesign is verified visually in every theme and size.
+
+- [ ] Extend `e2e/screenshots.spec.ts` to the full page list in Done criteria (including empty states before completing lessons, Zen idle and typing, account signed out, auth screens) at 1440 and 390, plus the no-horizontal-scroll assertion.
+- [ ] Run `SHOTS=1 THEMES=dark,light,dusk,ember npx playwright test e2e/screenshots.spec.ts`, review every image against the design direction, write a critique per page in the Log, fix, repeat until clean.
+- [ ] Motion latency tests in `e2e/motion.spec.ts`: existing test unchanged; add sound-on variant and Zen-after-3000-characters variant (same budgets).
+
+### M13. Docs and close (WS-K, sequential)
+Outcome: decisions and docs describe the current state.
+
+- [ ] `DECISIONS.md`: D16 (design system evolution: panels, controls, header rails, text-role rule, why it deviates from section 8), D17 (Zen semantics: source `zen`, pause exclusion, minimum to save, no lesson credit, render window), D18 (key sounds: synthesis over samples, packs, latency design, gesture handling, settings sync without rules change, old-client caveat).
+- [ ] `PROJECT.md`: one-line amendment notes under section 8 (pointing to D16) and section 15 (sound packs, D18), section 10 free test line mentions Zen (D17).
+- [ ] `README.md`: sections "Zen mode", "Sound", "Design system" (tokens, primitives, panel rule, text-role rule, how to add a page), update "Structure".
+- [ ] `AGENTS.md` Key paths: add `sound` to the feature list in the `src/features/` row (one line, no changelog).
+- [ ] Final: `npm run check`, `npm run test:e2e`, `PRESERVE=1` spec, em dash grep, emoji scan of UI strings; set `status: done` and append the final Log entry.
+
+## Log
+
+- 2026-10-11 19:10 Plan written by planner at base `0f487e5`. Screenshots of the current state (dark and light, 1440 and 390, every page) were captured into the session scratchpad and critiqued in Inputs. Contrast of text roles on `--surface` measured (dim fails AA on surface in all themes). Retrieval helper broken (`PyYAML` missing), rules selected manually. Defaults chosen for open questions: Zen in the main nav, Zen text from sentences, Zen counts toward totals but not lessons, synthesised sounds (no samples), sound pack default `soft`, volume 60, error sound on, settings not searchable.
