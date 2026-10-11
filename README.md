@@ -1,6 +1,6 @@
 # i am speed
 
-A calm touch-typing trainer for the **Austrian QWERTZ keyboard**. Structured lessons teach ten-finger typing one key at a time, with an on-screen keyboard that shows which finger goes where. German or English text, honest stats, no account, no backend. Everything stays in your browser.
+A calm touch-typing trainer for the **Austrian QWERTZ keyboard**. Structured lessons teach ten-finger typing one key at a time, with an on-screen keyboard that shows which finger goes where. German or English text, honest stats. No account needed and nothing leaves your browser; optional sign-in syncs your progress across devices.
 
 Live: https://speed.nohelll.com
 
@@ -25,10 +25,22 @@ npm start            # serves out/ locally (needs a build first)
 ```bash
 npm run check        # lint, prettier, typecheck, unit tests, content validation, build, brand check
 npm run test:e2e     # Playwright smoke tests against out/ (run a build first)
+npm run test:rules   # Firestore security rules against the emulator (needs Java, not part of check)
 SHOTS=1 npx playwright test e2e/screenshots.spec.ts   # screenshots into screenshots/ (git-ignored)
 ```
 
 The first e2e run needs a browser: `npx playwright install chromium`.
+
+## Cloud sync (optional)
+
+Anonymous use is local only: no account, no network requests, no Firebase code loaded. Signing in (email and password, or Google) syncs settings, attempt history and stats across devices. Local storage stays the source of truth; the account is a background copy. See `DECISIONS.md` D13 to D15.
+
+- What syncs: settings, the last 500 attempts, and lifetime stats (per-device contributions that merge without double counting). The full detail of your latest result stays on the device.
+- Config: the public Firebase web config lives in `src/config/firebase.ts`. It is not a secret; access is enforced by `firestore.rules` (owner only, shape validated). Default project: `speed-pwa` (`.firebaserc`).
+- Deploy rules and indexes: `firebase deploy --only firestore:rules,firestore:indexes`.
+- Rules tests: `npm run test:rules` starts the Firestore emulator and needs Java (JDK 21 or newer is safest). It is not part of `npm run check`.
+- Authorized domains in the Firebase console (Authentication, Settings): `speed.nohelll.com` and `localhost`. Google sign-in uses a popup.
+- Firebase code is only reached through dynamic imports under `src/features/firebase/`; an ESLint rule keeps it out of the initial bundle.
 
 ## Regenerate content
 
@@ -96,6 +108,9 @@ src/features/engine       typing state machine and metrics (pure, tested)
 src/features/lessons      curriculum and text generation (pure, tested)
 src/features/content      corpus types and lazy loading
 src/features/storage      versioned localStorage schema, migration, store
+src/features/auth         sign-in state and account screens
+src/features/sync         merge model, serialisation, sync engine (pure, tested)
+src/features/firebase     lazy Firebase client, auth and Firestore adapters (only place that imports firebase)
 src/features/{typing,results,stats,settings}   screens
 src/components/ui         Button, Toggle, Select, Slider, Section, Row, KeyCap, Stat, ChartFrame ...
 src/lib                   rng, colour maths, motion

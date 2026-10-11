@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import sources from "@/content/sources.json";
 import { SITE } from "@/config/site";
@@ -14,7 +15,8 @@ export default function AboutPage() {
       <h1 className="page-title">about</h1>
       <p className="page-lede">
         i am speed teaches touch typing on the Austrian QWERTZ keyboard. It runs entirely in your
-        browser, stores everything in local storage, and makes no network requests while you use it.
+        browser and stores everything in local storage. Without an account it makes no network
+        requests while you use it.
       </p>
 
       <Section title="how it counts">
@@ -23,6 +25,18 @@ export default function AboutPage() {
           the share of keystrokes that were right, including wrong ones you corrected. A lesson
           counts as passed at 95% accuracy. Keys are judged by the character they produce, so any
           operating-system layout works, but the lessons assume Austrian key positions.
+        </p>
+      </Section>
+
+      <Section title="privacy and accounts">
+        <p>
+          Without an account nothing leaves your browser. Signing in is optional and only needed to
+          use your progress on more than one device. With an account, your settings, attempt history
+          and stats are stored in Google Firebase (Firestore) under your user id, and only you can
+          read them. The full detail of your latest result is not synced and stays on the device.
+          You can delete your account and its cloud data at any time on the{" "}
+          <Link href="/account/">account page</Link>. Your local copy stays on the device until you
+          reset it in settings.
         </p>
       </Section>
 

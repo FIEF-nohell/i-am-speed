@@ -158,7 +158,7 @@ This rule applies to any agent that edits `.claude/agents/` (including the learn
 ## Project-specific section
 
 ### Stack
-- "i am speed": a touch-typing trainer for the Austrian QWERTZ layout. Next.js App Router, React, TypeScript strict, static export (`output: 'export'`), plain CSS with variable tokens, Recharts, lucide-react, Vitest, Playwright. No backend; data in localStorage only.
+- "i am speed": a touch-typing trainer for the Austrian QWERTZ layout. Next.js App Router, React, TypeScript strict, static export (`output: 'export'`), plain CSS with variable tokens, Recharts, lucide-react, Vitest, Playwright. No backend of its own; data in localStorage, with optional Firebase (Auth + Firestore) sync for signed-in users.
 - Product spec: `PROJECT.md`. Plan: `PLAN.md`. Decisions: `DECISIONS.md`. Content sources: `SOURCES.md`.
 
 ### How to run

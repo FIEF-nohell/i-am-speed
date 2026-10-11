@@ -24,6 +24,7 @@ Monkeytype is a typing speed test with a very clean UI, but it does not teach to
 
 - Next.js (App Router), React, TypeScript strict. Static export (`output: 'export'`). No backend, no database, no auth, no analytics.
 - All user data lives in localStorage only. No runtime network requests (self-host fonts via `next/font`). Network is allowed at build/prepare time only (see Content).
+- Amended 2026-10-11: optional sign-in with Firebase cloud sync, anonymous use unchanged. See DECISIONS.md D13.
 - Desktop-first. On touch-only devices show a short "needs a physical keyboard" notice.
 - UI language is English. Typing text language is switchable: German or English.
 - All lessons are open from the start. No unlocking. Completion is a mark, not a gate.
@@ -159,6 +160,8 @@ Text language (DE/EN), on-error behaviour, backspace behaviour, theme, font size
 ## 16. Storage
 
 Single versioned localStorage schema with a migration function, try/catch around every access, SSR-safe (no hydration mismatches: read storage only on the client, e.g. with `useSyncExternalStore`). Cap stored history (e.g. last 500 attempts, with per-key aggregates kept separately so old stats are not lost).
+
+Amended 2026-10-11: optional sign-in with Firebase cloud sync, anonymous use unchanged. See DECISIONS.md D13.
 
 ## 17. Verification (you are unattended, so prove it works)
 

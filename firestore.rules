@@ -1,0 +1,94 @@
+rules_version = '2';
+
+// Owner-only access with shape validation. See DECISIONS.md D13 and D14.
+// Rules cannot loop over map keys, so per-key stat keys are bounded by map
+// size only; the client encodes and validates them (serialize.ts).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function nonNegNumber(v) {
+      return v is number && v >= 0;
+    }
+
+    function validProfile() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['schema', 'settings', 'settingsUpdatedAt', 'updatedAt'])
+        && d.keys().hasAll(['schema', 'settings', 'settingsUpdatedAt', 'updatedAt'])
+        && d.schema is int && d.schema == 2
+        && d.settings is map && d.settings.size() <= 40
+        && nonNegNumber(d.settingsUpdatedAt)
+        && d.updatedAt is number;
+    }
+
+    function validTotals(t) {
+      return t is map
+        && t.keys().hasOnly(['attempts', 'timeMs', 'chars'])
+        && t.keys().hasAll(['attempts', 'timeMs', 'chars'])
+        && nonNegNumber(t.attempts)
+        && nonNegNumber(t.timeMs)
+        && nonNegNumber(t.chars);
+    }
+
+    function validContrib(id) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['id', 'rev', 'updatedAt', 'keys', 'fingers', 'days', 'lessons', 'totals'])
+        && d.keys().hasAll(['id', 'rev', 'updatedAt', 'keys', 'fingers', 'days', 'lessons', 'totals'])
+        && d.id == id
+        && d.rev is int && d.rev >= 0
+        && d.updatedAt is number
+        && d.keys is map && d.keys.size() <= 300
+        && d.fingers is map
+        && d.fingers.keys().hasOnly(['leftPinky', 'leftRing', 'leftMiddle', 'leftIndex',
+                                     'rightIndex', 'rightMiddle', 'rightRing', 'rightPinky', 'thumb'])
+        && d.days is map && d.days.size() <= 20000
+        && d.lessons is map && d.lessons.size() <= 500
+        && validTotals(d.totals);
+    }
+
+    function validAttempt(id) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['id', 'at', 'source', 'lang', 'netWpm', 'rawWpm', 'accuracy',
+                               'consistency', 'errors', 'durationMs', 'chars', 'passed'])
+        && d.keys().hasAll(['id', 'at', 'source', 'lang', 'netWpm', 'rawWpm', 'accuracy',
+                            'consistency', 'errors', 'durationMs', 'chars', 'passed'])
+        && d.id == id
+        && id.matches('^[A-Za-z0-9_.-]{1,96}$')
+        && d.source is string && d.source.size() <= 64
+        && d.lang in ['de', 'en']
+        && nonNegNumber(d.at)
+        && nonNegNumber(d.netWpm)
+        && nonNegNumber(d.rawWpm)
+        && nonNegNumber(d.accuracy) && d.accuracy <= 100
+        && nonNegNumber(d.consistency)
+        && nonNegNumber(d.errors)
+        && nonNegNumber(d.durationMs)
+        && nonNegNumber(d.chars)
+        && d.passed is bool;
+    }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && validProfile();
+      allow update: if isOwner(uid) && validProfile()
+        && request.resource.data.settingsUpdatedAt >= resource.data.settingsUpdatedAt;
+
+      match /contribs/{contribId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid) && validContrib(contribId);
+        allow update: if isOwner(uid) && validContrib(contribId)
+          && request.resource.data.rev >= resource.data.rev;
+      }
+
+      match /attempts/{attemptId} {
+        allow read, delete: if isOwner(uid);
+        // Attempts are immutable but written with idempotent sets, so an
+        // update with a valid shape is allowed.
+        allow create, update: if isOwner(uid) && validAttempt(attemptId);
+      }
+    }
+  }
+}
