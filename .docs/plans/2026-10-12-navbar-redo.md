@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 created: 2026-10-12
 updated: 2026-10-12
 base: e919791892d6b75c7d4e0957605d19a3b01c371b
@@ -323,20 +323,20 @@ Outcome: every existing spec passes, axe is clean signed out and signed in, the 
 
 Outcome: the header is checked by eye against a written checklist on every page, size and theme, and every finding is fixed.
 
-- [ ] Capture `SHOTS=1 THEMES=dark,light npx playwright test e2e/screenshots.spec.ts` (1440, 768, 390) and `SHOTS=1 THEMES=dusk,ember npx playwright test e2e/screenshots.spec.ts` (only no Playwright run may be active at the same time).
-- [ ] Review the header in every capture against this checklist and write each finding in the Log: (1) brand mark, wordmark, tabs and account control share one vertical centre line; (2) the first label and the account control align with the content column's left and right edges, and the hairline spans exactly the column like the footer's rule; (3) the accent bar sits on the hairline, exactly under the current word, nowhere on pages without a tab; (4) no icons, fills or borders around tabs; (5) spacing between tabs is even and `settings` sits at the right end on desktop; (6) at 390 two rows, wordmark visible, tabs spread edge to edge, nothing clipped; (7) light theme: hairline visible but quiet, accent bar clear, sign in border visible; (8) dusk and ember: accent bar and sync dot read correctly; (9) the menu panel is clearly delimited over stats charts and settings panels; (10) lesson list, lesson and test screens look identical to the "before" images below the header; (11) zen typing capture shows no header.
-- [ ] Fix every finding within the Design section's values. If a fix needs a value that differs from this plan, change the plan's Design section in place and log why.
-- [ ] Re-capture and re-review until the checklist passes in all captures; delete stale screenshots of removed variants if any.
+- [x] Capture `SHOTS=1 THEMES=dark,light npx playwright test e2e/screenshots.spec.ts` (1440, 768, 390) and `SHOTS=1 THEMES=dusk,ember npx playwright test e2e/screenshots.spec.ts` (only no Playwright run may be active at the same time).
+- [x] Review the header in every capture against this checklist and write each finding in the Log: (1) brand mark, wordmark, tabs and account control share one vertical centre line; (2) the first label and the account control align with the content column's left and right edges, and the hairline spans exactly the column like the footer's rule; (3) the accent bar sits on the hairline, exactly under the current word, nowhere on pages without a tab; (4) no icons, fills or borders around tabs; (5) spacing between tabs is even and `settings` sits at the right end on desktop; (6) at 390 two rows, wordmark visible, tabs spread edge to edge, nothing clipped; (7) light theme: hairline visible but quiet, accent bar clear, sign in border visible; (8) dusk and ember: accent bar and sync dot read correctly; (9) the menu panel is clearly delimited over stats charts and settings panels; (10) lesson list, lesson and test screens look identical to the "before" images below the header; (11) zen typing capture shows no header.
+- [x] Fix every finding within the Design section's values. If a fix needs a value that differs from this plan, change the plan's Design section in place and log why.
+- [x] Re-capture and re-review until the checklist passes in all captures; delete stale screenshots of removed variants if any.
 
 ### Milestone 8: Documentation and close-out
 
 Outcome: decisions and docs describe the current header; the plan and evidence are closed.
 
-- [ ] Append `## D20 Header navigation: text tabs on a hairline` to `DECISIONS.md`: context (four rejected headers, boxed icon tabs were the wrong concept), decision (column-aligned bar, hairline mirroring the footer, five text tabs with settings at the right, gliding 2px accent caret indicator with the SSR `::after` hand-off, `sign in` secondary button or avatar disclosure with sync dot, two-row layout at 40rem and below, no icons), rejected directions (bottom bar, sidebar, command palette, header call to action, tinted band, sticky, practise dropdown), the sentence "Supersedes the Header bullet of D16." and the verification (e2e `nav.spec.ts`, axe, preserve, screenshots at 1440, 768, 390). Do not edit D16 (the file is append-only).
-- [ ] `README.md` design system section: add one bullet: header is a column-wide bar of text tabs on a hairline with a gliding accent indicator; signed-out shows `sign in`, signed-in shows an avatar menu with sync status; two rows on phones; see D20. Update the screenshots bullet to mention 768.
-- [ ] Grep the diff for em dashes and emoji (`git diff e919791 -- . | grep -nP "\x{2014}|[\x{1F300}-\x{1FAFF}]"` returns nothing).
-- [ ] Write `.docs/evidence/2026-10-12-navbar-redo.md` (objective, outcome, revision, rules considered and applied, verification commands and results, learning disposition `pending`).
-- [ ] Final `npm run check` and `npm run test:e2e` green; set `status: done`, update `updated:`, append the final Log entry.
+- [x] Append `## D20 Header navigation: text tabs on a hairline` to `DECISIONS.md`: context (four rejected headers, boxed icon tabs were the wrong concept), decision (column-aligned bar, hairline mirroring the footer, five text tabs with settings at the right, gliding 2px accent caret indicator with the SSR `::after` hand-off, `sign in` secondary button or avatar disclosure with sync dot, two-row layout at 40rem and below, no icons), rejected directions (bottom bar, sidebar, command palette, header call to action, tinted band, sticky, practise dropdown), the sentence "Supersedes the Header bullet of D16." and the verification (e2e `nav.spec.ts`, axe, preserve, screenshots at 1440, 768, 390). Do not edit D16 (the file is append-only).
+- [x] `README.md` design system section: add one bullet: header is a column-wide bar of text tabs on a hairline with a gliding accent indicator; signed-out shows `sign in`, signed-in shows an avatar menu with sync status; two rows on phones; see D20. Update the screenshots bullet to mention 768.
+- [x] Grep the diff for em dashes and emoji (`git diff e919791 -- . | grep -nP "\x{2014}|[\x{1F300}-\x{1FAFF}]"` returns nothing).
+- [x] Write `.docs/evidence/2026-10-12-navbar-redo.md` (objective, outcome, revision, rules considered and applied, verification commands and results, learning disposition `pending`).
+- [x] Final `npm run check` and `npm run test:e2e` green; set `status: done`, update `updated:`, append the final Log entry.
 
 ## Log
 - 2026-10-12 00:00 M0 done: npm run check green at base e919791; preserve guard 4/4 green at base (no re-record needed); before images copied to scratchpad/before.
@@ -346,3 +346,9 @@ Outcome: decisions and docs describe the current header; the plan and evidence a
 - 2026-10-12 M4 done: AccountControl, UserMenu and CSS built. Signed-in fixture WORKS (seed firebase:authUser localStorage key plus i-am-speed:auth hint, Google blocked): no fallback needed. Fixture hardcodes the public web key because eslint forbids importing src/config/firebase from e2e. Under blocked network the sync sentence is 'Sync failed. Trying again soon.'. Escape test types 3 chars first and asserts progress unchanged. nav.spec 25 + auth-screens green.
 - 2026-10-12 M5 done: phone two-row CSS, 44px targets (sign in needed a higher-specificity selector because Button's data-size rule beat .signIn), nav.spec 29 passed. Finding: /settings/ overflows horizontally at 320 (sound pack radiogroup in the settings page, pre-existing, unrelated to the header); excluded from the 320 assertion, left unfixed as out of scope.
 - 2026-10-12 M6 done: motion-capture scoped, axe signed-in menu-open pass (dark, light), screenshots 768 plus account-menu capture. npm run check green; npm run test:e2e 67 passed 8 skipped (env-gated); PRESERVE=1 guard 4/4 green with the base baselines, no re-record needed.
+- 2026-10-12 M7 review: captured all four themes at 1440, 768, 390 and checked: single centre line, column edges, accent bar on hairline under the word, no bar on pages without a tab, no icons or fills, two rows at 390 with wordmark, light hairline quiet but visible, dusk and ember accent and dot correct, menu clearly delimited over stats, lesson and zen screens unchanged, zen typing shows no header, focus ring inset and clear of the hairline. No findings needed a code change. Note: on phones the open menu overlays the tab row (anchored under the avatar); accepted.
+- 2026-10-12 M8 done: D20, README, evidence written; final npm run check, npm run test:e2e (67 passed, 8 env-gated skipped) and PRESERVE guard (4/4) green. Plan done.
+
+## Completion
+
+Text tab bar on a hairline with a gliding 2px accent indicator (no animation on first paint, static ::after hand-off), bordered `sign in` button or avatar disclosure menu with sync status and isolated keyboard handling, two-row phone layout with 44px targets. Pure model and indicator state machine are unit-tested; `e2e/nav.spec.ts`, signed-in axe passes and 768 screenshots added. Preserve guard passed without re-recording. Known unrelated issue: /settings/ overflows at 320px (sound pack radio group).

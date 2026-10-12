@@ -100,3 +100,19 @@ Zen no longer has any target text. It supersedes the target-text part of D17 (sh
 - Aggregates: a zen attempt adds to `totals` (attempts, time, characters), to the time of its day and to recent attempts. `recordAttempt` leaves `keys`, `fingers`, the day's attempts, speed sum and accuracy sum, and lessons untouched, so accuracy averages are not skewed. Consequence: a day with only zen sessions has no point in the daily charts, but its time counts in the totals. Per-key latency from zen is not recorded.
 - Results and stats hide accuracy, errors, the error heatmap and slowest keys for zen; recent attempts show "-" for accuracy.
 - Saved only with at least five characters left; Esc otherwise returns to `/test/`. Focus-mode fade of header and footer is unchanged.
+
+## D20 Header navigation: text tabs on a hairline
+
+Context: four headers were rejected (links, a pill, two rails, one rail). The last one, a capsule of six icon plus label tabs with a filled thumb, was the wrong concept: the only bordered, filled, iconised object on screens that are otherwise type on canvas, with five visual channels for one fact (where am I), and at 390 it lost the wordmark and became six bare icons.
+
+Decision: the header is a ruled line of words that frames the content column like the footer does.
+
+- A column-aligned bar: wordmark left, five lowercase text tabs (`lessons`, `test`, `zen`, `stats`, `settings`), `settings` pushed to the right end on desktop. A 1px `--line` hairline runs under the bar and mirrors the footer rule. No icons, no fills, no borders around tabs.
+- The current tab is marked by colour (`--text` against `--muted`) and a 2px accent bar on the hairline, exactly as wide as the word. One indicator element glides between tabs on client navigation (transform and opacity only, D12) and fades on pages without a tab. It never animates on first paint: the static HTML draws the bar with a label `::after`, and the hook hands over to the indicator in a layout effect at the same pixels (`useNavIndicator`, `navIndicator.ts`).
+- Account: signed out shows a bordered `sign in` secondary button; signed in shows a round avatar initial with a sync dot that opens a disclosure panel (identity, sync sentence, `account`, `sign out`). The panel handles its own keys and stops them from reaching the typing screens (D11); Escape closes it and returns focus to the avatar.
+- Phones (40rem and below): two rows, wordmark and account on top, five tabs spread edge to edge below, every target at least 44px. No fixed or sticky elements.
+- Rejected: a bottom tab bar (needs icons, costs height and safe-area handling, collides with the footer and focus mode), a sidebar (takes column width), a command palette (hidden, collides with typing keys), a header call to action (competes with the accent indicator), a tinted band, a sticky header, a practise dropdown.
+
+Supersedes the Header bullet of D16.
+
+Verification: `e2e/nav.spec.ts` (aria-current per route, tab order, indicator geometry, glide, no first-load animation, reduced motion, account menu keys, phone and tablet layout, touch hover), axe including the open account menu, the preserve guard unchanged, and screenshots at 1440, 768 and 390 in four themes. The signed-in fixture seeds the persisted Firebase user with all Google requests blocked.
