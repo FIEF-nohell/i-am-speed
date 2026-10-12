@@ -187,3 +187,9 @@
   transform: translateY(-50%);
   background: var(--accent);
 }
+
+@media (max-width: 40rem) {
+  .item {
+    min-height: 2.75rem;
+  }
+}

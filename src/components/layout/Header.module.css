@@ -175,3 +175,59 @@
 .signIn[aria-current] {
   border-color: var(--accent);
 }
+
+/* Phones: two rows. Brand and account on top, the five tabs spread edge to edge below. */
+@media (max-width: 40rem) {
+  .header {
+    padding-top: 0;
+  }
+
+  .bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand account"
+      "nav nav";
+    height: auto;
+  }
+
+  .brand {
+    grid-area: brand;
+    height: 3.25rem;
+    margin-right: 0;
+  }
+
+  .account {
+    grid-area: account;
+    width: auto;
+    height: 3.25rem;
+  }
+
+  .nav {
+    grid-area: nav;
+    height: 2.75rem;
+    margin: 0 calc(var(--space-3) * -1);
+  }
+
+  .links {
+    justify-content: space-between;
+  }
+
+  .end {
+    margin-left: 0;
+  }
+
+  .account .signIn[data-size] {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 22.5rem) {
+  .link {
+    padding: 0 var(--space-2);
+  }
+
+  .nav {
+    margin: 0 calc(var(--space-2) * -1);
+  }
+}

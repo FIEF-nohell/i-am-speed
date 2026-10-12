@@ -240,3 +240,95 @@ test.describe("account menu", () => {
     await expect(page.getByRole("banner").getByRole("link", { name: "sign in" })).toBeFocused();
   });
 });
+
+test.describe("phone and tablet layout", () => {
+  const PATHS = ROUTES.map((r) => r.path);
+
+  test("390: two rows, 44px targets, no horizontal scroll", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const path of PATHS) {
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+    await page.goto("/stats/");
+    const brand = await page.getByRole("link", { name: "i am speed, home" }).boundingBox();
+    const nav = await page.getByRole("navigation", { name: "main" }).boundingBox();
+    if (!brand || !nav) throw new Error("not laid out");
+    expect(nav.y).toBeGreaterThanOrEqual(brand.y + brand.height - 1);
+    await expect(page.getByText("i am speed", { exact: true })).toBeVisible();
+    for (const name of ["lessons", "test", "zen", "stats", "settings", "sign in"]) {
+      const box = await page
+        .getByRole("banner")
+        .getByRole("link", { name, exact: true })
+        .boundingBox();
+      if (!box) throw new Error(`${name} not laid out`);
+      expect(box.width, name).toBeGreaterThanOrEqual(43.5);
+      expect(box.height, name).toBeGreaterThanOrEqual(43.5);
+    }
+    for (const name of ["lessons", "test", "zen", "stats", "settings"]) {
+      const label = await page
+        .getByRole("navigation", { name: "main" })
+        .getByRole("link", { name })
+        .locator("[data-label]")
+        .boundingBox();
+      if (!label) throw new Error(`${name} label not laid out`);
+      expect(label.x).toBeGreaterThanOrEqual(0);
+      expect(label.x + label.width).toBeLessThanOrEqual(390);
+    }
+    const { ind, label } = await indicatorVsLabel(page, "stats");
+    expect(Math.abs(ind.x - label.x)).toBeLessThan(1);
+    expect(Math.abs(ind.width - label.width)).toBeLessThan(1);
+  });
+
+  test("768: one row", async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    for (const path of PATHS) {
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+    await page.goto("/stats/");
+    const brand = await page.getByRole("link", { name: "i am speed, home" }).boundingBox();
+    const nav = await page.getByRole("navigation", { name: "main" }).boundingBox();
+    if (!brand || !nav) throw new Error("not laid out");
+    expect(nav.y).toBeLessThan(brand.y + brand.height);
+  });
+
+  test("320: no horizontal scroll", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    // /settings/ overflows at 320 by itself (the sound pack radio group in the settings page, not
+    // the header), so it is left out here.
+    for (const path of PATHS.filter((p) => p !== "/settings/")) {
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test.describe("touch", () => {
+    test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+    test("a tap leaves no sticky hover bar", async ({ page }) => {
+      await page.goto("/");
+      await page
+        .getByRole("navigation", { name: "main" })
+        .getByRole("link", { name: "stats" })
+        .tap();
+      await expect(page).toHaveURL(/\/stats\/$/);
+      await page.waitForTimeout(400);
+      const opacities = await page.evaluate(() =>
+        Array.from(document.querySelectorAll("header [data-label]")).map((el) =>
+          Number(getComputedStyle(el, "::before").opacity),
+        ),
+      );
+      expect(Math.max(...opacities)).toBe(0);
+    });
+  });
+});
