@@ -19,14 +19,11 @@
   color: var(--text);
 }
 
-.rails {
+/* One bar for every destination. The active tab is a thumb that slides between them. */
+.bar {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-}
-
-.rail {
-  display: flex;
   gap: 2px;
   padding: 4px;
   background: var(--panel);
@@ -35,7 +32,49 @@
   font-size: var(--text-sm);
 }
 
-.rail a {
+.thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  z-index: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  pointer-events: none;
+}
+
+.thumb[data-ready] {
+  transition:
+    transform var(--dur-slow) var(--ease-out),
+    width var(--dur-slow) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+
+.bar li {
+  position: relative;
+  z-index: 1;
+}
+
+.bar li.thumb {
+  z-index: 0;
+}
+
+/* A quiet divider between practising and utility destinations. */
+.split {
+  margin-left: var(--space-2);
+}
+
+.split::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--space-1) * -1 - 1px);
+  top: 25%;
+  bottom: 25%;
+  width: var(--stroke);
+  background: var(--line);
+}
+
+.bar a {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -48,29 +87,28 @@
   color: var(--muted);
   transition:
     color var(--dur-base) var(--ease-out),
-    background-color var(--dur-base) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
 
-.rail a:hover {
+.bar a:hover {
   color: var(--text);
 }
 
-.rail a:active {
+.bar a:active {
   transform: scale(0.97);
 }
 
-.rail a svg {
+.bar a svg {
   width: 1.1em;
   height: 1.1em;
   flex: none;
+  transition: color var(--dur-base) var(--ease-out);
 }
 
-.rail a[aria-current="page"] {
+.bar a[aria-current="page"] {
   color: var(--text);
-  background: var(--surface);
 }
-.rail a[aria-current="page"] svg {
+.bar a[aria-current="page"] svg {
   color: var(--accent);
 }
 
@@ -81,15 +119,12 @@
 }
 
 @media (max-width: 48rem) {
-  .rail a {
+  .bar a {
     padding: 0;
     width: 2.25rem;
   }
-  .rail a span {
+  .bar a span {
     display: none;
-  }
-  .rails {
-    gap: var(--space-2);
   }
 }
 
