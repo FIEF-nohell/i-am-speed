@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { blockAuthNetwork } from "./fixtures/auth";
+import { lessonText, typeText } from "./helpers";
+import { blockAuthNetwork, seedSignedInUser } from "./fixtures/auth";
 
 test.beforeEach(async ({ page }) => {
   await blockAuthNetwork(page);
@@ -46,6 +47,7 @@ test.describe("tabs and current page", () => {
       "zen",
       "stats",
       "settings",
+      "sign in",
     ];
     for (const name of names) {
       await page.keyboard.press("Tab");
@@ -154,5 +156,87 @@ test.describe("gliding indicator", () => {
     await page.waitForTimeout(100);
     const { ind, label } = await indicatorVsLabel(page, "settings");
     expect(Math.abs(ind.x - label.x)).toBeLessThan(1);
+  });
+});
+
+test.describe("account menu", () => {
+  test.beforeEach(async ({ page }) => {
+    await seedSignedInUser(page, { email: "noel@example.com", displayName: "Noel" });
+  });
+
+  const button = (page: Page) => page.getByRole("button", { name: "account menu" });
+  const menu = (page: Page) => page.locator("#account-menu");
+
+  test("avatar shows the initial and opens the panel", async ({ page }) => {
+    await page.goto("/stats/");
+    await expect(button(page)).toContainText("n");
+    await expect(menu(page)).toBeHidden();
+    await button(page).click();
+    await expect(button(page)).toHaveAttribute("aria-expanded", "true");
+    await expect(menu(page)).toContainText("noel@example.com");
+    await expect(menu(page)).toContainText("Noel");
+    await expect(menu(page)).toContainText(/offline|syncing|synced|connecting|not syncing|failed/i);
+  });
+
+  test("escape closes and returns focus; arrows move between items", async ({ page }) => {
+    await page.goto("/stats/");
+    await button(page).click();
+    await page.keyboard.press("Escape");
+    await expect(menu(page)).toBeHidden();
+    await expect(button(page)).toBeFocused();
+
+    await button(page).click();
+    await page.keyboard.press("ArrowDown");
+    await expect(menu(page).getByRole("link", { name: "account" })).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(menu(page).getByRole("button", { name: "sign out" })).toBeFocused();
+    await page.keyboard.press("Home");
+    await expect(menu(page).getByRole("link", { name: "account" })).toBeFocused();
+  });
+
+  test("a click outside closes; tabbing past the last item closes", async ({ page }) => {
+    await page.goto("/stats/");
+    await button(page).click();
+    await page.getByRole("heading", { level: 1 }).click();
+    await expect(menu(page)).toBeHidden();
+
+    await button(page).click();
+    await menu(page).getByRole("button", { name: "sign out" }).focus();
+    await page.keyboard.press("Tab");
+    await expect(menu(page)).toBeHidden();
+  });
+
+  test("account item navigates and marks the avatar", async ({ page }) => {
+    await page.goto("/stats/");
+    await button(page).click();
+    await menu(page).getByRole("link", { name: "account" }).click();
+    await expect(page).toHaveURL(/\/account\/$/);
+    await expect(button(page)).toHaveAttribute("data-current", "true");
+    await button(page).click();
+    await expect(menu(page).getByRole("link", { name: "account" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  test("escape in the menu never reaches the lesson", async ({ page }) => {
+    await page.goto("/lesson/home-01/");
+    const text = await lessonText(page);
+    await typeText(page, text.slice(0, 3));
+    const typed = page.locator('[aria-label="text to type"] [data-state="typed"]');
+    await expect(typed).toHaveCount(3);
+    await button(page).click();
+    await page.keyboard.press("Escape");
+    await expect(menu(page)).toBeHidden();
+    await expect(page).toHaveURL(/\/lesson\/home-01\/$/);
+    await expect(button(page)).toBeFocused();
+    await expect(typed).toHaveCount(3);
+  });
+
+  test("sign out leaves a focused sign in link", async ({ page }) => {
+    await page.goto("/stats/");
+    await button(page).click();
+    await menu(page).getByRole("button", { name: "sign out" }).click();
+    await expect(page.getByRole("banner").getByRole("link", { name: "sign in" })).toBeFocused();
   });
 });

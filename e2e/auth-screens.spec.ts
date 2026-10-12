@@ -88,13 +88,15 @@ test("signed-out account page explains and links to sign in and sign up", async 
   await expect(page).toHaveURL(/\/signup\/$/);
 });
 
-test("header offers an account entry for signed-out visitors", async ({ page }) => {
+test("header offers sign in for signed-out visitors", async ({ page }) => {
   await page.goto("/");
-  await page
-    .getByRole("navigation", { name: "main" })
-    .getByRole("link", { name: "account" })
-    .click();
-  await expect(page).toHaveURL(/\/account\/$/);
+  const link = page.getByRole("banner").getByRole("link", { name: "sign in" });
+  await link.click();
+  await expect(page).toHaveURL(/\/login\/$/);
+  await expect(page.getByRole("banner").getByRole("link", { name: "sign in" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 });
 
 test("network failure shows a calm message and re-enables the form", async ({ page }) => {

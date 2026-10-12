@@ -171,3 +171,7 @@
   width: 5.5rem;
   margin-left: var(--space-2);
 }
+
+.signIn[aria-current] {
+  border-color: var(--accent);
+}
