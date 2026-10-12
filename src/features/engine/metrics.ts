@@ -52,6 +52,16 @@ export function consistencyOf(samples: readonly number[]): number {
   return Math.max(0, Math.min(100, 100 * (1 - Math.sqrt(variance) / mean)));
 }
 
+/** Steadiness from the per-second raw rate. The last bucket is usually partial, so it is dropped. */
+export function seriesConsistency(series: readonly WpmPoint[], durationMs: number): number {
+  const perSecond = series.map((p, idx) => {
+    const prev = idx === 0 ? 0 : (series[idx - 1].raw * Math.min(idx * 1000, durationMs)) / 12000;
+    const cur = (p.raw * Math.min((idx + 1) * 1000, durationMs)) / 12000;
+    return cur - prev;
+  });
+  return consistencyOf(perSecond.length > 2 ? perSecond.slice(0, -1) : perSecond);
+}
+
 function buildSeries(keystrokes: readonly Keystroke[], durationMs: number): WpmPoint[] {
   const seconds = Math.max(1, Math.ceil(durationMs / 1000));
   const points: WpmPoint[] = [];
@@ -101,20 +111,13 @@ export function computeMetrics(state: EngineState): Metrics {
 
   const correctChars = state.entries.filter((e) => e.correct).length;
   const series = buildSeries(keystrokes, durationMs);
-  // The last bucket is usually partial, so steadiness is judged on the per-second raw rate.
-  const perSecond = series.map((p, idx) => {
-    const prev = idx === 0 ? 0 : (series[idx - 1].raw * Math.min(idx * 1000, durationMs)) / 12000;
-    const cur = (p.raw * Math.min((idx + 1) * 1000, durationMs)) / 12000;
-    return cur - prev;
-  });
-  const whole = perSecond.length > 2 ? perSecond.slice(0, -1) : perSecond;
 
   return {
     durationMs,
     netWpm: wpmOf(correctChars, durationMs),
     rawWpm: wpmOf(keystrokes.length, durationMs),
     accuracy: keystrokes.length === 0 ? 100 : (correctHits / keystrokes.length) * 100,
-    consistency: consistencyOf(whole),
+    consistency: seriesConsistency(series, durationMs),
     errors: keystrokes.length - correctHits,
     correctChars,
     typedChars: keystrokes.length,

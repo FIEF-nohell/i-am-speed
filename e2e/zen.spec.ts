@@ -1,85 +1,127 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { typeText } from "./helpers";
 
-const CHARS = '[aria-label="text to type"] [data-state]';
+const TEXT = '[aria-label="your text"]';
+const IDLE_LINE = "start typing, anything you like. esc to finish.";
 
-/** Types `count` characters of the upcoming text, reading what is left on screen as it goes. */
-async function typeAhead(page: Page, count: number): Promise<void> {
-  let done = 0;
-  while (done < count) {
-    const upcoming = await page
-      .locator(`${CHARS}[data-state="current"], ${CHARS}[data-state="untyped"]`)
-      .allTextContents();
-    const chunk = upcoming.join("").slice(0, Math.min(60, count - done));
-    expect(chunk.length).toBeGreaterThan(0);
-    await typeText(page, chunk);
-    done += chunk.length;
-  }
-}
-
-test("zen: nav entry, idle hint, focus mode, endless text", async ({ page }) => {
+test("zen: nav entry, idle hint, an empty canvas, focus mode", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("navigation", { name: "main" }).getByRole("link", { name: "zen" }).click();
   await expect(page).toHaveURL(/\/zen\/$/);
-  await expect(page.getByText("zen. no timer, no word count.")).toBeVisible();
+  await expect(page.getByText(IDLE_LINE)).toBeVisible();
   await expect(page.locator("html")).not.toHaveAttribute("data-focus", "zen");
-  await expect(page.locator(CHARS).first()).toBeVisible();
+  // No pre-rendered text of any kind: nothing to read, nothing to match.
+  await expect(page.locator(TEXT)).toBeVisible();
+  await expect(page.locator(TEXT)).toHaveText("");
+  await expect(page.locator('[aria-label="text to type"]')).toHaveCount(0);
+  await expect(page.getByText("new text")).toHaveCount(0);
 
-  await typeAhead(page, 20);
+  await page.keyboard.press("h");
   await expect(page.locator("html")).toHaveAttribute("data-focus", "zen");
   await expect(page.locator("header.site-chrome")).toHaveCSS("opacity", "0");
   await expect(page.locator("footer.site-chrome")).toHaveCSS("opacity", "0");
-
-  await typeAhead(page, 600);
-  const rendered = await page.locator(CHARS).count();
-  expect(rendered, "rendered characters stay bounded").toBeLessThan(700);
-  await expect(page.locator(`${CHARS}[data-state="untyped"]`).first()).toBeVisible();
-  const typed = await page.locator(`${CHARS}[data-state="typed"]`).count();
-  expect(typed, "typed characters scroll out of the window").toBeLessThan(620);
 });
 
 test("zen: the test toolbar leads to zen", async ({ page }) => {
   await page.goto("/test/");
   await page.getByRole("radio", { name: "zen", exact: true }).click();
   await expect(page).toHaveURL(/\/zen\/$/);
-  await expect(page.getByText("zen. no timer, no word count.")).toBeVisible();
+  await expect(page.getByText(IDLE_LINE)).toBeVisible();
 });
 
-test("zen: tab gives new text", async ({ page }) => {
+test("zen: whatever is typed appears, backspace deletes, tab and dead keys are ignored", async ({
+  page,
+}) => {
   await page.goto("/zen/");
-  await page.locator(CHARS).first().waitFor();
-  const read = async (): Promise<string> => (await page.locator(CHARS).allTextContents()).join("");
-  const first = (await read()).slice(0, 80);
+  await typeText(page, "hello wörld");
+  await page.keyboard.press("Enter");
+  await typeText(page, "zweite {zeile}@");
+  await expect(page.locator(TEXT)).toHaveText("hello wörld\nzweite {zeile}@");
+  // The newline is a real line break: the second line sits below the first.
+  const style = await page.locator(TEXT).evaluate((el) => getComputedStyle(el).whiteSpace);
+  expect(style).toBe("pre-wrap");
+
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Backspace");
+  await expect(page.locator(TEXT)).toHaveText("hello wörld\nzweite {zeile");
   await page.keyboard.press("Tab");
-  await expect.poll(async () => (await read()).slice(0, 80)).not.toBe(first);
-  await expect(page.locator("html")).not.toHaveAttribute("data-focus", "zen");
+  await page.evaluate(() =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Dead", bubbles: true })),
+  );
+  await page.keyboard.press("Shift");
+  await page.keyboard.press("Control+Backspace");
+  await expect(page.locator(TEXT)).toHaveText("hello wörld\nzweite");
+  await expect(page.locator(TEXT)).toBeVisible();
+  // Nothing is ever marked wrong.
+  await expect(page.locator(TEXT).locator("[data-state]")).toHaveCount(0);
 });
 
-test("zen: esc saves the session and leaves lessons untouched", async ({ page }) => {
+test("zen: esc saves the session without accuracy and leaves lessons untouched", async ({
+  page,
+}) => {
   await page.goto("/zen/");
-  await page.locator(CHARS).first().waitFor();
-  await typeAhead(page, 60);
+  await typeText(page, "ein freier Text mit Umlauten: äöü");
+  await page.keyboard.press("Enter");
+  await typeText(page, "und eine zweite zeile");
+  await page.keyboard.press("Backspace");
   await page.keyboard.press("Escape");
   await page.waitForURL("**/results/");
   await expect(page.locator("html")).not.toHaveAttribute("data-focus", "zen");
   await expect(page.locator("#main").getByText("zen", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "session saved" })).toBeVisible();
+  await expect(page.getByText("words", { exact: true })).toBeVisible();
+  await expect(page.getByText("accuracy", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("where it went wrong")).toHaveCount(0);
+  await expect(page.getByText("slowest keys")).toHaveCount(0);
+
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("i-am-speed:v1")!));
+  expect(stored.lastResult.attempt.source).toBe("zen");
+  expect(stored.lastResult.attempt.accuracy).toBe(100);
+  expect(stored.lastResult.text).toBe("ein freier Text mit Umlauten: äöü\nund eine zweite zeil");
+  expect(stored.keys).toEqual({});
+  expect(stored.fingers).toEqual({});
+  expect(stored.lessons).toEqual({});
 
   await page.goto("/stats/");
-  await expect(page.getByText("attempts", { exact: true })).toBeVisible();
-  await expect(page.locator("dl").getByText("1", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("attempts", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("characters", { exact: true })).toBeVisible();
 
   await page.goto("/");
   await expect(page.getByText(/^[1-9]\d* \/ \d+$/)).toHaveCount(0);
 });
 
-test("zen: esc before typing returns to the test without saving", async ({ page }) => {
+test("zen: esc before five characters returns to the test without saving", async ({ page }) => {
   await page.goto("/zen/");
-  await page.locator(CHARS).first().waitFor();
+  await page.keyboard.press("Escape");
+  await page.waitForURL("**/test/");
+  await page.goto("/zen/");
+  await typeText(page, "abcd");
   await page.keyboard.press("Escape");
   await page.waitForURL("**/test/");
   await page.goto("/stats/");
   await expect(page.getByText("attempts", { exact: true })).toHaveCount(0);
+});
+
+test("zen: a long session renders a bounded tail and keeps the newest text in view", async ({
+  page,
+}) => {
+  await page.goto("/zen/");
+  const line = "free words keep flowing, there is nothing to hit. ";
+  await page.evaluate((chunk) => {
+    for (let i = 0; i < 160; i++)
+      for (const key of chunk)
+        window.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+  }, line);
+  await expect(page.locator(TEXT)).toContainText("nothing to hit.");
+  const shown = (await page.locator(TEXT).textContent())?.length ?? 0;
+  expect(shown, "rendered characters stay bounded").toBeLessThan(6100);
+  expect(shown).toBeGreaterThan(3500);
+  // The last line is scrolled into the frame.
+  await expect
+    .poll(() =>
+      page.locator(TEXT).evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop),
+    )
+    .toBeLessThan(2);
 });
 
 test("zen: anonymous use makes no network requests", async ({ page }) => {
@@ -88,8 +130,7 @@ test("zen: anonymous use makes no network requests", async ({ page }) => {
     if (!r.url().startsWith("http://localhost:4173")) external.push(r.url());
   });
   await page.goto("/zen/");
-  await page.locator(CHARS).first().waitFor();
-  await typeAhead(page, 40);
+  await typeText(page, "no network needed here");
   await page.keyboard.press("Escape");
   await page.waitForURL("**/results/");
   expect(external).toEqual([]);

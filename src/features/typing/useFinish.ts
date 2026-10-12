@@ -11,12 +11,10 @@ interface Options {
   state: EngineState;
   source: string;
   lang: Lang;
-  /** Stored instead of the engine target (Zen keeps only the typed portion). */
-  text?: string;
 }
 
 /** When an attempt finishes: store it once, then show the results page. */
-export function useFinish({ state, source, lang, text }: Options): void {
+export function useFinish({ state, source, lang }: Options): void {
   const router = useRouter();
   const doneFor = useRef<EngineState["entries"] | null>(null);
 
@@ -26,10 +24,10 @@ export function useFinish({ state, source, lang, text }: Options): void {
     commitAttempt({
       source,
       lang,
-      text: text ?? state.target,
+      text: state.target,
       metrics: computeMetrics(state),
       at: Date.now(),
     });
     router.push("/results/");
-  }, [state, source, lang, text, router]);
+  }, [state, source, lang, router]);
 }

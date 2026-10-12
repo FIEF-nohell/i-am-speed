@@ -120,7 +120,7 @@ Phases, each roughly 5 to 10 lessons, each lesson roughly 1 to 2 minutes:
 
 For phases 1 to 4, generate drills Keybr-style: pick real words from the frequency list that use only the unlocked key set, weighted towards the newest keys, and fall back to pseudo-words only when too few real words exist. The allowed character set per lesson is explicit data, and generation must never leave it. Each lesson has a stable id, title, short description, target character set, length target, and completion rule (accuracy >= 95%).
 
-Also provide a free test mode (Monkeytype-like: time 15/30/60 or word count 10/25/50) in the selected text language, and an endless Zen mode (`/zen/`, no timer, saved on Esc). See DECISIONS.md D17.
+Also provide a free test mode (Monkeytype-like: time 15/30/60 or word count 10/25/50) in the selected text language, and a free-type Zen mode (`/zen/`, a blank canvas with no target text, no errors, saved on Esc). See DECISIONS.md D17 and D19.
 
 ## 11. Content (German and English)
 

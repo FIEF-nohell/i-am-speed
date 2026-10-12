@@ -26,6 +26,9 @@ export function dayKey(at: number): string {
  */
 export function recordAttempt(data: StoredData, input: AttemptInput): StoredData {
   const { metrics: m } = input;
+  // Zen is free type: nothing is a target, so accuracy is not applicable. It counts toward
+  // totals, recent attempts and the time per day, but never toward accuracy-based aggregates.
+  const free = sourceKind(input.source) === "zen";
   const passed = m.accuracy >= PASS_ACCURACY;
   const { ownId } = data.sync;
   const own: Contribution = data.sync.contribs[ownId] ?? {
@@ -51,7 +54,7 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
   };
 
   const keys = { ...own.keys };
-  for (const [k, s] of Object.entries(m.perKey)) {
+  for (const [k, s] of free ? [] : Object.entries(m.perKey)) {
     const prev = keys[k] ?? { attempts: 0, errors: 0, totalMs: 0, timedHits: 0 };
     keys[k] = {
       attempts: prev.attempts + s.attempts,
@@ -61,7 +64,7 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
     };
   }
   const fingers = { ...own.fingers };
-  for (const [f, s] of Object.entries(m.perFinger) as [
+  for (const [f, s] of (free ? [] : Object.entries(m.perFinger)) as [
     keyof typeof fingers,
     { attempts: number; errors: number },
   ][]) {
@@ -71,6 +74,15 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
 
   const dk = dayKey(input.at);
   const day: DayTotals = own.days[dk] ?? { attempts: 0, wpmSum: 0, accuracySum: 0, timeMs: 0 };
+
+  const dayTotals: DayTotals = free
+    ? { ...day, timeMs: day.timeMs + m.durationMs }
+    : {
+        attempts: day.attempts + 1,
+        wpmSum: day.wpmSum + m.netWpm,
+        accuracySum: day.accuracySum + m.accuracy,
+        timeMs: day.timeMs + m.durationMs,
+      };
 
   const isLesson = sourceKind(input.source) === "lesson";
   const lessons = { ...own.lessons };
@@ -95,12 +107,7 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
     fingers,
     days: {
       ...own.days,
-      [dk]: {
-        attempts: day.attempts + 1,
-        wpmSum: day.wpmSum + m.netWpm,
-        accuracySum: day.accuracySum + m.accuracy,
-        timeMs: day.timeMs + m.durationMs,
-      },
+      [dk]: dayTotals,
     },
     lessons,
     totals: {
@@ -118,8 +125,8 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
     lastResult: {
       attempt,
       series: m.series,
-      perKey: m.perKey,
-      perFinger: m.perFinger,
+      perKey: free ? {} : m.perKey,
+      perFinger: free ? {} : m.perFinger,
       text: input.text,
     },
     sync: {

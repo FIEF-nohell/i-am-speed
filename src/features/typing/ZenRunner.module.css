@@ -29,13 +29,8 @@
   align-items: center;
   gap: var(--space-2);
 }
-.tab {
-  transition: opacity var(--dur-base) var(--ease-out);
-}
-
 /* Once typing starts only a quiet esc hint remains. The layout never shifts. */
-.zen[data-running] .line,
-.zen[data-running] .tab {
+.zen[data-running] .line {
   opacity: 0;
 }
 .zen[data-running] .hints {
@@ -61,14 +56,12 @@
 @media (prefers-reduced-motion: reduce) {
   .line,
   .hints,
-  .tab,
   .finish {
     transition: none;
   }
 }
 :global([data-motion="reduce"]) .line,
 :global([data-motion="reduce"]) .hints,
-:global([data-motion="reduce"]) .tab,
 :global([data-motion="reduce"]) .finish {
   transition: none;
 }

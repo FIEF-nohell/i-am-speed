@@ -20,8 +20,11 @@ const PAGES = [
 ];
 
 async function audit(page: Page, label: string): Promise<void> {
-  // The test and zen screens have no h1 of their own: wait for the typing text instead.
-  await page.locator('h1, [aria-label="text to type"] [data-state]').first().waitFor();
+  // The test and zen screens have no h1 of their own: wait for the typing text or canvas instead.
+  await page
+    .locator('h1, [aria-label="text to type"] [data-state], [aria-label="your text"]')
+    .first()
+    .waitFor({ state: "attached" });
   // Let entrance animations finish so contrast is measured on settled colours.
   await page.waitForTimeout(700);
   const { violations, passes } = await new AxeBuilder({ page }).analyze();

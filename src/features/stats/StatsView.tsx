@@ -96,7 +96,7 @@ export function StatsView() {
     <div className={`page-wide ${styles.page}`}>
       <PageHeader
         title="stats"
-        lede={`${plural(data.totals.attempts, "attempt")} over ${plural(days.length, "day")}.`}
+        lede={`${plural(data.totals.attempts, "attempt")} over ${plural(Object.keys(data.days).length, "day")}.`}
       />
 
       <div className={styles.tiles}>

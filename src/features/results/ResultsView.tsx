@@ -76,7 +76,9 @@ export function ResultsView() {
     );
   }
 
-  const slow = slowestKeys(result.perKey, 5);
+  // Zen is free type: nothing is wrong, so there is no error map and no per-key timing.
+  const free = sourceKind(result.attempt.source) === "zen";
+  const slow = free ? [] : slowestKeys(result.perKey, 5);
   const hasErrors = Object.keys(heat).length > 0;
 
   return (
@@ -87,19 +89,21 @@ export function ResultsView() {
         <WpmChart series={result.series} />
       </Panel>
 
-      <Panel
-        index={2}
-        title="where it went wrong"
-        description={
-          hasErrors
-            ? "Darker red means a higher error rate on that key."
-            : "No errors. Nothing to show."
-        }
-      >
-        {hasErrors && (
-          <KeyboardGuide colorByFinger={false} heat={heat} label="keyboard error heatmap" />
-        )}
-      </Panel>
+      {!free && (
+        <Panel
+          index={2}
+          title="where it went wrong"
+          description={
+            hasErrors
+              ? "Darker red means a higher error rate on that key."
+              : "No errors. Nothing to show."
+          }
+        >
+          {hasErrors && (
+            <KeyboardGuide colorByFinger={false} heat={heat} label="keyboard error heatmap" />
+          )}
+        </Panel>
+      )}
 
       {slow.length > 0 && (
         <Panel

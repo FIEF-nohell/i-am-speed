@@ -7,7 +7,7 @@ Live: https://speed.nohelll.com
 - Next.js (App Router), React, TypeScript strict, static export (`output: 'export'`).
 - 67 lessons in 11 phases, all open from the start. Passing is 95% accuracy and is only a mark, never a gate.
 - Free test: 15/30/60 seconds or 10/25/50 words.
-- Zen mode: endless text with no timer, saved on Esc (see below).
+- Zen mode: free type on a blank canvas, no target text, saved on Esc (see below).
 - Four themes (dark, light, dusk, ember), one accent each. Data export and import as JSON.
 
 ## Run
@@ -90,7 +90,7 @@ Add an animation: use the `.enter` class (optionally `style={staggerStyle(i)}`) 
 
 ## Zen mode
 
-`/zen/` (linked from the nav and the test toolbar) is an endless typing screen. Before the first key it shows a quiet hint; once you type, the header and footer fade out and only a small `esc` hint remains. `Esc` finishes and opens the results page, `Tab` gives new text. A session is saved only if you typed at least one word (otherwise `Esc` goes back to the test), counts toward totals, days, keys and fingers, and never toward lessons. Pauses over 5 s do not count as time. The text is a window over a stream of sentences, so long sessions stay as cheap as short ones. Details: DECISIONS.md D17.
+`/zen/` (linked from the nav and the test toolbar) is free type: a blank canvas with a caret and no text to copy. Whatever you type appears as your own text; `Enter` starts a new line, `Backspace` deletes a character (`Ctrl` or `Alt` with it deletes a word), `Tab` and dead keys do nothing. Nothing is a target, so nothing is wrong: no error colours, no error sound, no accuracy. Once you type, the header and footer fade out and only a small `esc` hint remains. `Esc` finishes and opens the results page. A session is saved only if at least five characters are left (otherwise `Esc` goes back to the test). Results show speed, words, raw speed, consistency, time and characters. A session counts toward time typed, characters, attempts and recent attempts, and never toward lessons, accuracy or per-key and per-finger stats. Pauses over 5 s do not count as time. Only the newest few thousand characters are rendered, so long sessions stay as cheap as short ones. Details: DECISIONS.md D17 and D19.
 
 ## Sound
 

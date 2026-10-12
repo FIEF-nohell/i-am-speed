@@ -1,13 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { createState, reduce } from "@/features/engine/engine";
+import { FreeTypeSession } from "@/features/engine/freeType";
 import { computeMetrics } from "@/features/engine/metrics";
 import { DEFAULT_ENGINE_CONFIG } from "@/features/engine/types";
 import { DEFAULT_SETTINGS } from "@/features/settings/settings";
 import { migrate, parseStored } from "./migrate";
 import { dayKey, recordAttempt } from "./record";
 import { combine } from "@/features/sync/combine";
+import { attemptToDoc, contribToDoc, docToAttempt, docToContrib } from "@/features/sync/serialize";
 import { legacyContribId } from "@/features/sync/hash";
-import { MAX_ATTEMPTS, SCHEMA_VERSION, createEmptyData, type DataEnv } from "./schema";
+import {
+  MAX_ATTEMPTS,
+  SCHEMA_VERSION,
+  createEmptyData,
+  type DataEnv,
+  type StoredData,
+} from "./schema";
 
 /** Deterministic env: ids "own-000001", "own-000002", ... and a fixed clock. */
 function testEnv(now = 1_700_000_000_000): DataEnv {
@@ -280,24 +288,101 @@ describe("recordAttempt", () => {
     expect(d.lessons).toEqual({});
     expect(d.attempts).toHaveLength(1);
   });
-  it("records a zen attempt in totals, days, keys and fingers but never in lessons", () => {
-    const m = metricsFor("ab ab", "ab ab");
-    const d = recordAttempt(createEmptyData(testEnv()), {
-      source: "zen",
-      lang: "de",
-      text: "ab ab",
-      metrics: m,
-      at: new Date(2026, 9, 11, 12).getTime(),
+  describe("zen attempts", () => {
+    const at = new Date(2026, 9, 11, 12).getTime();
+    const zenMetrics = () => {
+      let clock = 0;
+      const session = new FreeTypeSession(() => clock, 5000);
+      for (const ch of "hello world, wie geht's?") {
+        clock += 150;
+        session.press({ kind: "char", char: ch });
+      }
+      session.finish();
+      return session.metrics();
+    };
+    const zen = (data: StoredData) =>
+      recordAttempt(data, { source: "zen", lang: "de", text: "hello", metrics: zenMetrics(), at });
+    const lesson = (data: StoredData) =>
+      recordAttempt(data, {
+        source: "home-01",
+        lang: "de",
+        text: "ab",
+        metrics: metricsFor("abcdefghij", "abxcdefghij"),
+        at,
+      });
+
+    it("never creates lesson progress", () => {
+      const d = zen(createEmptyData(testEnv()));
+      expect(d.lessons).toEqual({});
+      expect(d.sync.contribs[d.sync.ownId].lessons).toEqual({});
+      expect(d.attempts[0].source).toBe("zen");
+      expect(d.lastResult?.attempt.source).toBe("zen");
     });
-    expect(d.lessons).toEqual({});
-    expect(d.sync.contribs[d.sync.ownId].lessons).toEqual({});
-    expect(d.totals.attempts).toBe(1);
-    expect(d.totals.chars).toBe(m.typedChars);
-    expect(d.days["2026-10-11"].attempts).toBe(1);
-    expect(d.keys.a.attempts).toBe(2);
-    expect(Object.keys(d.fingers).length).toBeGreaterThan(0);
-    expect(d.attempts[0].source).toBe("zen");
-    expect(d.lastResult?.attempt.source).toBe("zen");
+
+    it("increments totals, time per day and recent attempts", () => {
+      const m = zenMetrics();
+      const d = zen(createEmptyData(testEnv()));
+      expect(d.totals).toEqual({ attempts: 1, timeMs: m.durationMs, chars: m.typedChars });
+      expect(d.days["2026-10-11"].timeMs).toBe(m.durationMs);
+      expect(d.attempts).toHaveLength(1);
+      expect(d.attempts[0].accuracy).toBe(100);
+    });
+
+    it("leaves every accuracy-based aggregate untouched", () => {
+      const before = lesson(createEmptyData(testEnv()));
+      const after = zen(before);
+      expect(after.keys).toEqual(before.keys);
+      expect(after.fingers).toEqual(before.fingers);
+      const day = before.days["2026-10-11"];
+      expect(after.days["2026-10-11"].accuracySum).toBe(day.accuracySum);
+      expect(after.days["2026-10-11"].attempts).toBe(day.attempts);
+      expect(after.days["2026-10-11"].wpmSum).toBe(day.wpmSum);
+      expect(after.lessons).toEqual(before.lessons);
+      expect(after.totals.attempts).toBe(before.totals.attempts + 1);
+      expect(after.lastResult?.perKey).toEqual({});
+      expect(after.lastResult?.perFinger).toEqual({});
+    });
+
+    it("keeps even a hostile metrics object out of key and finger aggregates", () => {
+      const m = { ...zenMetrics(), perKey: metricsFor("ab", "ax").perKey };
+      const d = recordAttempt(createEmptyData(testEnv()), {
+        source: "zen",
+        lang: "en",
+        text: "x",
+        metrics: { ...m, perFinger: metricsFor("ab", "ax").perFinger },
+        at,
+      });
+      expect(d.keys).toEqual({});
+      expect(d.fingers).toEqual({});
+    });
+
+    it("survives serialisation within the deployed rule limits", () => {
+      const d = zen(lesson(createEmptyData(testEnv())));
+      const own = d.sync.contribs[d.sync.ownId];
+      expect(docToContrib(own.id, JSON.parse(JSON.stringify(contribToDoc(own))))).toEqual(own);
+      const doc = attemptToDoc(d.attempts[1]);
+      expect(doc.accuracy).toBe(100);
+      for (const f of ["netWpm", "rawWpm", "consistency", "errors", "durationMs", "chars"]) {
+        expect(Number.isFinite(doc[f])).toBe(true);
+        expect(doc[f] as number).toBeGreaterThanOrEqual(0);
+      }
+      expect(docToAttempt(d.attempts[1].id, JSON.parse(JSON.stringify(doc)))).toEqual(
+        d.attempts[1],
+      );
+      for (const day of Object.values(own.days))
+        for (const v of Object.values(day)) expect(v).toBeGreaterThanOrEqual(0);
+      expect(docToContrib(own.id, contribToDoc(own))?.totals).toEqual(own.totals);
+    });
+
+    it("merges with another device like any other contribution", () => {
+      const a = zen(createEmptyData(testEnv()));
+      const b = lesson(createEmptyData({ ...testEnv(), newId: () => "other-000001" }));
+      const merged = combine({ ...a.sync.contribs, ...b.sync.contribs });
+      expect(merged.totals.attempts).toBe(2);
+      expect(merged.lessons["home-01"].attempts).toBe(1);
+      expect(merged.keys).toEqual(b.keys);
+      expect(merged.days["2026-10-11"].attempts).toBe(1);
+    });
   });
   it("caps history but keeps aggregates", () => {
     let d = createEmptyData();

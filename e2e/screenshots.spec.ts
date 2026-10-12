@@ -13,12 +13,13 @@ const SIZES = [
 const THEMES = (process.env.THEMES ?? "dark").split(",");
 const CHARS = '[aria-label="text to type"] [data-state]';
 
-/** Types `count` characters of whatever Zen text is currently ahead. */
-async function typeAhead(page: Page, count: number): Promise<void> {
-  const upcoming = await page
-    .locator(`${CHARS}[data-state="current"], ${CHARS}[data-state="untyped"]`)
-    .allTextContents();
-  await typeText(page, upcoming.join("").slice(0, count));
+const ZEN_TEXT = '[aria-label="your text"]';
+const SAMPLE =
+  "the quiet part of the day is when words come easily and nothing needs to be right. ";
+
+/** Types free text into Zen. */
+async function typeFree(page: Page, count: number): Promise<void> {
+  await typeText(page, SAMPLE.repeat(Math.ceil(count / SAMPLE.length)).slice(0, count));
 }
 
 for (const theme of THEMES) {
@@ -62,10 +63,10 @@ for (const theme of THEMES) {
       await shot("test", { fullPage: false });
 
       await page.goto("/zen/");
-      await page.locator(CHARS).first().waitFor();
+      await page.locator(ZEN_TEXT).waitFor();
       await page.waitForTimeout(300);
       await shot("zen-idle", { fullPage: false });
-      await typeAhead(page, 30);
+      await typeFree(page, 120);
       await page.waitForTimeout(900);
       await shot("zen-typing", { fullPage: false });
       await page.keyboard.press("Escape");

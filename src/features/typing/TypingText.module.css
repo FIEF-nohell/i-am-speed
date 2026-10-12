@@ -88,9 +88,3 @@
 :global([data-motion="reduce"]) .caret {
   transition: none;
 }
-
-/* Windowed (Zen) trim frame: content and scroll shift together, so nothing may animate. */
-.inner[data-snap],
-.inner[data-snap] .caret {
-  transition: none;
-}

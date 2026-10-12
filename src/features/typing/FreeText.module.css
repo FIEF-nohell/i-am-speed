@@ -1,0 +1,61 @@
+.frame {
+  position: relative;
+  overflow: hidden;
+  height: calc(var(--type-size) * var(--type-leading) * 3);
+  font-size: var(--type-size);
+  line-height: calc(var(--type-size) * var(--type-leading));
+  letter-spacing: 0;
+  color: var(--text);
+  cursor: text;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Older lines fade out at the top once the text has scrolled. */
+.frame[data-scrolled] {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 1.1em);
+}
+
+.text {
+  white-space: pre-wrap;
+}
+
+.caret {
+  display: inline-block;
+  vertical-align: text-bottom;
+  height: calc(var(--type-size) * 1.15);
+  background: var(--accent);
+}
+.caret[data-style="line"] {
+  width: 2px;
+  border-radius: 1px;
+}
+.caret[data-style="block"] {
+  width: 1ch;
+  background: var(--accent-soft);
+  border-radius: 3px;
+}
+.caret[data-style="underline"] {
+  width: 1ch;
+  background: transparent;
+  border-bottom: 2px solid var(--accent);
+  box-sizing: border-box;
+}
+.caret[data-idle] {
+  animation: blink 1.1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret[data-idle] {
+    animation: none;
+  }
+}
+:global([data-motion="reduce"]) .caret[data-idle] {
+  animation: none;
+}

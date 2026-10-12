@@ -3,6 +3,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Kbd } from "@/components/ui/Kbd";
 import { Panel } from "@/components/ui/Panel";
 import { Stat } from "@/components/ui/Stat";
+import { countWords } from "@/features/engine/freeType";
 import { LESSON_BY_ID, nextLesson } from "@/features/lessons/curriculum";
 import { PASS_ACCURACY } from "@/features/lessons/types";
 import { formatDuration } from "@/features/stats/aggregate";
@@ -10,12 +11,6 @@ import type { LastResult } from "@/features/storage/schema";
 import { retryHref, sourceKind, sourceLabel } from "@/features/storage/source";
 import { AnimatedStat } from "./AnimatedStat";
 import styles from "./ResultsHero.module.css";
-
-/** Words typed in a session: whitespace separated chunks of the typed text. */
-export function countWords(text: string): number {
-  const trimmed = text.trim();
-  return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
-}
 
 function verdictOf(
   kind: ReturnType<typeof sourceKind>,
@@ -47,13 +42,17 @@ export function ResultsHero({ result }: { result: LastResult }) {
 
       <dl className={styles.lead}>
         <AnimatedStat size="lead" accent label="speed" target={attempt.netWpm} unit="wpm" />
-        <AnimatedStat
-          size="lead"
-          label="accuracy"
-          target={attempt.accuracy}
-          unit="%"
-          delayMs={120}
-        />
+        {kind === "zen" ? (
+          <Stat size="lead" label="words" value={`${countWords(result.text)}`} />
+        ) : (
+          <AnimatedStat
+            size="lead"
+            label="accuracy"
+            target={attempt.accuracy}
+            unit="%"
+            delayMs={120}
+          />
+        )}
       </dl>
 
       <dl className={styles.strip}>
@@ -66,8 +65,11 @@ export function ResultsHero({ result }: { result: LastResult }) {
           delayMs={360}
         />
         <Stat label="time" value={formatDuration(attempt.durationMs)} />
-        <Stat label="errors" value={`${attempt.errors}`} />
-        {kind === "zen" && <Stat label="words" value={`${countWords(result.text)}`} />}
+        {kind === "zen" ? (
+          <Stat label="characters" value={attempt.chars.toLocaleString("en")} />
+        ) : (
+          <Stat label="errors" value={`${attempt.errors}`} />
+        )}
       </dl>
 
       <div className={styles.actions}>
@@ -99,9 +101,11 @@ export function ResultsHero({ result }: { result: LastResult }) {
           <span>
             <Kbd>enter</Kbd> {next ? "next" : "retry"}
           </span>
-          <span>
-            <Kbd>tab</Kbd> retry
-          </span>
+          {kind !== "zen" && (
+            <span>
+              <Kbd>tab</Kbd> retry
+            </span>
+          )}
         </p>
       </div>
     </Panel>

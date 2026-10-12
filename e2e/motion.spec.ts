@@ -95,7 +95,7 @@ function expectBudget(timings: number[], label: string): void {
   expect(sorted.at(-1)!, `${label}: slowest key handler`).toBeLessThan(BUDGET.max);
 }
 
-/** Times `count` synchronous key handlers on whatever text is currently ahead (works for Zen). */
+/** Times `count` synchronous key handlers on the lesson text currently ahead. */
 async function timeKeys(page: Page, count: number): Promise<number[]> {
   return page.evaluate((total) => {
     const sel = '[aria-label="text to type"] [data-state]';
@@ -129,10 +129,27 @@ test("typing with key sounds on stays within the key handler budget", async ({ p
   expectBudget(await timeKeys(page, 120), "sound on");
 });
 
+/** Times `count` free-type key handlers in Zen, typing plain prose with the occasional newline. */
+async function timeFreeKeys(page: Page, count: number): Promise<number[]> {
+  return page.evaluate(async (total) => {
+    const prose = "free words flow without any target to hit. ";
+    const out: number[] = [];
+    for (let i = 0; i < total; i++) {
+      const key = i % 97 === 96 ? "Enter" : prose[i % prose.length];
+      const t0 = performance.now();
+      window.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+      out.push(performance.now() - t0);
+      // Let React commit and the browser lay out, as it does between real key presses.
+      if (i % 20 === 19) await new Promise((r) => requestAnimationFrame(r));
+    }
+    return out;
+  }, count);
+}
+
 test("zen after 3000 characters stays within the key handler budget", async ({ page }) => {
   await page.goto("/zen/");
-  await page.locator('[aria-label="text to type"] [data-state]').first().waitFor();
-  const timings = await timeKeys(page, 3000);
+  await page.locator('[aria-label="your text"]').waitFor();
+  const timings = await timeFreeKeys(page, 3000);
   expectBudget(timings.slice(-300), "zen, last 300 of 3000");
   expectBudget(timings, "zen, all 3000");
   await expect(page.locator("html")).toHaveAttribute("data-focus", "zen");

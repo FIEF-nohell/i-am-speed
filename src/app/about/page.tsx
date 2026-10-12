@@ -20,7 +20,7 @@ interface Shortcut {
 }
 
 const SHORTCUTS: readonly Shortcut[] = [
-  { keys: ["tab"], action: "restart the current text (in zen: new text)" },
+  { keys: ["tab"], action: "restart the current text" },
   { keys: ["esc"], action: "restart the current text (in zen: finish and save)" },
   { keys: ["enter"], action: "next lesson, on the results page after a pass" },
   { keys: ["tab"], action: "retry, on the results page" },

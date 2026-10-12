@@ -17,10 +17,6 @@ interface Options {
   onKey?: KeySoundHandler;
   /** Time limit in ms for timed tests. */
   limitMs?: number | null;
-  /** Open-ended run (Zen): the text can be extended and never finishes by itself. */
-  open?: boolean;
-  /** Idle gaps longer than this are removed from the run's clock. */
-  pauseAfterMs?: number | null;
   /** Called when "restart after N" fails the attempt. */
   onFail?: () => void;
   /** Bumped by the caller to start a fresh session with the same text. */
@@ -36,10 +32,9 @@ const EMPTY_STATE: EngineState = {
   backspaces: 0,
   startedAt: null,
   elapsed: 0,
-  open: false,
 };
 
-function isFormTarget(t: EventTarget | null): boolean {
+export function isFormTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   return t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName);
 }
@@ -63,21 +58,16 @@ export function useTypingSession({
   onFail,
   runId,
   limitMs = null,
-  open = false,
-  pauseAfterMs = null,
 }: Options) {
   const { onError, restartAfter, backspace } = config;
   const session = useMemo(
     () =>
       text
-        ? new TypingSession(text, { onError, restartAfter, backspace }, undefined, limitMs, {
-            open,
-            pauseAfterMs,
-          })
+        ? new TypingSession(text, { onError, restartAfter, backspace }, undefined, limitMs)
         : null,
     // runId deliberately restarts the session with identical text.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [text, onError, restartAfter, backspace, runId, limitMs, open, pauseAfterMs],
+    [text, onError, restartAfter, backspace, runId, limitMs],
   );
   const [pressed, setPressed] = useState<ReadonlySet<string>>(new Set());
 

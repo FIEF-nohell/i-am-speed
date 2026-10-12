@@ -8,11 +8,7 @@ import {
   type Keystroke,
 } from "./types";
 
-export function createState(
-  target: string,
-  config: EngineConfig,
-  opts: { open?: boolean } = {},
-): EngineState {
+export function createState(target: string, config: EngineConfig): EngineState {
   return {
     target,
     config,
@@ -22,17 +18,11 @@ export function createState(
     backspaces: 0,
     startedAt: null,
     elapsed: 0,
-    open: opts.open ?? false,
   };
 }
 
 export function restart(state: EngineState): EngineState {
-  return createState(state.target, state.config, { open: state.open });
-}
-
-/** Appends text to the target of a run. Entries, keystrokes and status are untouched. */
-export function extendTarget(state: EngineState, more: string): EngineState {
-  return more ? { ...state, target: state.target + more } : state;
+  return createState(state.target, state.config);
 }
 
 export function errorKeystrokes(state: EngineState): number {
@@ -56,7 +46,6 @@ function wordsAreClean(state: EngineState): boolean {
 }
 
 function isDone(state: EngineState): boolean {
-  if (state.open) return false;
   if (state.entries.length < state.target.length) return false;
   // "stop at word end" cannot finish with an unfixed error in the last word.
   // A wrong last letter must be erased and fixed before the run ends.
