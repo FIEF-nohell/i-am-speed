@@ -42,7 +42,10 @@ test("capture key interactions", async ({ browser }) => {
   await page.getByRole("radio", { name: "light", exact: true }).click();
   await frames("theme", [0, 80, 160, 300, 500]);
   await page.getByRole("radio", { name: "dark", exact: true }).click();
-  await page.getByRole("link", { name: "lessons" }).click();
+  await page
+    .getByRole("navigation", { name: "main" })
+    .getByRole("link", { name: "lessons" })
+    .click();
   await frames("route", [0, 100, 200, 400]);
   // Zen: idle, first key (chrome fades), a long run (the text scrolls), finish.
   await page.goto("/zen/");

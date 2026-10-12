@@ -1,13 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
+import { blockAuthNetwork, seedSignedInUser } from "./fixtures/auth";
 import { completeLesson, lessonText, typeText } from "./helpers";
 
 // Visual review aid: `SHOTS=1 THEMES=dark,light,dusk,ember npx playwright test e2e/screenshots.spec.ts`.
-// Output is git-ignored. Every page is captured at 1440 and 390, and each capture also asserts
+// Output is git-ignored. Every page is captured at 1440, 768 and 390, and each capture also asserts
 // that the page does not scroll sideways.
 test.skip(!process.env.SHOTS, "set SHOTS=1 to capture screenshots");
 
 const SIZES = [
   { name: "1440", width: 1440, height: 900 },
+  { name: "768", width: 768, height: 1024 },
   { name: "390", width: 390, height: 844 },
 ];
 const THEMES = (process.env.THEMES ?? "dark").split(",");
@@ -24,7 +26,7 @@ async function typeFree(page: Page, count: number): Promise<void> {
 
 for (const theme of THEMES) {
   for (const size of SIZES) {
-    test(`screens ${theme} ${size.name}`, async ({ page }) => {
+    test(`screens ${theme} ${size.name}`, async ({ page, browser }) => {
       test.setTimeout(180_000);
       await page.setViewportSize({ width: size.width, height: size.height });
       const shot = async (name: string, opts: { fullPage?: boolean } = {}): Promise<void> => {
@@ -92,6 +94,25 @@ for (const theme of THEMES) {
       await visit("/login/", "login");
       await visit("/signup/", "signup");
       await visit("/forgot-password/", "forgot-password");
+
+      // Signed in, menu open: a fresh context with a seeded user and no stored attempts.
+      const context = await browser.newContext({
+        viewport: { width: size.width, height: size.height },
+      });
+      try {
+        const signedIn = await context.newPage();
+        await blockAuthNetwork(signedIn);
+        await signedIn.goto("/settings/");
+        await signedIn.getByRole("radio", { name: theme, exact: true }).click();
+        await seedSignedInUser(signedIn, { email: "noel@example.com", displayName: "Noel" });
+        await signedIn.goto("/stats/");
+        await signedIn.getByRole("heading", { level: 1 }).first().waitFor();
+        await signedIn.getByRole("button", { name: "account menu" }).click();
+        await signedIn.waitForTimeout(500);
+        await signedIn.screenshot({ path: `screenshots/${theme}-${size.name}-account-menu.png` });
+      } finally {
+        await context.close();
+      }
     });
   }
 }

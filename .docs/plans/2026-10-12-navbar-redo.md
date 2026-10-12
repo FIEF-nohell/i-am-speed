@@ -313,11 +313,11 @@ Outcome: the two-row bar at 40rem and below, 44px targets, no horizontal scroll 
 
 Outcome: every existing spec passes, axe is clean signed out and signed in, the preserve guard holds.
 
-- [ ] `e2e/motion-capture.spec.ts`: change `page.getByRole("link", { name: "lessons" })` to `page.getByRole("navigation", { name: "main" }).getByRole("link", { name: "lessons" })`.
-- [ ] `e2e/a11y.spec.ts`: add `axe: signed-in header with the account menu open, <theme>` for dark and light (seed user, go to `/stats/`, open the menu, run `audit`). Skip with a comment if the fixture fallback was taken.
-- [ ] `e2e/screenshots.spec.ts`: add `{ name: "768", width: 768, height: 1024 }` to `SIZES`; after the `forgot-password` capture, seed a signed-in user in a fresh context, open the menu on `/stats/`, and capture `account-menu` (viewport, not full page).
-- [ ] Run `npm run check` and `npm run test:e2e`; fix anything red.
-- [ ] Run `PRESERVE=1 npx playwright test e2e/preserve.spec.ts`. If any capture differs, open the diff image; re-record with `--update-snapshots` only if the difference is caused solely by header geometry (for example `main` height), and write the evidence in the Log. Any difference inside the list rows, the typing text, the keyboard or the info bar is a bug to fix, not to re-record.
+- [x] `e2e/motion-capture.spec.ts`: change `page.getByRole("link", { name: "lessons" })` to `page.getByRole("navigation", { name: "main" }).getByRole("link", { name: "lessons" })`.
+- [x] `e2e/a11y.spec.ts`: add `axe: signed-in header with the account menu open, <theme>` for dark and light (seed user, go to `/stats/`, open the menu, run `audit`). Skip with a comment if the fixture fallback was taken.
+- [x] `e2e/screenshots.spec.ts`: add `{ name: "768", width: 768, height: 1024 }` to `SIZES`; after the `forgot-password` capture, seed a signed-in user in a fresh context, open the menu on `/stats/`, and capture `account-menu` (viewport, not full page).
+- [x] Run `npm run check` and `npm run test:e2e`; fix anything red.
+- [x] Run `PRESERVE=1 npx playwright test e2e/preserve.spec.ts`. If any capture differs, open the diff image; re-record with `--update-snapshots` only if the difference is caused solely by header geometry (for example `main` height), and write the evidence in the Log. Any difference inside the list rows, the typing text, the keyboard or the info bar is a bug to fix, not to re-record.
 
 ### Milestone 7: Visual review and fixes
 
@@ -345,3 +345,4 @@ Outcome: decisions and docs describe the current header; the plan and evidence a
 - 2026-10-12 M3 done: useNavIndicator wired; nav.spec 19 passed incl. glide (running CSSTransition on transform at 100ms), zero animations on first load (rAF sampler) and under reduced motion; zen.spec green.
 - 2026-10-12 M4 done: AccountControl, UserMenu and CSS built. Signed-in fixture WORKS (seed firebase:authUser localStorage key plus i-am-speed:auth hint, Google blocked): no fallback needed. Fixture hardcodes the public web key because eslint forbids importing src/config/firebase from e2e. Under blocked network the sync sentence is 'Sync failed. Trying again soon.'. Escape test types 3 chars first and asserts progress unchanged. nav.spec 25 + auth-screens green.
 - 2026-10-12 M5 done: phone two-row CSS, 44px targets (sign in needed a higher-specificity selector because Button's data-size rule beat .signIn), nav.spec 29 passed. Finding: /settings/ overflows horizontally at 320 (sound pack radiogroup in the settings page, pre-existing, unrelated to the header); excluded from the 320 assertion, left unfixed as out of scope.
+- 2026-10-12 M6 done: motion-capture scoped, axe signed-in menu-open pass (dark, light), screenshots 768 plus account-menu capture. npm run check green; npm run test:e2e 67 passed 8 skipped (env-gated); PRESERVE=1 guard 4/4 green with the base baselines, no re-record needed.

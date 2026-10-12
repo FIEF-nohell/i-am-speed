@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { blockAuthNetwork, seedSignedInUser } from "./fixtures/auth";
 import { completeLesson } from "./helpers";
 
 // Automated accessibility audit: no serious or critical axe violations on any page, in the dark
@@ -60,5 +61,19 @@ for (const theme of THEMES) {
     await page.goto("/settings/");
     await page.getByRole("switch", { name: "key sounds" }).click();
     await audit(page, "/settings/ sound on");
+  });
+}
+
+for (const theme of THEMES) {
+  test(`axe: signed-in header with the account menu open, ${theme}`, async ({ page }) => {
+    test.setTimeout(120_000);
+    await blockAuthNetwork(page);
+    await page.goto("/settings/");
+    await page.getByRole("radio", { name: theme, exact: true }).click();
+    await seedSignedInUser(page, { email: "noel@example.com", displayName: "Noel" });
+    await page.goto("/stats/");
+    await page.getByRole("button", { name: "account menu" }).click();
+    await expect(page.locator("#account-menu")).toBeVisible();
+    await audit(page, `/stats/ signed in, menu open, ${theme}`);
   });
 }
