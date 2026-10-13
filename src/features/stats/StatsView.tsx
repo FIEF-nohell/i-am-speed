@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { Stat } from "@/components/ui/Stat";
+import { staggerStyle } from "@/lib/motion";
 import { LESSONS, PHASES } from "@/features/lessons/curriculum";
 import { heatByCode } from "@/features/results/heat";
 import { dayKey } from "@/features/storage/record";
@@ -43,14 +44,14 @@ function Tile({
   index: number;
 }) {
   return (
-    <Panel as="div" index={index} className={styles.tile}>
+    <div className={`${styles.fig} enter`} style={staggerStyle(index)}>
       <dl>{children}</dl>
       {progress !== undefined && (
-        <span className={styles.tileLine} aria-hidden="true">
+        <span className={styles.figLine} aria-hidden="true">
           <span style={{ width: `${progress * 100}%` }} />
         </span>
       )}
-    </Panel>
+    </div>
   );
 }
 
@@ -79,7 +80,7 @@ export function StatsView() {
     return (
       <div className="page-full">
         <PageHeader title="stats" />
-        <Panel as="div">
+        <Panel bare as="div">
           <EmptyState
             icon={<BarChart3 />}
             title="no attempts yet"
@@ -108,7 +109,7 @@ export function StatsView() {
         lede={`${plural(data.totals.attempts, "attempt")} over ${plural(Object.keys(data.days).length, "day")}.`}
       />
 
-      <div className={styles.tiles}>
+      <div className={styles.figures}>
         <Tile index={1}>
           <Stat size="tile" label="time typed" value={formatDuration(data.totals.timeMs)} />
         </Tile>
@@ -121,9 +122,6 @@ export function StatsView() {
         <Tile index={4} progress={passed / LESSONS.length}>
           <Stat size="tile" label="lessons passed" value={`${passed} / ${LESSONS.length}`} />
         </Tile>
-      </div>
-
-      <div className={styles.tiles}>
         <Tile index={5}>
           <Stat size="tile" label="today" value={formatDuration(activity.todayMs)} />
         </Tile>

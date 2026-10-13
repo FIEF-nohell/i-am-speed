@@ -8,6 +8,14 @@
   min-width: 0;
 }
 
+.bare {
+  padding: var(--space-4) 0 0;
+  background: none;
+  border: 0;
+  border-top: var(--stroke) solid var(--line);
+  border-radius: 0;
+}
+
 .head {
   display: flex;
   justify-content: space-between;
@@ -41,7 +49,7 @@
 }
 
 @media (max-width: 36rem) {
-  .panel {
+  .panel:not(.bare) {
     padding: var(--space-4);
   }
   .head {

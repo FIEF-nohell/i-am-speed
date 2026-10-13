@@ -9,6 +9,8 @@ interface Props {
   aside?: ReactNode;
   id?: string;
   as?: "section" | "div";
+  /** No fill, border or padding: a hairline rule above the content instead of a card. */
+  bare?: boolean;
   className?: string;
   /** Position in the page: the panel fades in with a capped stagger (the shared `.enter`). */
   index?: number;
@@ -25,6 +27,7 @@ export function Panel({
   aside,
   id,
   as: Tag = "section",
+  bare,
   className,
   index,
   children,
@@ -33,7 +36,7 @@ export function Panel({
   return (
     <Tag
       id={id}
-      className={`${styles.panel} ${index === undefined ? "" : "enter"} ${className ?? ""}`}
+      className={`${styles.panel} ${bare ? styles.bare : ""} ${index === undefined ? "" : "enter"} ${className ?? ""}`}
       style={index === undefined ? undefined : staggerStyle(index)}
       aria-labelledby={Tag === "section" ? headingId : undefined}
     >

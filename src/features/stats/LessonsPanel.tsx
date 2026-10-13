@@ -11,7 +11,7 @@ interface Props {
 
 export function LessonsPanel({ lessons, progress, index }: Props) {
   return (
-    <Panel index={index} title="lessons" description="Best speed counts only passed attempts.">
+    <Panel bare index={index} title="lessons" description="Best speed counts only passed attempts.">
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>

@@ -15,6 +15,7 @@ interface Props {
 export function KeysPanel({ weak, heat, index }: Props) {
   return (
     <Panel
+      bare
       index={index}
       title="keys"
       description={weak.length ? "Highest error rate over all attempts." : undefined}

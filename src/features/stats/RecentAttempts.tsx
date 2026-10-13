@@ -13,7 +13,7 @@ interface Props {
 /** Newest attempts first. Zen, tests and lessons are labelled by `sourceLabel`. Zen has no accuracy. */
 export function RecentAttempts({ attempts, now, index }: Props) {
   return (
-    <Panel index={index} title="recent attempts" description="Your latest finished runs.">
+    <Panel bare index={index} title="recent attempts" description="Your latest finished runs.">
       {attempts.length === 0 ? (
         <p className={styles.note}>No saved attempts on this device yet.</p>
       ) : (

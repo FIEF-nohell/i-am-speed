@@ -1,31 +1,32 @@
 .page {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-7);
 }
 
-/* Stat tiles */
-.tiles {
+/* Headline figures: one open strip, a hairline above each, no boxes. */
+.figures {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-6) var(--space-6);
 }
-.tile {
+.fig {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: var(--stroke) solid var(--line);
 }
-.tile dl {
+.fig dl {
   margin: 0;
 }
-.tileLine {
+.figLine {
   display: block;
   height: 2px;
   border-radius: 1px;
   background: var(--line);
   overflow: hidden;
 }
-.tileLine > span {
+.figLine > span {
   display: block;
   height: 100%;
   background: var(--accent);
@@ -43,12 +44,12 @@
 .pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5);
+  gap: var(--space-7);
 }
 .trio {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-5);
+  gap: var(--space-7);
 }
 .records li {
   display: grid;
@@ -194,14 +195,14 @@
   .pair {
     grid-template-columns: minmax(0, 1fr);
   }
-  .tiles {
+  .figures {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 36rem) {
-  .tiles {
-    gap: var(--space-3);
+  .figures {
+    gap: var(--space-5) var(--space-4);
   }
   .recent li {
     grid-template-columns: minmax(0, 1fr) auto auto;

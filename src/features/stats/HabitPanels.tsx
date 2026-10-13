@@ -13,6 +13,7 @@ export function WeekdayPanel({
   const max = Math.max(...weekdays.map((w) => w.minutes), 0);
   return (
     <Panel
+      bare
       index={index}
       title="week rhythm"
       description="Average practice time on each weekday, over the days you practised."
@@ -66,6 +67,7 @@ export function RecordsPanel({ records, index }: { records: Records; index?: num
   rows.push({ label: "average run", value: formatDuration(records.avgRunMs) });
   return (
     <Panel
+      bare
       index={index}
       title="records"
       description={`Highlights from your last ${records.count} saved runs.`}

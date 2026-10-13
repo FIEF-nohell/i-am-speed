@@ -17,6 +17,7 @@ export function FingersPanel({ fingers, index }: { fingers: FingerAccuracy[]; in
   const weakest = weakestFinger(fingers);
   return (
     <Panel
+      bare
       index={index}
       title="fingers"
       description="Accuracy by finger, across everything you have typed."
@@ -43,7 +44,12 @@ export function FingersPanel({ fingers, index }: { fingers: FingerAccuracy[]; in
 
 export function PhasesPanel({ phases, index }: { phases: PhaseProgress[]; index?: number }) {
   return (
-    <Panel index={index} title="phases" description="Lessons passed in each phase of the course.">
+    <Panel
+      bare
+      index={index}
+      title="phases"
+      description="Lessons passed in each phase of the course."
+    >
       <ul className={styles.bars}>
         {phases.map((p) => (
           <li key={p.phase}>

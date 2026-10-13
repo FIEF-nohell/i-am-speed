@@ -66,7 +66,7 @@ export function ActivityChart({
     : `${Math.round(total).toLocaleString("en")} ${unit} over ${activeDays} active days.`;
 
   return (
-    <Panel as="div" index={index}>
+    <Panel bare as="div" index={index}>
       <ChartFrame
         title={title}
         height={220}

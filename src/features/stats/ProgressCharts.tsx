@@ -78,7 +78,7 @@ export function ProgressCharts({
     : `Latest ${data[lastIndex].value} ${unit} over ${data.length} days.`;
 
   return (
-    <Panel as="div" index={index}>
+    <Panel bare as="div" index={index}>
       <ChartFrame
         title={title}
         height={220}
