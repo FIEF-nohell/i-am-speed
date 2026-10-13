@@ -1,6 +1,6 @@
 .footer {
   width: 100%;
-  max-width: var(--column);
+  max-width: var(--column-wide);
   margin: var(--space-8) auto 0;
   padding: 0 var(--gutter) var(--space-6);
 }

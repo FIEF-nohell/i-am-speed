@@ -61,6 +61,9 @@ export function addAggregates(a: Aggregates, b: Aggregates): Aggregates {
           wpmSum: p.wpmSum + s.wpmSum,
           accuracySum: p.accuracySum + s.accuracySum,
           timeMs: p.timeMs + s.timeMs,
+          ...(p.chars !== undefined || s.chars !== undefined
+            ? { chars: (p.chars ?? 0) + (s.chars ?? 0) }
+            : {}),
         }
       : { ...s };
   }

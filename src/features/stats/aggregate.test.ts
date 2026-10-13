@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { Attempt } from "@/features/storage/schema";
 import { LESSONS } from "@/features/lessons/curriculum";
 import {
+  activitySeries,
+  activitySummary,
+  weekdayAverages,
   completedPerPhase,
   dailySeries,
   filterDays,
@@ -117,5 +120,63 @@ describe("stats aggregation", () => {
         weakestFinger(fingerAccuracies({ leftPinky: { attempts: 100, errors: 20 } })),
       ).toBeNull();
     });
+  });
+});
+
+describe("activity stats", () => {
+  const day = (timeMin: number, chars?: number) => ({
+    attempts: 1,
+    wpmSum: 30,
+    accuracySum: 95,
+    timeMs: timeMin * 60000,
+    ...(chars === undefined ? {} : { chars }),
+  });
+
+  it("fills quiet days with zeros and keeps legacy days without chars as null", () => {
+    const s = activitySeries(
+      { "2026-10-09": day(5, 300), "2026-10-11": day(2) },
+      [],
+      "7d",
+      "2026-10-11",
+    );
+    expect(s.map((d) => d.date)).toEqual([
+      "2026-10-05",
+      "2026-10-06",
+      "2026-10-07",
+      "2026-10-08",
+      "2026-10-09",
+      "2026-10-10",
+      "2026-10-11",
+    ]);
+    expect(s[4]).toMatchObject({ minutes: 5, chars: 300 });
+    expect(s[5]).toMatchObject({ minutes: 0, chars: 0 });
+    expect(s[6]).toMatchObject({ minutes: 2, chars: null });
+  });
+  it("counts zen-only days and returns nothing without activity", () => {
+    const zen = { attempts: 0, wpmSum: 0, accuracySum: 0, timeMs: 60000, chars: 40 };
+    expect(activitySeries({ "2026-10-11": zen }, [], "7d", "2026-10-11")[6].chars).toBe(40);
+    expect(activitySeries({}, [], "30d", "2026-10-11")).toEqual([]);
+  });
+  it("computes streaks, which survive a not-yet-practised today", () => {
+    const days = {
+      "2026-10-01": day(1),
+      "2026-10-02": day(1),
+      "2026-10-03": day(1),
+      "2026-10-09": day(4),
+      "2026-10-10": day(2),
+    };
+    const a = activitySummary(days, "2026-10-11");
+    expect(a.streak).toBe(2);
+    expect(a.longestStreak).toBe(3);
+    expect(a.todayMs).toBe(0);
+    expect(a.activeDays).toBe(5);
+    expect(a.bestDay).toEqual({ date: "2026-10-09", ms: 240000 });
+    expect(activitySummary(days, "2026-10-13").streak).toBe(0);
+  });
+  it("averages practice per weekday, Monday first", () => {
+    // 2026-10-05 and 2026-10-12 are Mondays.
+    const w = weekdayAverages({ "2026-10-05": day(10), "2026-10-12": day(20) });
+    expect(w[0]).toEqual({ day: "mon", minutes: 15 });
+    expect(w[1].minutes).toBe(0);
   });
 });

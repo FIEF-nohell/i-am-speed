@@ -3,6 +3,7 @@ import { FINGERS } from "@/features/keyboard/layout/atQwertz";
 import type { Finger } from "@/features/keyboard/layout/types";
 import type { Lesson } from "@/features/lessons/types";
 import type { Attempt, DayTotals, LessonProgress } from "@/features/storage/schema";
+import { sourceKind } from "@/features/storage/source";
 
 export interface WeakKey {
   key: string;
@@ -158,4 +159,142 @@ export function weakestFinger(accuracies: readonly FingerAccuracy[], minAttempts
   const rated = accuracies.filter((f) => f.accuracy !== null && f.attempts >= minAttempts);
   if (rated.length < 2) return null;
   return rated.reduce((low, f) => ((f.accuracy ?? 100) < (low.accuracy ?? 100) ? f : low));
+}
+
+export interface ActivityDay {
+  date: string;
+  minutes: number;
+  /** null when the day predates per-day character tracking and no saved attempt covers it. */
+  chars: number | null;
+  attempts: number;
+}
+
+/** Characters per day from saved attempts, the fallback for days recorded without `chars`. */
+function charsFromAttempts(attempts: readonly Attempt[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const a of attempts) {
+    const d = new Date(a.at);
+    const p = (n: number) => String(n).padStart(2, "0");
+    const key = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    out[key] = (out[key] ?? 0) + a.chars;
+  }
+  return out;
+}
+
+/**
+ * Every calendar day from the start of the range (or the first active day for "all") through
+ * `today`, quiet days included as zeros so gaps in practice stay visible. Zen days count.
+ */
+export function activitySeries(
+  days: Record<string, DayTotals>,
+  attempts: readonly Attempt[],
+  range: DayRange,
+  today: string,
+): ActivityDay[] {
+  const active = Object.keys(days)
+    .filter((d) => days[d].timeMs > 0 || days[d].attempts > 0)
+    .sort();
+  if (active.length === 0) return [];
+  const first = range === "all" ? active[0] : shiftDay(today, -(RANGE_DAYS[range] - 1));
+  const fallback = charsFromAttempts(attempts);
+  const out: ActivityDay[] = [];
+  for (let date = first; date <= today; date = shiftDay(date, 1)) {
+    const d = days[date];
+    out.push({
+      date,
+      minutes: d ? d.timeMs / 60000 : 0,
+      chars: d ? (d.chars ?? fallback[date] ?? null) : 0,
+      attempts: d?.attempts ?? 0,
+    });
+    if (out.length > 3660) break;
+  }
+  return out;
+}
+
+export interface ActivitySummary {
+  todayMs: number;
+  todayChars: number;
+  /** Consecutive practice days ending today, or yesterday if today has no practice yet. */
+  streak: number;
+  longestStreak: number;
+  activeDays: number;
+  /** Average practice time on days that had any, in ms. */
+  avgActiveMs: number;
+  bestDay: { date: string; ms: number } | null;
+}
+
+export function activitySummary(days: Record<string, DayTotals>, today: string): ActivitySummary {
+  const dates = Object.keys(days)
+    .filter((d) => days[d].timeMs > 0)
+    .sort();
+  let longest = 0;
+  let run = 0;
+  let prev: string | null = null;
+  for (const date of dates) {
+    run = prev !== null && shiftDay(prev, 1) === date ? run + 1 : 1;
+    longest = Math.max(longest, run);
+    prev = date;
+  }
+  const set = new Set(dates);
+  let cursor = set.has(today) ? today : shiftDay(today, -1);
+  let streak = 0;
+  while (set.has(cursor)) {
+    streak++;
+    cursor = shiftDay(cursor, -1);
+  }
+  const totalMs = dates.reduce((a, d) => a + days[d].timeMs, 0);
+  const best = dates.reduce<{ date: string; ms: number } | null>(
+    (b, d) => (!b || days[d].timeMs > b.ms ? { date: d, ms: days[d].timeMs } : b),
+    null,
+  );
+  return {
+    todayMs: days[today]?.timeMs ?? 0,
+    todayChars: days[today]?.chars ?? 0,
+    streak,
+    longestStreak: longest,
+    activeDays: dates.length,
+    avgActiveMs: dates.length > 0 ? totalMs / dates.length : 0,
+    bestDay: best,
+  };
+}
+
+export const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+
+/** Average practice minutes per weekday (Monday first), over every day that had practice. */
+export function weekdayAverages(
+  days: Record<string, DayTotals>,
+): { day: string; minutes: number }[] {
+  const sum = new Array<number>(7).fill(0);
+  const count = new Array<number>(7).fill(0);
+  for (const [date, d] of Object.entries(days)) {
+    if (d.timeMs <= 0) continue;
+    const [y, m, dd] = date.split("-").map(Number);
+    const i = (new Date(y, m - 1, dd).getDay() + 6) % 7;
+    sum[i] += d.timeMs / 60000;
+    count[i] += 1;
+  }
+  return WEEKDAYS.map((day, i) => ({ day, minutes: count[i] > 0 ? sum[i] / count[i] : 0 }));
+}
+
+export interface Records {
+  fastest: Attempt | null;
+  mostAccurate: Attempt | null;
+  longest: Attempt | null;
+  avgRunMs: number;
+  count: number;
+}
+
+/** Highlights of the saved attempts. Zen runs have no target, so they do not count for speed or accuracy. */
+export function attemptRecords(attempts: readonly Attempt[]): Records {
+  const scored = attempts.filter((a) => sourceKind(a.source) !== "zen");
+  const top = (list: readonly Attempt[], pick: (a: Attempt) => number) =>
+    list.reduce<Attempt | null>((b, a) => (!b || pick(a) > pick(b) ? a : b), null);
+  return {
+    fastest: top(scored, (a) => a.netWpm),
+    mostAccurate: top(scored, (a) => a.accuracy),
+    longest: top(attempts, (a) => a.durationMs),
+    avgRunMs:
+      attempts.length > 0 ? attempts.reduce((s, a) => s + a.durationMs, 0) / attempts.length : 0,
+    count: attempts.length,
+  };
 }

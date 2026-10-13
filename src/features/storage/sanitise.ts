@@ -48,6 +48,7 @@ function sanitiseDay(v: unknown): DayTotals | null {
     wpmSum: num(v.wpmSum),
     accuracySum: num(v.accuracySum),
     timeMs: num(v.timeMs),
+    ...(typeof v.chars === "number" ? { chars: num(v.chars) } : {}),
   };
 }
 

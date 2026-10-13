@@ -9,15 +9,21 @@ import { Panel } from "@/components/ui/Panel";
 import { Stat } from "@/components/ui/Stat";
 import { LESSONS, PHASES } from "@/features/lessons/curriculum";
 import { heatByCode } from "@/features/results/heat";
+import { dayKey } from "@/features/storage/record";
 import { useData, useHydrated } from "@/features/storage/store";
 import {
+  activitySummary,
+  attemptRecords,
   completedPerPhase,
   dailySeries,
   fingerAccuracies,
   formatDuration,
   recentAttempts,
   weakestKeys,
+  weekdayAverages,
 } from "./aggregate";
+import { ActivityChart } from "./ActivityChart";
+import { RecordsPanel, WeekdayPanel } from "./HabitPanels";
 import { FingersPanel, PhasesPanel } from "./BarPanels";
 import { KeysPanel } from "./KeysPanel";
 import { LessonsPanel } from "./LessonsPanel";
@@ -57,6 +63,9 @@ export function StatsView() {
   const heat = useMemo(() => heatByCode(data.keys), [data.keys]);
   const fingers = useMemo(() => fingerAccuracies(data.fingers), [data.fingers]);
   const recent = useMemo(() => recentAttempts(data.attempts, 10), [data.attempts]);
+  const activity = useMemo(() => activitySummary(data.days, dayKey(now)), [data.days, now]);
+  const weekdays = useMemo(() => weekdayAverages(data.days), [data.days]);
+  const records = useMemo(() => attemptRecords(data.attempts), [data.attempts]);
   const phases = completedPerPhase(
     LESSONS,
     data.lessons,
@@ -68,7 +77,7 @@ export function StatsView() {
   if (!hydrated) return <div style={{ minHeight: "30rem" }} />;
   if (data.totals.attempts === 0) {
     return (
-      <div className="page-wide">
+      <div className="page-full">
         <PageHeader title="stats" />
         <Panel as="div">
           <EmptyState
@@ -93,7 +102,7 @@ export function StatsView() {
   }
 
   return (
-    <div className={`page-wide ${styles.page}`}>
+    <div className={`page-full ${styles.page}`}>
       <PageHeader
         title="stats"
         lede={`${plural(data.totals.attempts, "attempt")} over ${plural(Object.keys(data.days).length, "day")}.`}
@@ -114,17 +123,58 @@ export function StatsView() {
         </Tile>
       </div>
 
-      <ProgressCharts days={days} now={now} index={5} />
-
-      <div className={styles.pair}>
-        <FingersPanel fingers={fingers} index={6} />
-        <PhasesPanel phases={phases} index={7} />
+      <div className={styles.tiles}>
+        <Tile index={5}>
+          <Stat size="tile" label="today" value={formatDuration(activity.todayMs)} />
+        </Tile>
+        <Tile index={6}>
+          <Stat
+            size="tile"
+            label="streak"
+            value={plural(activity.streak, "day")}
+            unit={
+              activity.longestStreak > activity.streak
+                ? `best ${activity.longestStreak}`
+                : undefined
+            }
+          />
+        </Tile>
+        <Tile index={7}>
+          <Stat
+            size="tile"
+            label="per active day"
+            value={formatDuration(activity.avgActiveMs)}
+            unit={`${activity.activeDays} days`}
+          />
+        </Tile>
+        <Tile index={8}>
+          <Stat
+            size="tile"
+            label="best day"
+            value={activity.bestDay ? formatDuration(activity.bestDay.ms) : "-"}
+            unit={activity.bestDay?.date.slice(5)}
+          />
+        </Tile>
       </div>
 
-      <KeysPanel weak={weak} heat={heat} index={8} />
-      <RecentAttempts attempts={recent} now={now} index={9} />
+      <div className={styles.pair}>
+        <ActivityChart days={data.days} attempts={data.attempts} now={now} index={9} />
+        <ProgressCharts days={days} now={now} index={10} />
+      </div>
+
+      <div className={styles.trio}>
+        <WeekdayPanel weekdays={weekdays} index={11} />
+        <FingersPanel fingers={fingers} index={12} />
+        <PhasesPanel phases={phases} index={13} />
+      </div>
+
+      <div className={styles.pair}>
+        <KeysPanel weak={weak} heat={heat} index={14} />
+        <RecordsPanel records={records} index={15} />
+      </div>
+      <RecentAttempts attempts={recent} now={now} index={16} />
       {attempted.length > 0 && (
-        <LessonsPanel lessons={attempted} progress={data.lessons} index={10} />
+        <LessonsPanel lessons={attempted} progress={data.lessons} index={17} />
       )}
     </div>
   );

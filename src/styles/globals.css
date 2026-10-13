@@ -32,6 +32,7 @@
   --control-md: 2.5rem;
 
   --column: 56rem;
+  --column-wide: 80rem;
   --column-narrow: 40rem;
   --column-form: 24rem;
   --header-h: 3.5rem;
@@ -134,7 +135,7 @@ a:hover {
 }
 
 .page {
-  max-width: var(--column);
+  max-width: var(--column-wide);
   margin: 0 auto;
   padding: var(--space-5) var(--gutter) 0;
 }
@@ -172,6 +173,12 @@ a:hover {
 /* Wide pages (stats, results, settings) use the full header column. */
 .page-wide {
   max-width: var(--column);
+  margin: 0 auto;
+}
+
+/* Menu pages with dense content (stats) use the wide column. */
+.page-full {
+  max-width: var(--column-wide);
   margin: 0 auto;
 }
 

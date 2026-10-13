@@ -2,7 +2,7 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: var(--column);
+  max-width: var(--column-wide);
   margin: 0 auto var(--space-3);
   padding: var(--space-2) var(--gutter) 0;
 }

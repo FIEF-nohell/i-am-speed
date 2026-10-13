@@ -45,6 +45,29 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-5);
 }
+.trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+.records li {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: var(--stroke) solid var(--line);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.records li:last-child {
+  border-bottom: 0;
+}
+.records .note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .bars {
   display: grid;
   gap: var(--space-3);
@@ -159,6 +182,12 @@
 .table td:not(:first-child),
 .table thead th:not(:first-child) {
   text-align: right;
+}
+
+@media (max-width: 70rem) {
+  .trio {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 52rem) {

@@ -75,13 +75,15 @@ export function recordAttempt(data: StoredData, input: AttemptInput): StoredData
   const dk = dayKey(input.at);
   const day: DayTotals = own.days[dk] ?? { attempts: 0, wpmSum: 0, accuracySum: 0, timeMs: 0 };
 
+  const chars = (day.chars ?? 0) + m.typedChars;
   const dayTotals: DayTotals = free
-    ? { ...day, timeMs: day.timeMs + m.durationMs }
+    ? { ...day, timeMs: day.timeMs + m.durationMs, chars }
     : {
         attempts: day.attempts + 1,
         wpmSum: day.wpmSum + m.netWpm,
         accuracySum: day.accuracySum + m.accuracy,
         timeMs: day.timeMs + m.durationMs,
+        chars,
       };
 
   const isLesson = sourceKind(input.source) === "lesson";

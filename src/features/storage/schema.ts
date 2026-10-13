@@ -45,6 +45,8 @@ export interface DayTotals {
   wpmSum: number;
   accuracySum: number;
   timeMs: number;
+  /** Characters typed that day, zen included. Absent on days recorded before this was tracked. */
+  chars?: number;
 }
 
 /** Full detail of the latest attempt, so the results page survives a reload. */
