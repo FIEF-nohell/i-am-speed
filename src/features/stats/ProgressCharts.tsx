@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -16,17 +16,14 @@ import {
   GRID_OPACITY,
   GRID_STROKE,
   LAST_DOT_RADIUS,
-  LEGEND,
   LINE_PRIMARY,
   STROKE_WIDTH,
   TOOLTIP_STYLE,
 } from "@/components/charts/chartTheme";
-import { ChartFrame, type LegendItem } from "@/components/ui/ChartFrame";
-import { Panel } from "@/components/ui/Panel";
+import { ChartFrame } from "@/components/ui/ChartFrame";
 import { Segmented } from "@/components/ui/Segmented";
-import { dayKey } from "@/features/storage/record";
-import { filterDays, type DayPoint, type DayRange } from "./aggregate";
-import styles from "./StatsView.module.css";
+import type { DayPoint } from "./aggregate";
+import { CHART_HEIGHT, CHART_MARGIN, X_TICK_GAP, Y_AXIS_WIDTH } from "./chartLayout";
 
 type Metric = "wpm" | "accuracy";
 
@@ -34,99 +31,88 @@ const METRICS = [
   { value: "wpm", label: "speed" },
   { value: "accuracy", label: "accuracy" },
 ] as const;
-const RANGES = [
-  { value: "7d", label: "7 days" },
-  { value: "30d", label: "30 days" },
-  { value: "all", label: "all" },
-] as const;
 
-const COPY: Record<Metric, { title: string; unit: string; legend: LegendItem }> = {
-  wpm: { title: "average speed per day", unit: "wpm", legend: LEGEND.net },
-  accuracy: { title: "average accuracy per day", unit: "%", legend: LEGEND.accuracy },
+const COPY: Record<Metric, { title: string; unit: string }> = {
+  wpm: { title: "average wpm per day", unit: "wpm" },
+  accuracy: { title: "average accuracy per day", unit: "%" },
 };
 
 interface DotProps {
   cx?: number;
   cy?: number;
   index?: number;
+  value?: number | null;
 }
 
+/**
+ * Daily averages on the same calendar `dates` as the activity chart beside it, so both x axes
+ * match. Days without a scored attempt are gaps the line bridges.
+ */
 export function ProgressCharts({
   days,
-  now,
-  index,
+  dates,
 }: {
-  days: DayPoint[];
-  now: number;
-  index?: number;
+  days: readonly DayPoint[];
+  dates: readonly string[];
 }) {
   const [metric, setMetric] = useState<Metric>("wpm");
-  const [range, setRange] = useState<DayRange>("30d");
-  const today = dayKey(now);
-  const visible = useMemo(() => filterDays(days, range, today), [days, range, today]);
-  const { title, unit, legend } = COPY[metric];
-  const data = visible.map((d) => ({
-    date: d.date.slice(5),
-    value: Math.round(d[metric] * 10) / 10,
-  }));
-  const lastIndex = data.length - 1;
-  const empty = data.length < 2;
+  const { title, unit } = COPY[metric];
+  const byDate = new Map(days.map((d) => [d.date, d]));
+  const data = dates.map((date) => {
+    const d = byDate.get(date);
+    return { date: date.slice(5), value: d ? Math.round(d[metric] * 10) / 10 : null };
+  });
+  const scored = data.filter((d) => d.value !== null);
+  const lastIndex = data.findLastIndex((d) => d.value !== null);
+  const empty = scored.length < 2;
   const summary = empty
     ? days.length < 2
       ? "Practise on two different days to see a trend."
       : "Fewer than two days in this range. Try a longer one."
-    : `Latest ${data[lastIndex].value} ${unit} over ${data.length} days.`;
+    : `Latest ${data[lastIndex].value} ${unit} over ${scored.length} days.`;
 
   return (
-    <Panel bare as="div" index={index}>
-      <ChartFrame
-        title={title}
-        height={220}
-        empty={empty}
-        summary={summary}
-        legend={[legend]}
-        aside={
-          <div className={styles.switches}>
-            <Segmented
-              variant="pill"
-              label="metric"
-              value={metric}
-              options={METRICS}
-              onChange={setMetric}
-            />
-            <Segmented
-              variant="pill"
-              label="range"
-              value={range}
-              options={RANGES}
-              onChange={setRange}
-            />
-          </div>
-        }
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeOpacity={GRID_OPACITY} />
-            <XAxis dataKey="date" tick={AXIS_TICK} axisLine={AXIS_LINE} tickLine={false} />
-            <YAxis
-              tick={AXIS_TICK}
-              axisLine={false}
-              tickLine={false}
-              width={44}
-              domain={metric === "accuracy" ? [80, 100] : ["auto", "auto"]}
-            />
-            <Tooltip
-              contentStyle={TOOLTIP_STYLE}
-              cursor={{ stroke: "var(--line)" }}
-              formatter={(v) => [`${v} ${unit}`, title]}
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={LINE_PRIMARY}
-              strokeWidth={STROKE_WIDTH}
-              isAnimationActive={false}
-              dot={({ cx, cy, index }: DotProps) => (
+    <ChartFrame
+      title={title}
+      height={CHART_HEIGHT}
+      empty={empty}
+      summary={summary}
+      aside={<Segmented label="metric" value={metric} options={METRICS} onChange={setMetric} />}
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={CHART_MARGIN}>
+          <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeOpacity={GRID_OPACITY} />
+          <XAxis
+            dataKey="date"
+            scale="band"
+            tick={AXIS_TICK}
+            axisLine={AXIS_LINE}
+            tickLine={false}
+            minTickGap={X_TICK_GAP}
+          />
+          <YAxis
+            tick={AXIS_TICK}
+            axisLine={false}
+            tickLine={false}
+            width={Y_AXIS_WIDTH}
+            domain={metric === "accuracy" ? [80, 100] : ["auto", "auto"]}
+          />
+          <Tooltip
+            contentStyle={TOOLTIP_STYLE}
+            cursor={{ stroke: "var(--line)" }}
+            formatter={(v) => [`${v} ${unit}`, title]}
+          />
+          <Line
+            type="monotone"
+            dataKey="value"
+            connectNulls
+            stroke={LINE_PRIMARY}
+            strokeWidth={STROKE_WIDTH}
+            isAnimationActive={false}
+            dot={({ cx, cy, index, value }: DotProps) =>
+              value === null || value === undefined || cx === undefined || cy === undefined ? (
+                <g key={index} />
+              ) : (
                 <circle
                   key={index}
                   cx={cx}
@@ -134,12 +120,12 @@ export function ProgressCharts({
                   r={index === lastIndex ? LAST_DOT_RADIUS : 2}
                   fill={LINE_PRIMARY}
                 />
-              )}
-              activeDot={{ r: LAST_DOT_RADIUS, fill: LINE_PRIMARY, stroke: "none" }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartFrame>
-    </Panel>
+              )
+            }
+            activeDot={{ r: LAST_DOT_RADIUS, fill: LINE_PRIMARY, stroke: "none" }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </ChartFrame>
   );
 }

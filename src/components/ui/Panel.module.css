@@ -9,11 +9,13 @@
 }
 
 .bare {
-  padding: var(--space-4) 0 0;
+  padding: 0;
   background: none;
   border: 0;
-  border-top: var(--stroke) solid var(--line);
   border-radius: 0;
+}
+.bare .head {
+  align-items: baseline;
 }
 
 .head {

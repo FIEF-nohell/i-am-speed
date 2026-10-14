@@ -83,8 +83,8 @@ test("zen: esc saves the session without accuracy and leaves lessons untouched",
   expect(stored.lessons).toEqual({});
 
   await page.goto("/stats/");
-  await expect(page.getByText("attempts", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("characters", { exact: true })).toBeVisible();
+  await expect(page.getByText("time typed", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^1 attempt and \d+ characters over 1 day\.$/)).toBeVisible();
 
   await page.goto("/");
   await expect(page.getByText(/^[1-9]\d* \/ \d+$/)).toHaveCount(0);
@@ -99,7 +99,7 @@ test("zen: esc before five characters returns to the test without saving", async
   await page.keyboard.press("Escape");
   await page.waitForURL("**/test/");
   await page.goto("/stats/");
-  await expect(page.getByText("attempts", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("no attempts yet")).toBeVisible();
 });
 
 test("zen: a long session renders a bounded tail and keeps the newest text in view", async ({

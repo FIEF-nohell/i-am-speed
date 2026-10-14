@@ -6,6 +6,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
+import { Segmented } from "@/components/ui/Segmented";
 import { Stat } from "@/components/ui/Stat";
 import { staggerStyle } from "@/lib/motion";
 import { LESSONS, PHASES } from "@/features/lessons/curriculum";
@@ -13,6 +14,7 @@ import { heatByCode } from "@/features/results/heat";
 import { dayKey } from "@/features/storage/record";
 import { useData, useHydrated } from "@/features/storage/store";
 import {
+  activitySeries,
   activitySummary,
   attemptRecords,
   completedPerPhase,
@@ -22,6 +24,7 @@ import {
   recentAttempts,
   weakestKeys,
   weekdayAverages,
+  type DayRange,
 } from "./aggregate";
 import { ActivityChart } from "./ActivityChart";
 import { RecordsPanel, WeekdayPanel } from "./HabitPanels";
@@ -32,25 +35,20 @@ import { ProgressCharts } from "./ProgressCharts";
 import { RecentAttempts } from "./RecentAttempts";
 import styles from "./StatsView.module.css";
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const plural = (n: number, word: string) =>
+  `${n.toLocaleString("en")} ${word}${n === 1 ? "" : "s"}`;
 
-function Tile({
-  children,
-  progress,
-  index,
-}: {
-  children: ReactNode;
-  progress?: number;
-  index: number;
-}) {
+const RANGES = [
+  { value: "7d", label: "7 days" },
+  { value: "30d", label: "30 days" },
+  { value: "all", label: "all" },
+] as const;
+
+/** One horizontal band of the page: a full-width rule over a 12-column grid. */
+function Band({ index, children }: { index: number; children: ReactNode }) {
   return (
-    <div className={`${styles.fig} enter`} style={staggerStyle(index)}>
-      <dl>{children}</dl>
-      {progress !== undefined && (
-        <span className={styles.figLine} aria-hidden="true">
-          <span style={{ width: `${progress * 100}%` }} />
-        </span>
-      )}
+    <div className={`${styles.band} enter`} style={staggerStyle(index)}>
+      {children}
     </div>
   );
 }
@@ -59,12 +57,19 @@ export function StatsView() {
   const data = useData();
   const hydrated = useHydrated();
   const [now] = useState(() => Date.now());
+  const [range, setRange] = useState<DayRange>("30d");
+  const today = dayKey(now);
   const days = useMemo(() => dailySeries(data.days), [data.days]);
+  const span = useMemo(
+    () => activitySeries(data.days, data.attempts, range, today),
+    [data.days, data.attempts, range, today],
+  );
+  const spanDates = useMemo(() => span.map((d) => d.date), [span]);
   const weak = useMemo(() => weakestKeys(data.keys, 8), [data.keys]);
   const heat = useMemo(() => heatByCode(data.keys), [data.keys]);
   const fingers = useMemo(() => fingerAccuracies(data.fingers), [data.fingers]);
   const recent = useMemo(() => recentAttempts(data.attempts, 10), [data.attempts]);
-  const activity = useMemo(() => activitySummary(data.days, dayKey(now)), [data.days, now]);
+  const activity = useMemo(() => activitySummary(data.days, today), [data.days, today]);
   const weekdays = useMemo(() => weekdayAverages(data.days), [data.days]);
   const records = useMemo(() => attemptRecords(data.attempts), [data.attempts]);
   const phases = completedPerPhase(
@@ -80,7 +85,7 @@ export function StatsView() {
     return (
       <div className="page-full">
         <PageHeader title="stats" />
-        <Panel bare as="div">
+        <div className={styles.band}>
           <EmptyState
             icon={<BarChart3 />}
             title="no attempts yet"
@@ -97,7 +102,7 @@ export function StatsView() {
           >
             Finish a lesson, a test or a zen session and your progress will collect here.
           </EmptyState>
-        </Panel>
+        </div>
       </div>
     );
   }
@@ -106,26 +111,13 @@ export function StatsView() {
     <div className={`page-full ${styles.page}`}>
       <PageHeader
         title="stats"
-        lede={`${plural(data.totals.attempts, "attempt")} over ${plural(Object.keys(data.days).length, "day")}.`}
+        lede={`${plural(data.totals.attempts, "attempt")} and ${plural(data.totals.chars, "character")} over ${plural(Object.keys(data.days).length, "day")}.`}
       />
 
-      <div className={styles.figures}>
-        <Tile index={1}>
+      <Band index={1}>
+        <dl className={styles.figures}>
           <Stat size="tile" label="time typed" value={formatDuration(data.totals.timeMs)} />
-        </Tile>
-        <Tile index={2}>
-          <Stat size="tile" label="characters" value={data.totals.chars.toLocaleString("en")} />
-        </Tile>
-        <Tile index={3}>
-          <Stat size="tile" label="attempts" value={`${data.totals.attempts}`} />
-        </Tile>
-        <Tile index={4} progress={passed / LESSONS.length}>
-          <Stat size="tile" label="lessons passed" value={`${passed} / ${LESSONS.length}`} />
-        </Tile>
-        <Tile index={5}>
           <Stat size="tile" label="today" value={formatDuration(activity.todayMs)} />
-        </Tile>
-        <Tile index={6}>
           <Stat
             size="tile"
             label="streak"
@@ -136,43 +128,46 @@ export function StatsView() {
                 : undefined
             }
           />
-        </Tile>
-        <Tile index={7}>
-          <Stat
-            size="tile"
-            label="per active day"
-            value={formatDuration(activity.avgActiveMs)}
-            unit={`${activity.activeDays} days`}
-          />
-        </Tile>
-        <Tile index={8}>
-          <Stat
-            size="tile"
-            label="best day"
-            value={activity.bestDay ? formatDuration(activity.bestDay.ms) : "-"}
-            unit={activity.bestDay?.date.slice(5)}
-          />
-        </Tile>
-      </div>
+          <Stat size="tile" label="lessons passed" value={`${passed} / ${LESSONS.length}`} />
+        </dl>
+      </Band>
 
-      <div className={styles.pair}>
-        <ActivityChart days={data.days} attempts={data.attempts} now={now} index={9} />
-        <ProgressCharts days={days} now={now} index={10} />
-      </div>
+      <Band index={2}>
+        <Panel
+          bare
+          title="day by day"
+          aside={<Segmented label="range" value={range} options={RANGES} onChange={setRange} />}
+        >
+          <div className={styles.charts}>
+            <ActivityChart series={span} />
+            <ProgressCharts days={days} dates={spanDates} />
+          </div>
+        </Panel>
+      </Band>
 
-      <div className={styles.trio}>
-        <WeekdayPanel weekdays={weekdays} index={11} />
-        <FingersPanel fingers={fingers} index={12} />
-        <PhasesPanel phases={phases} index={13} />
-      </div>
+      <Band index={3}>
+        <WeekdayPanel
+          className={styles.third}
+          weekdays={weekdays}
+          avgActiveMs={activity.avgActiveMs}
+        />
+        <FingersPanel className={styles.third} fingers={fingers} />
+        <PhasesPanel className={styles.third} phases={phases} />
+      </Band>
 
-      <div className={styles.pair}>
-        <KeysPanel weak={weak} heat={heat} index={14} />
-        <RecordsPanel records={records} index={15} />
-      </div>
-      <RecentAttempts attempts={recent} now={now} index={16} />
+      <Band index={4}>
+        <KeysPanel className={styles.half} weak={weak} heat={heat} />
+        <RecordsPanel className={styles.half} records={records} bestDay={activity.bestDay} />
+      </Band>
+
+      <Band index={5}>
+        <RecentAttempts attempts={recent} now={now} />
+      </Band>
+
       {attempted.length > 0 && (
-        <LessonsPanel lessons={attempted} progress={data.lessons} index={17} />
+        <Band index={6}>
+          <LessonsPanel lessons={attempted} progress={data.lessons} />
+        </Band>
       )}
     </div>
   );

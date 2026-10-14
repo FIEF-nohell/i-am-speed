@@ -1,22 +1,24 @@
 import { Panel } from "@/components/ui/Panel";
 import { sourceLabel } from "@/features/storage/source";
-import { formatDuration, type Records } from "./aggregate";
+import { formatDuration, type ActivitySummary, type Records } from "./aggregate";
 import styles from "./StatsView.module.css";
 
 export function WeekdayPanel({
   weekdays,
-  index,
+  avgActiveMs,
+  className,
 }: {
   weekdays: { day: string; minutes: number }[];
-  index?: number;
+  avgActiveMs: number;
+  className?: string;
 }) {
   const max = Math.max(...weekdays.map((w) => w.minutes), 0);
   return (
     <Panel
       bare
-      index={index}
+      className={className}
       title="week rhythm"
-      description="Average practice time on each weekday, over the days you practised."
+      aside={<span>{formatDuration(avgActiveMs)} per active day</span>}
     >
       <ul className={styles.bars}>
         {weekdays.map((w) => (
@@ -44,7 +46,15 @@ export function WeekdayPanel({
   );
 }
 
-export function RecordsPanel({ records, index }: { records: Records; index?: number }) {
+export function RecordsPanel({
+  records,
+  bestDay,
+  className,
+}: {
+  records: Records;
+  bestDay: ActivitySummary["bestDay"];
+  className?: string;
+}) {
   const rows: { label: string; value: string; note?: string }[] = [];
   if (records.fastest)
     rows.push({
@@ -65,12 +75,18 @@ export function RecordsPanel({ records, index }: { records: Records; index?: num
       note: sourceLabel(records.longest.source),
     });
   rows.push({ label: "average run", value: formatDuration(records.avgRunMs) });
+  if (bestDay)
+    rows.push({
+      label: "best day",
+      value: formatDuration(bestDay.ms),
+      note: bestDay.date.slice(5),
+    });
   return (
     <Panel
       bare
-      index={index}
+      className={className}
       title="records"
-      description={`Highlights from your last ${records.count} saved runs.`}
+      aside={<span>last {records.count} runs</span>}
     >
       <ul className={styles.records}>
         {rows.map((r) => (

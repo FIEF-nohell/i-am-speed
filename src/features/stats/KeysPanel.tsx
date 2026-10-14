@@ -9,16 +9,16 @@ import styles from "./StatsView.module.css";
 interface Props {
   weak: WeakKey[];
   heat: Readonly<Record<string, number>>;
-  index?: number;
+  className?: string;
 }
 
-export function KeysPanel({ weak, heat, index }: Props) {
+export function KeysPanel({ weak, heat, className }: Props) {
   return (
     <Panel
       bare
-      index={index}
+      className={className}
       title="keys"
-      description={weak.length ? "Highest error rate over all attempts." : undefined}
+      aside={weak.length ? <span>highest error rate, all time</span> : undefined}
     >
       {weak.length === 0 ? (
         <EmptyState icon={<Check />} title="no weak keys yet">

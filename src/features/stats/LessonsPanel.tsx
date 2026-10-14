@@ -6,12 +6,17 @@ import styles from "./StatsView.module.css";
 interface Props {
   lessons: readonly Lesson[];
   progress: Record<string, LessonProgress>;
-  index?: number;
+  className?: string;
 }
 
-export function LessonsPanel({ lessons, progress, index }: Props) {
+export function LessonsPanel({ lessons, progress, className }: Props) {
   return (
-    <Panel bare index={index} title="lessons" description="Best speed counts only passed attempts.">
+    <Panel
+      bare
+      className={className}
+      title="lessons"
+      aside={<span>best counts passed runs only</span>}
+    >
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>

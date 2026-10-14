@@ -9,7 +9,7 @@ interface Props {
   aside?: ReactNode;
   id?: string;
   as?: "section" | "div";
-  /** No fill, border or padding: a hairline rule above the content instead of a card. */
+  /** No fill, border or padding: a heading and content, placed by the page (e.g. stats bands). */
   bare?: boolean;
   className?: string;
   /** Position in the page: the panel fades in with a capped stagger (the shared `.enter`). */
