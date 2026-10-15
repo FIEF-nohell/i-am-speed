@@ -41,15 +41,9 @@ export function wordStart(target: string, pos: number): number {
   return i;
 }
 
-function wordsAreClean(state: EngineState): boolean {
-  return !hasUncorrectedErrors(state.entries, 0, state.entries.length);
-}
-
+/** Done once the whole text is typed. Unfixed errors do not block the end; they lower accuracy. */
 function isDone(state: EngineState): boolean {
-  if (state.entries.length < state.target.length) return false;
-  // "stop at word end" cannot finish with an unfixed error in the last word.
-  // A wrong last letter must be erased and fixed before the run ends.
-  return state.config.onError === "block" || wordsAreClean(state);
+  return state.entries.length >= state.target.length;
 }
 
 function record(state: EngineState, ks: Keystroke, entries: readonly Entry[]): EngineState {

@@ -35,10 +35,14 @@ describe("continue mode", () => {
   it("marks wrong chars, advances and finishes", () => {
     const s = run("abc", "axc", { onError: "continue" });
     expect(s.entries.map((e) => e.correct)).toEqual([true, false, true]);
-    expect(s.status).toBe("running");
-    const fixed = run("abc", "axc<<bc", { onError: "continue" });
-    expect(fixed.status).toBe("finished");
+    expect(s.status).toBe("finished");
     expect(computeMetrics(s).errors).toBe(1);
+  });
+  it("finishes when the last char is wrong", () => {
+    for (const onError of ["continue", "restartAfterN"] as const) {
+      const s = run("abc", "abx", { onError, restartAfter: 3 });
+      expect(s.status).toBe("finished");
+    }
   });
 });
 
@@ -77,12 +81,10 @@ describe("stop at word end", () => {
     s = reduce(s, { kind: "backspace", t: 9100 });
     expect(s.entries).toHaveLength(1);
   });
-  it("does not finish with an unfixed error in the last word", () => {
+  it("finishes with an unfixed error in the last word", () => {
     const s = run("ab", "ax", { onError: "stopAtWordEnd" });
-    expect(s.entries).toHaveLength(2);
-    expect(s.status).toBe("running");
-    const fixed = run("ab", "ax<b", { onError: "stopAtWordEnd" });
-    expect(fixed.status).toBe("finished");
+    expect(s.status).toBe("finished");
+    expect(computeMetrics(s).errors).toBe(1);
   });
 });
 
