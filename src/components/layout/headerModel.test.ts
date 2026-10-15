@@ -23,6 +23,7 @@ describe("currentNav", () => {
     expect(currentNav("/test/")).toEqual({ href: "/test/", current: "page" });
     expect(currentNav("/test")).toEqual({ href: "/test/", current: "page" });
     expect(currentNav("/zen/")?.href).toBe("/zen/");
+    expect(currentNav("/rain/")?.href).toBe("/rain/");
     expect(currentNav("/stats/")?.href).toBe("/stats/");
     expect(currentNav("/settings/")?.href).toBe("/settings/");
   });

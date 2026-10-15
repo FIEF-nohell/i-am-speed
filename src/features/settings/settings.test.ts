@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SETTINGS, SOUND_PACKS, sanitiseSettings, type Settings } from "./settings";
+import {
+  DEFAULT_SETTINGS,
+  SOUND_PACKS,
+  keyboardSettingFor,
+  keyboardVisible,
+  sanitiseSettings,
+  type Settings,
+} from "./settings";
 
 /** The 14 fields that existed before the sound pack, volume and error sound were added. */
 const LEGACY: Partial<Settings> = {
@@ -89,5 +96,17 @@ describe("sanitiseSettings: existing fields are unchanged", () => {
     expect(out.theme).toBe("dark");
     expect(out.restartAfter).toBe(10);
     expect(out.soundVolume).toBe(10);
+  });
+});
+
+describe("keyboard toggle", () => {
+  it("shows the real state and stores an override only where it differs from the phase default", () => {
+    const auto = { ...DEFAULT_SETTINGS, keyboard: "phases1to8" as const };
+    expect(keyboardVisible(auto, 3)).toBe(true);
+    expect(keyboardVisible(auto, 12)).toBe(false);
+    expect(keyboardSettingFor(true, 12)).toBe("always");
+    expect(keyboardSettingFor(false, 12)).toBe("phases1to8");
+    expect(keyboardSettingFor(false, 3)).toBe("never");
+    expect(keyboardSettingFor(true, 3)).toBe("phases1to8");
   });
 });

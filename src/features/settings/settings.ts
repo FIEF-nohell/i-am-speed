@@ -114,3 +114,14 @@ export function keyboardVisible(s: Settings, phase: number | null): boolean {
   if (s.keyboard === "always") return true;
   return phase !== null && phase <= 8;
 }
+
+/**
+ * The setting a toggle press stores for a lesson in `phase`. Matching the phase default keeps the
+ * automatic mode, so "phases 1 to 8" stays in charge everywhere else; differing from it pins
+ * "always" or "never".
+ */
+export function keyboardSettingFor(on: boolean, phase: number | null): KeyboardVisibility {
+  const byDefault = phase !== null && phase <= 8;
+  if (on === byDefault) return "phases1to8";
+  return on ? "always" : "never";
+}

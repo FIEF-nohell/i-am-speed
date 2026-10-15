@@ -10,6 +10,7 @@ const PAGES = [
   "/",
   "/test/",
   "/zen/",
+  "/rain/",
   "/results/",
   "/stats/",
   "/settings/",

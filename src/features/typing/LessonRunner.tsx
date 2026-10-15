@@ -8,7 +8,7 @@ import { Toggle } from "@/components/ui/Toggle";
 import { LANG_LABEL, LANGS, type Lang } from "@/features/content/types";
 import { LESSON_BY_ID, PHASES } from "@/features/lessons/curriculum";
 import { generateLessonText } from "@/features/lessons/generate";
-import { engineConfigOf, keyboardVisible } from "@/features/settings/settings";
+import { engineConfigOf, keyboardSettingFor, keyboardVisible } from "@/features/settings/settings";
 import { useKeySound } from "@/features/sound/useKeySound";
 import { updateSettings, useHydrated, useSettings } from "@/features/storage/store";
 import { createRng, randomSeed } from "@/lib/rng";
@@ -93,8 +93,10 @@ export function LessonRunner({ lessonId }: { lessonId: string }) {
               keyboard
               <Toggle
                 label="show keyboard"
-                checked={settings.keyboard !== "never"}
-                onChange={(on) => updateSettings({ keyboard: on ? "phases1to8" : "never" })}
+                checked={keyboardVisible(settings, lesson.phase)}
+                onChange={(on) =>
+                  updateSettings({ keyboard: keyboardSettingFor(on, lesson.phase) })
+                }
               />
             </label>
           </div>

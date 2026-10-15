@@ -116,3 +116,9 @@ Decision: the header is a ruled line of words that frames the content column lik
 Supersedes the Header bullet of D16.
 
 Verification: `e2e/nav.spec.ts` (aria-current per route, tab order, indicator geometry, glide, no first-load animation, reduced motion, account menu keys, phone and tablet layout, touch hover), axe including the open account menu, the preserve guard unchanged, and screenshots at 1440, 768 and 390 in four themes. The signed-in fixture seeds the persisted Firebase user with all Google requests blocked.
+
+## D21 Rain mini game and the lesson keyboard toggle
+
+Decision: `/rain/` is a falling-words game with a `rain` tab. Words fall faster and come from rarer, longer word bands every 25 s. The first letter locks the lowest word with that letter (no two words share a first letter), a wrong key restarts the word and breaks the combo, backspace does nothing, five missed words end the run. The engine is pure and subscribable (`src/features/rain/engine.ts`). The best score lives in its own localStorage key, not in the attempts store, because accuracy statistics do not apply to a mode where errors reset instead of accumulate.
+
+The lesson keyboard toggle shows the real state (off in phases 9 and up under "phases 1 to 8"). A press stores "always" or "never" only when it differs from the phase default, otherwise it returns to "phases1to8".

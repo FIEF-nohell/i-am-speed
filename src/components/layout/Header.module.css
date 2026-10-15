@@ -231,3 +231,10 @@
     margin: 0 calc(var(--space-2) * -1);
   }
 }
+
+/* Six tabs on the narrowest phones: tighter padding, targets stay 44px wide. */
+@media (max-width: 24rem) {
+  .link {
+    padding: 0 var(--space-1);
+  }
+}

@@ -11,6 +11,7 @@ const ROUTES: readonly { path: string; tab: string | null; current: "page" | "tr
   { path: "/lesson/home-01/", tab: "lessons", current: "true" },
   { path: "/test/", tab: "test", current: "page" },
   { path: "/zen/", tab: "zen", current: "page" },
+  { path: "/rain/", tab: "rain", current: "page" },
   { path: "/stats/", tab: "stats", current: "page" },
   { path: "/settings/", tab: "settings", current: "page" },
   { path: "/results/", tab: null, current: "page" },
@@ -45,6 +46,7 @@ test.describe("tabs and current page", () => {
       "lessons",
       "test",
       "zen",
+      "rain",
       "stats",
       "settings",
       "sign in",
@@ -259,7 +261,7 @@ test.describe("phone and tablet layout", () => {
     if (!brand || !nav) throw new Error("not laid out");
     expect(nav.y).toBeGreaterThanOrEqual(brand.y + brand.height - 1);
     await expect(page.getByText("i am speed", { exact: true })).toBeVisible();
-    for (const name of ["lessons", "test", "zen", "stats", "settings", "sign in"]) {
+    for (const name of ["lessons", "test", "zen", "rain", "stats", "settings", "sign in"]) {
       const box = await page
         .getByRole("banner")
         .getByRole("link", { name, exact: true })
@@ -268,7 +270,7 @@ test.describe("phone and tablet layout", () => {
       expect(box.width, name).toBeGreaterThanOrEqual(43.5);
       expect(box.height, name).toBeGreaterThanOrEqual(43.5);
     }
-    for (const name of ["lessons", "test", "zen", "stats", "settings"]) {
+    for (const name of ["lessons", "test", "zen", "rain", "stats", "settings"]) {
       const label = await page
         .getByRole("navigation", { name: "main" })
         .getByRole("link", { name })
