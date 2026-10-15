@@ -122,3 +122,11 @@ Verification: `e2e/nav.spec.ts` (aria-current per route, tab order, indicator ge
 Decision: `/rain/` is a falling-words game with a `rain` tab. Words fall faster and come from rarer, longer word bands every 25 s. The first letter locks the lowest word with that letter (no two words share a first letter), a wrong key restarts the word and breaks the combo, backspace does nothing, five missed words end the run. The engine is pure and subscribable (`src/features/rain/engine.ts`). The best score lives in its own localStorage key, not in the attempts store, because accuracy statistics do not apply to a mode where errors reset instead of accumulate.
 
 The lesson keyboard toggle shows the real state (off in phases 9 and up under "phases 1 to 8"). A press stores "always" or "never" only when it differs from the phase default, otherwise it returns to "phases1to8".
+
+## D22 One page width and a profile sidebar on the lessons page
+
+Decision: every page outside the typing screens (lessons, stats, settings, about, account, rain) uses the header and footer column (`.page-full`, 80rem). Only the typing screens (lesson, test, zen) keep their narrow 56rem column, and the auth forms stay narrow because they are forms. Settings and account lay their panels out in an auto-fit grid, about in two columns.
+
+The lessons page is a main column plus a 19rem sidebar from 64rem up, behind a vertical hairline, sticky. Below 64rem the sidebar follows the lessons. The main column has a "next up" line (first lesson not yet passed) and phases as ruled bands like the stats page: a left cell with number, title, description and a thin progress line, a right cell with the lessons in two columns. No cards. The sidebar has identity (initial, name or "guest", sync line), overall figures (average and best speed, accuracy, streak, lessons passed, time typed) and the last five attempts with a speed sparkline, all from stored data; it explains itself until the first attempt.
+
+Supersedes the width part of D16.

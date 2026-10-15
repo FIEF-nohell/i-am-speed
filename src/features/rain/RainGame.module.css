@@ -1,6 +1,6 @@
 .rain {
   width: 100%;
-  max-width: var(--column);
+  max-width: var(--column-wide);
   margin: 0 auto;
   display: flex;
   flex-direction: column;

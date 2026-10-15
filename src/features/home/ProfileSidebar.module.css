@@ -1,0 +1,130 @@
+.side {
+  min-width: 0;
+}
+
+.block {
+  padding-top: var(--space-5);
+  margin-top: var(--space-5);
+  border-top: var(--stroke) solid var(--line);
+}
+.block:first-child {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--text);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1;
+}
+.who {
+  min-width: 0;
+}
+.name {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.sub {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.sub a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.label {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+  margin: 0;
+}
+
+/* Sidebar-sized figures: the global tile size is built for full-width bands. */
+.figures > div[data-size="tile"] > dd[class] {
+  font-size: 1.5rem;
+  white-space: nowrap;
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  margin-bottom: var(--space-3);
+  color: var(--accent);
+}
+
+.recent {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 5.5rem;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+.what {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.wpm {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.when {
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.more {
+  display: inline-block;
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.more:hover {
+  color: var(--text);
+}

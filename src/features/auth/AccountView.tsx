@@ -54,7 +54,7 @@ export function AccountView() {
   };
 
   return (
-    <div className="page-narrow">
+    <div className="page-full">
       <PageHeader
         eyebrow={user ? undefined : "you are not signed in"}
         title="account"
@@ -63,7 +63,11 @@ export function AccountView() {
         }
       />
       <div className={styles.stack}>
-        {notice && <Notice tone={notice.error ? "error" : "neutral"}>{notice.text}</Notice>}
+        {notice && (
+          <div className={styles.full}>
+            <Notice tone={notice.error ? "error" : "neutral"}>{notice.text}</Notice>
+          </div>
+        )}
         <LinkDialog />
         {user && <VerifyEmail user={user} />}
 

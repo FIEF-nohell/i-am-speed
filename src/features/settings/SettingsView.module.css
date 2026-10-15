@@ -3,11 +3,11 @@
 }
 
 .column {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  align-items: start;
   gap: var(--space-5);
   min-width: 0;
-  max-width: 40rem;
 }
 
 /* Holds the height while settings load from storage, so nothing jumps. */
@@ -18,7 +18,7 @@
 @media (min-width: 64rem) {
   .layout {
     display: grid;
-    grid-template-columns: 11rem minmax(0, 40rem);
+    grid-template-columns: 11rem minmax(0, 1fr);
     gap: var(--space-6);
   }
 }

@@ -37,10 +37,7 @@ for (const theme of THEMES) {
     await page.goto("/");
     await page.getByRole("heading", { level: 1 }).waitFor();
     // Header, footer and the page title block are redesigned on purpose; compare the list itself.
-    await expect(page.locator("main .page-narrow > div")).toHaveScreenshot(
-      `list-${theme}.png`,
-      OPTIONS,
-    );
+    await expect(page.locator("#lessons")).toHaveScreenshot(`list-${theme}.png`, OPTIONS);
 
     await page.goto("/lesson/top-01/");
     const text = await lessonText(page);

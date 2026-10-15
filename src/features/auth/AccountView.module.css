@@ -1,7 +1,12 @@
 .stack {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  align-items: start;
   gap: var(--space-5);
+}
+.full,
+.stack > :only-child {
+  grid-column: 1 / -1;
 }
 
 .form {

@@ -26,7 +26,7 @@ export function SettingsView() {
   const signedIn = useAuth().status === "signed-in";
 
   return (
-    <div className="page-wide">
+    <div className="page-full">
       <PageHeader title="settings" lede="Saved on this device as you change them." />
       {hydrated ? (
         <div className={styles.layout}>

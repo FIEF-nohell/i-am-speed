@@ -1,0 +1,78 @@
+.home {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+}
+.main {
+  min-width: 0;
+}
+
+.next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+  margin-bottom: var(--space-6);
+  border-top: var(--stroke) solid var(--line);
+}
+.nextText {
+  min-width: 0;
+}
+.eyebrow {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nextTitle {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text);
+}
+.nextDesc {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 36rem;
+}
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+}
+.done {
+  margin: 0 0 var(--space-6);
+  padding: var(--space-4) 0 0;
+  border-top: var(--stroke) solid var(--line);
+  color: var(--muted);
+}
+
+@media (min-width: 64rem) {
+  .home {
+    grid-template-columns: minmax(0, 1fr) 19rem;
+    gap: 0;
+  }
+  .main {
+    padding-right: var(--space-7);
+  }
+  /* The sidebar sits behind a vertical hairline and follows the scroll. */
+  .side {
+    padding-left: var(--space-6);
+    border-left: var(--stroke) solid var(--line);
+  }
+  .side > :global(aside) {
+    position: sticky;
+    top: var(--space-5);
+  }
+}
+
+@media (max-width: 36rem) {
+  .next {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
