@@ -8,7 +8,9 @@ export type LessonSpec =
   | { type: "symbols"; symbols: string }
   | { type: "words"; band: readonly [number, number]; variant: "lower" | "caps" | "numbers" }
   | { type: "sentences"; band: readonly [number, number]; punctuationRich?: boolean }
-  | { type: "paragraphs"; band: readonly [number, number]; withNumbers?: boolean };
+  | { type: "paragraphs"; band: readonly [number, number]; withNumbers?: boolean }
+  /** Programming snippets (React, Next.js, Tailwind, JavaScript). Language independent. */
+  | { type: "code" };
 
 export interface Lesson {
   /** Stable. Stored in the user's history, never rename. */

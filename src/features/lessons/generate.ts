@@ -3,6 +3,7 @@ import type { Corpus } from "@/features/content/types";
 import { pick, type Rng } from "@/lib/rng";
 import { TextBuilder, capitalise, digitsToken, fill, isLettersOnly } from "./builder";
 import { DIGITS, LOWER } from "./charsets";
+import { CODE_SNIPPETS } from "./code";
 import { generateDrill } from "./drill";
 import { dateToken, symbolToken } from "./templates";
 import type { Lesson, LessonSpec } from "./types";
@@ -148,6 +149,9 @@ const paragraphsText: Gen<"paragraphs"> = (lesson, spec, corpus, rng) => {
   return b.text();
 };
 
+const codeText: Gen<"code"> = (lesson, _spec, _corpus, rng) =>
+  fromSentences(lesson, CODE_SNIPPETS, rng);
+
 /** Text for one attempt of a lesson. Never contains a character outside `lesson.chars`. */
 export function generateLessonText(lesson: Lesson, corpus: Corpus, rng: Rng): string {
   const spec = lesson.spec;
@@ -179,6 +183,9 @@ export function generateLessonText(lesson: Lesson, corpus: Corpus, rng: Rng): st
       break;
     case "paragraphs":
       text = paragraphsText(lesson, spec, corpus, rng);
+      break;
+    case "code":
+      text = codeText(lesson, spec, corpus, rng);
       break;
   }
   // Last line of defence, and a guarantee for the validator: an empty result becomes a safe drill.

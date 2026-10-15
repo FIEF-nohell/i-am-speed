@@ -63,6 +63,12 @@ export const PHASES: readonly Phase[] = [
     title: "paragraphs",
     description: "Longer passages with everything mixed.",
   },
+  {
+    id: 12,
+    slug: "code",
+    title: "programming",
+    description: "React, Next.js, Tailwind and JavaScript, symbols included.",
+  },
 ];
 
 interface Step {
@@ -461,6 +467,24 @@ const paragraphLessons = build(
   false,
 );
 
+const codeLessons = build(
+  12,
+  "code",
+  [
+    {
+      title: "web dev code",
+      description:
+        "Hooks, JSX, Tailwind classes and shell lines. Brackets, braces, pipes and quotes.",
+      newChars: "",
+      length: 420,
+      spec: { type: "code" },
+      chars: ALL_TYPEABLE,
+    },
+  ],
+  "",
+  false,
+);
+
 export const LESSONS: readonly Lesson[] = [
   ...letterLessons,
   ...shiftLessons,
@@ -470,6 +494,7 @@ export const LESSONS: readonly Lesson[] = [
   ...wordsLessons,
   ...sentenceLessons,
   ...paragraphLessons,
+  ...codeLessons,
 ];
 
 export const LESSON_BY_ID: ReadonlyMap<string, Lesson> = new Map(LESSONS.map((l) => [l.id, l]));
